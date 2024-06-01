@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<!--added-->
+	<IsRoslynComponent>true</IsRoslynComponent>
+	<!--/added-->
+
+	<TargetFramework>netstandard2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+
+    <!-- Avoid ID conflicts with the package project. -->
+    <PackageId>*$(MSBuildProjectFile)*</PackageId>
+    <RootNamespace>$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <AssemblyName>$(MSBuildProjectName.Replace(" ", "_"))</AssemblyName>
+    <Title>$(GlobalPackageTitle)</Title>
+    <Version>$(GlobalPackageVersion)</Version>
+    <Authors>$(GlobalPackageOwner)</Authors>
+    <Company>$(GlobalPackageCompany)</Company>
+    <Product>$(GlobalPackageProduct)</Product>
+    <Description>$(GlobalPackageDescription)</Description>
+    <Copyright>$(GlobalPackageCopyright)</Copyright>
+    <PackageProjectUrl>$(GlobalPackageWebsite)</PackageProjectUrl>
+    <RepositoryUrl>$(GlobalPackageRepository)</RepositoryUrl>
+    <AssemblyVersion>$(GlobalPackageVersion)</AssemblyVersion>
+    <FileVersion>$(GlobalPackageVersion)</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\AssemblyInfo.cs" Link="AssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<!-- unity 2021.2 uses CodeAnalysis.CSharp v3.9, analyzer WON'T work on piror to 2021.2 when built with v3.6 or later -->
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="2.9.8" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources.Designer.cs" DesignTime="True" AutoGen="True" DependentUpon="Resources.resx" />
+    <EmbeddedResource Update="Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs" />
+  </ItemGroup>
+
+</Project>

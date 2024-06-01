@@ -1,0 +1,31 @@
+<Project>
+
+	<PropertyGroup>
+		<LangVersion>9.0</LangVersion>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<PropertyGroup Label="UserMacros">
+		<GlobalPackageID>SatorImaging.StaticMemberAnalyzer</GlobalPackageID>
+		<GlobalPackageTitle>Static Member Analyzer</GlobalPackageTitle>
+		<GlobalPackageProduct>$(GlobalPackageTitle)</GlobalPackageProduct>
+		<GlobalPackageVersion>1.0.0</GlobalPackageVersion>
+		<GlobalPackageOwner>Sator Imaging</GlobalPackageOwner>
+		<GlobalPackageCompany>$(GlobalPackageOwner)</GlobalPackageCompany>
+		<GlobalPackageCopyright>(c) 2024 $(GlobalPackageOwner)</GlobalPackageCopyright>
+		<!-- !!! update vsix manifest too !!! -->
+		<GlobalPackageDescription>Roslyn-based analyzer to diagnose static fields and properties initialization.</GlobalPackageDescription>
+		<GlobalPackageTags>StaticMemberAnalyzer, Roslyn, analyzer, analyzers, static, field, property, initialization</GlobalPackageTags>
+		<GlobalPackageWebsite>https://x.com/sator_imaging</GlobalPackageWebsite>
+		<GlobalPackageRepository>https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer</GlobalPackageRepository>
+		<GlobalPackageReleaseNote>https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer</GlobalPackageReleaseNote>
+		<GlobalPackageLicenseUrl>https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer/blob/main/LICENSE.md</GlobalPackageLicenseUrl>
+		<GlobalPackageLicenseSPDX>MIT</GlobalPackageLicenseSPDX>
+		<GlobalPackageIconUrl>https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer/raw/main/assets/icon-128px.png</GlobalPackageIconUrl>
+	</PropertyGroup>
+
+	<Target Name="GetVsixVersion" Outputs="$(GlobalPackageVersion)" />
+	<Target Name="GetVsixPublisher" Outputs="$(GlobalPackageOwner)" />
+	<Target Name="GetVsixRepository" Outputs="$(GlobalPackageRepository)" />
+
+</Project>

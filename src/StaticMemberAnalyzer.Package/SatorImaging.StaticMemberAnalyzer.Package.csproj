@@ -1,0 +1,86 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<PackageId>$(GlobalPackageID)</PackageId>
+		<PackageVersion>$(GlobalPackageVersion)</PackageVersion>
+		<Authors>$(GlobalPackageOwner)</Authors>
+		<!--<PackageLicenseUrl>$(GlobalPackageLicenseUrl)</PackageLicenseUrl>-->
+		<PackageProjectUrl>$(GlobalPackageWebsite)</PackageProjectUrl>
+		<PackageIconUrl>$(GlobalPackageIconUrl)</PackageIconUrl>
+		<RepositoryUrl>$(GlobalPackageRepository)</RepositoryUrl>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<Description>$(GlobalPackageDescription)</Description>
+		<PackageReleaseNotes>$(GlobalPackageReleaseNote)</PackageReleaseNotes>
+		<Copyright>$(GlobalPackageCopyright)</Copyright>
+		<PackageTags>$(GlobalPackageTags)</PackageTags>
+		<DevelopmentDependency>true</DevelopmentDependency>
+		<NoPackageAnalysis>true</NoPackageAnalysis>
+
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
+
+		<RootNamespace>$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+
+		<AssemblyName>$(MSBuildProjectName.Replace(" ", "_"))</AssemblyName>
+
+		<Title>$(GlobalPackageTitle)</Title>
+
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+
+		<Version>$(GlobalPackageVersion)</Version>
+
+		<Company>$(GlobalPackageCompany)</Company>
+
+		<Product>$(GlobalPackageProduct)</Product>
+
+		<PackageLicenseExpression>$(GlobalPackageLicenseSPDX)</PackageLicenseExpression>
+
+		<PackageIcon>icon-128px.png</PackageIcon>
+
+		<AssemblyVersion>$(GlobalPackageVersion)</AssemblyVersion>
+
+		<FileVersion>$(GlobalPackageVersion)</FileVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DebugType>portable</DebugType>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DebugType>none</DebugType>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\..\assets\icon-128px.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="..\..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\StaticMemberAnalyzer.CodeFixes\SatorImaging.StaticMemberAnalyzer.CodeFixes.csproj" />
+		<ProjectReference Include="..\StaticMemberAnalyzer.Analysis\SatorImaging.StaticMemberAnalyzer.Analysis.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="tools\*.ps1" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="" />
+	</ItemGroup>
+
+	<Target Name="_AddAnalyzersToOutput">
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="$(OutputPath)\SatorImaging.StaticMemberAnalyzer.Analysis.dll" PackagePath="analyzers/dotnet/cs" />
+			<TfmSpecificPackageFile Include="$(OutputPath)\SatorImaging.StaticMemberAnalyzer.CodeFixes.dll" PackagePath="analyzers/dotnet/cs" />
+		</ItemGroup>
+	</Target>
+
+</Project>
