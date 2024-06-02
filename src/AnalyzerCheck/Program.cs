@@ -9,9 +9,11 @@ public class Program
     public readonly static float F = StaticFields.F;    // error
     public readonly static int I = 310;
 
-    public readonly static byte BEFORE = AFTER;   // reading uninitialized value (0) from static field in same type
+    public static int Property { get; } = AFTER;  // error reading uninitialized value (0) from static field in same type
+    public readonly static byte BEFORE = AFTER;   // error 
     public readonly static byte AFTER = 155;      // <-- move this line above to fix problem
     public readonly static byte CORRECT = AFTER;
+
 
     public static void Main()
     {
@@ -37,6 +39,27 @@ public class Program
     // no error on static fields without initializer
     public static byte SB;
     public static readonly byte SRB;
+    public static int FromNest = Nested.Value;
+    // no error on nameof/typeof syntax
+    public static Type TypeOf = typeof(StaticFields.Nested);
+    public static string NameOf = "" + nameof(StaticFields.F) + "";
+    // no error on static method access
+    public static Action StaticAction = StaticMethod;
+    public static Action StaticActionXR = StaticFields.StaticMethod;
+    public static Func<bool> StaticFunc = StaticFuncBool;
+    public static Func<bool> StaticFuncXR = StaticFields.StaticFuncBool;
+    // no error on access in delegate
+    public static Action ActionDef = () => { Console.WriteLine(StaticFields.I); };
+    public static Func<int> FuncDef = () => StaticFields.I;
+    // no error in setter/getter
+    static float f;
+    public static float Getter { get => f + StaticFields.F; }
+    public static float Setter { set => f = StaticFields.F; }
+
+    public static class Nested { public static int Value = -310; }
+    public static void StaticMethod() { }
+    public static bool StaticFuncBool() => true;
+
 }
 
 public class StaticFields
@@ -45,6 +68,10 @@ public class StaticFields
     public readonly static int I = Program.I;
     public readonly static double D = 3.10 + InterFileReferencing.PublicDouble;
     public readonly static float F = 0.31f;
+
+    public static class Nested { }
+    public static void StaticMethod() { }
+    public static bool StaticFuncBool() => false;
 }
 
 public class CrazySource { public static float Value = CrazyDestination.Value; }

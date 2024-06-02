@@ -1,10 +1,9 @@
 # Static Field Analyzer for C# / .NET
 
-Roslyn-based analyzer for C# to provide diagnostics of static fields and properties (not yet) initialization.
+Roslyn-based analyzer to provide diagnostics of static fields and properties initialization.
 
-- Wrong order of static field declaration
+- Wrong order of static field and property declaration
 - [Cross-Referencing Problem](#cross-referencing-problem) of static field across type
-- TODO: static property initialization diagnostics
 
 
 ![Analyzer in Action](https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer/raw/main/assets/InAction.gif)
@@ -13,11 +12,31 @@ Roslyn-based analyzer for C# to provide diagnostics of static fields and propert
 
 
 
+# Unity Integration
+
+This analyzer can be used with Unity 2020.2 or above. See the following page for detail.
+
+https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer/tree/main/unity
+
+
+
+
+
+# Visual Studio 2019 or Earlier
+
+Analyzer is tested on Visual Studio 2022.
+
+You could use this analyzer on older versions of Visual Studio. To do so, update `Vsix` project file by following instructions written in memo and build project.
+
+
+
+
+
 # Cross-Referencing Problem
 
-It is a design bug which makes all things complex. Not only that but also it causes initialization error only when meet a specific condition.
+It is a design bug makes all things complex. Not only that but also it causes initialization error only when meet a specific condition.
 
-So that it must be fixed even if app works correctly at a moment, to prevent simple but complicated bug which is hard to find in large code base by hand. As you know static fields will never report error when initialization failed!!
+So it must be fixed even if app works correctly at a moment, to prevent simple but complicated bug which is hard to find in large code base by hand. As you know static fields will never report error when initialization failed!!
 
 > It could be happened when reordering field declarations on refactoring large code base.
 
@@ -89,26 +108,3 @@ When you store your api end point (costs each access) or api key or something se
 
 Of course using `readonly static string` won't solve the problem perfectly, but worth to consider use.
 -->
-
-
-
-
-
-# Visual Studio 2019 or Earlier
-
-This analyzer is tested on Visual Studio 2022.
-
-You could use this analyzer on older versions of Visual Studio. To do so, update `Vsix` project file by following instructions written in memo file and build project.
-
-
-
-
-
-&nbsp;  
-&nbsp;  
-
-# Devnote
-
-## TODO
-
-- Implement static property analyzer!!
