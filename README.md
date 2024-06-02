@@ -66,20 +66,20 @@ class B {
 
 public static class Test
 {
-	public static void Main()
-	{
-		System.Console.WriteLine(A.Value);  // 620
-		System.Console.WriteLine(A.Other);  // 310
-		System.Console.WriteLine(B.Value);  // 0   👈👈👈
-		System.Console.WriteLine(B.Other);  // 620
+    public static void Main()
+    {
+        System.Console.WriteLine(A.Value);  // 620
+        System.Console.WriteLine(A.Other);  // 310
+        System.Console.WriteLine(B.Value);  // 0   👈👈👈
+        System.Console.WriteLine(B.Other);  // 620
 
         // when changing class member access order, it works correctly 🤣
-        // see the following for details
-		//System.Console.WriteLine(B.Value);  // 310  👈 correct!!
-		//System.Console.WriteLine(B.Other);  // 620
-		//System.Console.WriteLine(A.Value);  // 620
-		//System.Console.WriteLine(A.Other);  // 310
-	}
+        // see the following section for detailed explanation
+        //System.Console.WriteLine(B.Value);  // 310  👈 correct!!
+        //System.Console.WriteLine(B.Other);  // 620
+        //System.Console.WriteLine(A.Value);  // 620
+        //System.Console.WriteLine(A.Other);  // 310
+    }
 }
 ```
 
@@ -92,6 +92,14 @@ public static class Test
     - `B.Other = 620;`
     - // then, assign `B.Other` value (620) to `A.Value`
 - `A.Other = 310;`  // initialized here!! this value is not assigned to B.Value
+
+
+When reading B value first, initialization order is changed and resulting value is also changed accordingly:
+
+- `B.Other = 620;`
+- `B.Value = A.Other;`
+    - `A.Value = B.Other;`  // correct: B.Other is initialized before reading value
+    - `A.Other = 310;`
 
 
 
