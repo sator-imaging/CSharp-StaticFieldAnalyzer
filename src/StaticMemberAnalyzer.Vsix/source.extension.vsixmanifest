@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
 	<Metadata>
-		<Identity Id="StaticMemberAnalyzer.379f785f-c277-4e07-8d7c-d408c6c873ff" Language="en-US"
+		<Identity Id="StaticMemberAnalyzer.379g785f-c277-4e07-8d7c-d408c6c873df" Language="en-US"
 				  Version="|%CurrentProject%;GetVsixVersion|" Publisher="|%CurrentProject%;GetVsixPublisher|" />
 		<!-- cannot have non-alphabetic chars & spaces in display name!?!?!??? -->
 		<DisplayName>StaticMemberAnalyzer</DisplayName>

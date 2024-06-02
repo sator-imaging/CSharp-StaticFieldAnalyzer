@@ -15,7 +15,7 @@
 		<PackageProjectUrl>$(GlobalPackageWebsite)</PackageProjectUrl>
 		<PackageIconUrl>$(GlobalPackageIconUrl)</PackageIconUrl>
 		<RepositoryUrl>$(GlobalPackageRepository)</RepositoryUrl>
-		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 		<Description>$(GlobalPackageDescription)</Description>
 		<PackageReleaseNotes>$(GlobalPackageReleaseNote)</PackageReleaseNotes>
 		<Copyright>$(GlobalPackageCopyright)</Copyright>

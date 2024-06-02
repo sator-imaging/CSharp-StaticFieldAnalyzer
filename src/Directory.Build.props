@@ -9,7 +9,7 @@
 		<GlobalPackageID>SatorImaging.StaticMemberAnalyzer</GlobalPackageID>
 		<GlobalPackageTitle>Static Member Analyzer</GlobalPackageTitle>
 		<GlobalPackageProduct>$(GlobalPackageTitle)</GlobalPackageProduct>
-		<GlobalPackageVersion>1.0.0</GlobalPackageVersion>
+		<GlobalPackageVersion>1.1.0</GlobalPackageVersion>
 		<GlobalPackageOwner>Sator Imaging</GlobalPackageOwner>
 		<GlobalPackageCompany>$(GlobalPackageOwner)</GlobalPackageCompany>
 		<GlobalPackageCopyright>(c) 2024 $(GlobalPackageOwner)</GlobalPackageCopyright>
