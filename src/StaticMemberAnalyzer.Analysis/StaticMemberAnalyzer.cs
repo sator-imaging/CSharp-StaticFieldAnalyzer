@@ -3,7 +3,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -78,7 +77,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
         private static void InitializeAndRegisterCallbacks(CompilationStartAnalysisContext context)
         {
             // it seems that model cannot be reusable. all reports are gone after opening other file in VisualStudio
-            cache_filePathToModel.Clear();
+            ts_filePathToModel?.Clear();
 
             //https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Analyzer%20Actions%20Semantics.md
             // called per source document
@@ -103,9 +102,10 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
         [ThreadStatic, Obsolete] static List<IMemberReferenceOperation>? ts_refOperatorList;
         //[ThreadStatic, Obsolete] static List<ISymbol>? ts_crossFoundSymbolList;
         [ThreadStatic, Obsolete] static List<IMemberReferenceOperation>? ts_crossRefOperatorList;
+
+        [ThreadStatic, Obsolete] static Dictionary<string, SemanticModel>? ts_filePathToModel;
 #pragma warning restore RS1008
 
-        readonly static ConcurrentDictionary<string, SemanticModel> cache_filePathToModel = new();
 
 
         // NOTE: async method causes error on complex source code
@@ -124,7 +124,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
             //var crossFoundSymbolList = (ts_crossFoundSymbolList ??= new(capacity: DEFAULT_LIST_CAPACITY));
             var crossRefOperatorList = (ts_crossRefOperatorList ??= new(capacity: DEFAULT_LIST_CAPACITY));
 
-            cache_filePathToModel.TryAdd(context.SemanticModel.SyntaxTree.FilePath, context.SemanticModel);
+            var filePathToModel = (ts_filePathToModel ??= new());
+            if (!filePathToModel.ContainsKey(context.SemanticModel.SyntaxTree.FilePath))
+                filePathToModel.Add(context.SemanticModel.SyntaxTree.FilePath, context.SemanticModel);
 
             //var root = await context.SemanticModel.SyntaxTree.GetRootAsync(context.CancellationToken).ConfigureAwait(false);
             var root = context.SemanticModel.SyntaxTree.GetRoot();
@@ -169,10 +171,10 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 
                         foreach (var crossField in crossFDSyntaxList)
                         {
-                            if (!cache_filePathToModel.TryGetValue(crossField.SyntaxTree.FilePath, out var crossModel))
+                            if (!filePathToModel.TryGetValue(crossField.SyntaxTree.FilePath, out var crossModel))
                             {
-                                crossModel = cache_filePathToModel.GetOrAdd(crossField.SyntaxTree.FilePath,
-                                                                            context.SemanticModel.Compilation.GetSemanticModel(crossField.SyntaxTree));
+                                crossModel = context.SemanticModel.Compilation.GetSemanticModel(crossField.SyntaxTree);
+                                filePathToModel.Add(crossField.SyntaxTree.FilePath, crossModel);
                             }
 
                             ClearAndCollectFieldInfo(crossField, crossModel, /*crossFoundSymbolList*/null, crossRefOperatorList);

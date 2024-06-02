@@ -34,7 +34,7 @@
 	<PropertyGroup>
 		<TargetFramework>net472</TargetFramework>
 		<RootNamespace>$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
-		<AssemblyName>$(MSBuildProjectName.Replace(" ", "_"))</AssemblyName>
+		<AssemblyName>$(MSBuildProjectName.Replace(" ", "_")).$(GlobalPackageVersion)</AssemblyName>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -65,6 +65,18 @@
 		<StartAction>Program</StartAction>
 		<StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
 		<StartArguments>/rootsuffix $(VSSDKTargetPlatformRegRootSuffix)</StartArguments>
+		<PackageLicenseExpression>$(GlobalPackageLicenseSPDX)</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<AssemblyVersion>$(GlobalPackageVersion)</AssemblyVersion>
+		<FileVersion>$(GlobalPackageVersion)</FileVersion>
+		<RepositoryUrl>$(GlobalPackageRepository)</RepositoryUrl>
+		<PackageProjectUrl>$(GlobalPackageWebsite)</PackageProjectUrl>
+		<Copyright>$(GlobalPackageCopyright)</Copyright>
+		<Product>$(GlobalPackageProduct)</Product>
+		<Company>$(GlobalPackageCompany)</Company>
+		<Authors>$(GlobalPackageOwner)</Authors>
+		<Version>$(GlobalPackageVersion)</Version>
+		<Title>$(GlobalPackageTitle)</Title>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
