@@ -6,7 +6,19 @@ Roslyn-based analyzer to provide diagnostics of static fields and properties ini
 - [Cross-Referencing Problem](#cross-referencing-problem) of static field across type
 
 
-![Analyzer in Action](https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer/raw/main/assets/InAction.gif)
+![Analyzer in Action](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/InAction.gif)
+
+
+
+
+
+# Installation
+
+- NuGet
+	- https://www.nuget.org/packages/SatorImaging.StaticMemberAnalyzer/
+- Visual Studio Marketplace
+	- Install as an extension per user local machine
+	- https://marketplace.visualstudio.com/items?itemName=sator-imaging.StaticMemberAnalyzer
 
 
 
