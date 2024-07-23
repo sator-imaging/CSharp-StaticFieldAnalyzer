@@ -10,3 +10,8 @@ See official manual for further information.
 # Latest Information
 
 https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer
+
+
+# License
+
+This software is licensed under the MIT License.
