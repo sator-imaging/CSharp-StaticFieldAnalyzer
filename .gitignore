@@ -4,8 +4,7 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
 # added
-__release
-- Pictures by Image Creator from MS Designer
+.*/
 
 # User-specific files
 *.rsuser
