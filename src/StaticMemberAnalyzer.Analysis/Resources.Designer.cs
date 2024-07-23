@@ -79,7 +79,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Uninitialized Field Access に類似しているローカライズされた文字列を検索します。
+        ///   Reading Uninitialized Value に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0001_Title {
             get {
@@ -88,7 +88,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Static field is trying to read value from static field declared in another type に類似しているローカライズされた文字列を検索します。
+        ///   Trying to read value from static field declared in cross-referencing type に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0002_Description {
             get {
@@ -106,11 +106,316 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Static Cross Referencing に類似しているローカライズされた文字列を検索します。
+        ///   Cross Referencing across Type に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0002_Title {
             get {
                 return ResourceManager.GetString("SMA0002_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Initialization order of partial type files is undefined in language spec. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0003_Description {
+            get {
+                return ResourceManager.GetString("SMA0003_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Partial type member &apos;{0}&apos; is declared in another file (AnotherFile) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0003_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0003_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Static Member Declared in Another File に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0003_Title {
+            get {
+                return ResourceManager.GetString("SMA0003_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Static field is read before initialize. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0004_Description {
+            get {
+                return ResourceManager.GetString("SMA0004_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   &apos;{0}&apos; is trying to read before declaration (LateDeclare) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0004_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0004_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Late Declaration に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0004_Title {
+            get {
+                return ResourceManager.GetString("SMA0004_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9000_Description {
+            get {
+                return ResourceManager.GetString("SMA9000_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   [identifier] {0}
+        ///&gt; {1} に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9000_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA9000_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Underlining on Identifier Symbols に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9000_Title {
+            get {
+                return ResourceManager.GetString("SMA9000_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9001_Description {
+            get {
+                return ResourceManager.GetString("SMA9001_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   [localvar] {0}
+        ///&gt; {1} に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9001_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA9001_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Underlining on Local Variables に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9001_Title {
+            get {
+                return ResourceManager.GetString("SMA9001_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9002_Description {
+            get {
+                return ResourceManager.GetString("SMA9002_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   [param] {0}
+        ///&gt; {1} に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9002_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA9002_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Underlining on Method or Lambda Parameters に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9002_Title {
+            get {
+                return ResourceManager.GetString("SMA9002_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9010_Description {
+            get {
+                return ResourceManager.GetString("SMA9010_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   [declaration] {0}
+        ///&gt; {1} に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9010_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA9010_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Underlining on Declarations に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9010_Title {
+            get {
+                return ResourceManager.GetString("SMA9010_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9020_Description {
+            get {
+                return ResourceManager.GetString("SMA9020_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   [linehead] {0}
+        ///&gt; {1} に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9020_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA9020_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Underlining at Line Head に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9020_Title {
+            get {
+                return ResourceManager.GetString("SMA9020_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9021_Description {
+            get {
+                return ResourceManager.GetString("SMA9021_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   [linelead] {0}
+        ///&gt; {1} に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9021_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA9021_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Underlining at Line Leading に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9021_Title {
+            get {
+                return ResourceManager.GetString("SMA9021_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9022_Description {
+            get {
+                return ResourceManager.GetString("SMA9022_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   [linefill] {0}
+        ///&gt; {1} に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9022_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA9022_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Underlining on Modifiers に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9022_Title {
+            get {
+                return ResourceManager.GetString("SMA9022_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9023_Description {
+            get {
+                return ResourceManager.GetString("SMA9023_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   [lineend] {0}
+        ///&gt; {1} に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9023_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA9023_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Underlining at Line End に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9023_Title {
+            get {
+                return ResourceManager.GetString("SMA9023_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9100_Description {
+            get {
+                return ResourceManager.GetString("SMA9100_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   {1} ({0}) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9100_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA9100_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Underlining as Warning に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9100_Title {
+            get {
+                return ResourceManager.GetString("SMA9100_Title", resourceCulture);
             }
         }
     }

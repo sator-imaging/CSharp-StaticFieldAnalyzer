@@ -126,16 +126,123 @@
     <comment>The format-able message the diagnostic displays.</comment>
   </data>
   <data name="SMA0001_Title" xml:space="preserve">
-    <value>Uninitialized Field Access</value>
+    <value>Reading Uninitialized Value</value>
     <comment>The title of the diagnostic.</comment>
   </data>
   <data name="SMA0002_Description" xml:space="preserve">
-    <value>Static field is trying to read value from static field declared in another type</value>
+    <value>Trying to read value from static field declared in cross-referencing type</value>
   </data>
   <data name="SMA0002_MessageFormat" xml:space="preserve">
     <value>Type '{0}' is referencing static field in type '{1}' (CrossRef)</value>
   </data>
   <data name="SMA0002_Title" xml:space="preserve">
-    <value>Static Cross Referencing</value>
+    <value>Cross Referencing across Type</value>
+  </data>
+  <data name="SMA0003_Description" xml:space="preserve">
+    <value>Initialization order of partial type files is undefined in language spec.</value>
+  </data>
+  <data name="SMA0003_MessageFormat" xml:space="preserve">
+    <value>Partial type member '{0}' is declared in another file (AnotherFile)</value>
+  </data>
+  <data name="SMA0003_Title" xml:space="preserve">
+    <value>Static Member Declared in Another File</value>
+  </data>
+  <data name="SMA0004_Description" xml:space="preserve">
+    <value>Static field is read before initialize.</value>
+  </data>
+  <data name="SMA0004_MessageFormat" xml:space="preserve">
+    <value>'{0}' is trying to read before declaration (LateDeclare)</value>
+  </data>
+  <data name="SMA0004_Title" xml:space="preserve">
+    <value>Late Declaration</value>
+  </data>
+  <data name="SMA9000_Description" xml:space="preserve">
+    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+  </data>
+  <data name="SMA9000_MessageFormat" xml:space="preserve">
+    <value>[identifier] {0}
+&gt; {1}</value>
+  </data>
+  <data name="SMA9000_Title" xml:space="preserve">
+    <value>Underlining on Identifier Symbols</value>
+  </data>
+  <data name="SMA9001_Description" xml:space="preserve">
+    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+  </data>
+  <data name="SMA9001_MessageFormat" xml:space="preserve">
+    <value>[localvar] {0}
+&gt; {1}</value>
+  </data>
+  <data name="SMA9001_Title" xml:space="preserve">
+    <value>Underlining on Local Variables</value>
+  </data>
+  <data name="SMA9002_Description" xml:space="preserve">
+    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+  </data>
+  <data name="SMA9002_MessageFormat" xml:space="preserve">
+    <value>[param] {0}
+&gt; {1}</value>
+  </data>
+  <data name="SMA9002_Title" xml:space="preserve">
+    <value>Underlining on Method or Lambda Parameters</value>
+  </data>
+  <data name="SMA9010_Description" xml:space="preserve">
+    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+  </data>
+  <data name="SMA9010_MessageFormat" xml:space="preserve">
+    <value>[declaration] {0}
+&gt; {1}</value>
+  </data>
+  <data name="SMA9010_Title" xml:space="preserve">
+    <value>Underlining on Declarations</value>
+  </data>
+  <data name="SMA9020_Description" xml:space="preserve">
+    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+  </data>
+  <data name="SMA9020_MessageFormat" xml:space="preserve">
+    <value>[linehead] {0}
+&gt; {1}</value>
+  </data>
+  <data name="SMA9020_Title" xml:space="preserve">
+    <value>Underlining at Line Head</value>
+  </data>
+  <data name="SMA9021_Description" xml:space="preserve">
+    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+  </data>
+  <data name="SMA9021_MessageFormat" xml:space="preserve">
+    <value>[linelead] {0}
+&gt; {1}</value>
+  </data>
+  <data name="SMA9021_Title" xml:space="preserve">
+    <value>Underlining at Line Leading</value>
+  </data>
+  <data name="SMA9022_Description" xml:space="preserve">
+    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+  </data>
+  <data name="SMA9022_MessageFormat" xml:space="preserve">
+    <value>[linefill] {0}
+&gt; {1}</value>
+  </data>
+  <data name="SMA9022_Title" xml:space="preserve">
+    <value>Underlining on Modifiers</value>
+  </data>
+  <data name="SMA9023_Description" xml:space="preserve">
+    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+  </data>
+  <data name="SMA9023_MessageFormat" xml:space="preserve">
+    <value>[lineend] {0}
+&gt; {1}</value>
+  </data>
+  <data name="SMA9023_Title" xml:space="preserve">
+    <value>Underlining at Line End</value>
+  </data>
+  <data name="SMA9100_Description" xml:space="preserve">
+    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+  </data>
+  <data name="SMA9100_MessageFormat" xml:space="preserve">
+    <value>{1} ({0})</value>
+  </data>
+  <data name="SMA9100_Title" xml:space="preserve">
+    <value>Underlining as Warning</value>
   </data>
 </root>
