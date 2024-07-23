@@ -1,33 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿#pragma warning disable IDE0079
+
+#pragma warning disable IDE0044
+#pragma warning disable IDE0051
+#pragma warning disable CA2211
+#pragma warning disable CA1822
+
+using System.ComponentModel;
 
 namespace AnalyzerCheck;
 
 internal class InterFileReferencing
 {
-    public readonly static int CrossRef = 10 + StaticFields.I + 20;
+    public readonly static int CrossRef = 10 + OtherClass.I + 20;
     public readonly static double PublicDouble = 99.99;
 }
 
-
-
-
-public static class Test
+partial struct PartialStruct
 {
-    // error reading uninitialized static field
-    public static int BeforeInit = IntValue;
-    public static int IntValue = 310;
-
-    // cross referencing across type *may* cause problem
-    // due to changing initialization order implicitly
-    public static int CrossRef = OtherClass.Value;
-}
-
-public static class OtherClass
-{
-    public static int CrossRef = Test.IntValue;
-    public static int Value = 310;
+    public readonly static int InAnotherFile = 310;
+    public readonly static int Value = InMainFile;
+    public readonly static int OK = Value + InAnotherFile;
 }
