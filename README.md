@@ -1,12 +1,27 @@
 # Static Field Analyzer for C# / .NET
 
+[![NuGet](https://img.shields.io/nuget/v/SatorImaging.StaticMemberAnalyzer)](https://www.nuget.org/packages/SatorImaging.StaticMemberAnalyzer)
+
 Roslyn-based analyzer to provide diagnostics of static fields and properties initialization.
 
 - Wrong order of static field and property declaration
+- Partial type member reference across files
 - [Cross-Referencing Problem](#cross-referencing-problem) of static field across type
+- Annotating / Underlining field, property or etc with custom message
 
 
 ![Analyzer in Action](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/InAction.gif)
+
+
+
+## Annotation for Type, Field and Property 💯
+
+There is fancy extra feature to take your attention while coding in Visual Studio. No more need to use `Obsolete` attribute in case of annotating types, methods, fields and properties.
+
+See [the following section](#annotating--underlining) for details.
+
+
+![Draw Underline](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/DrawUnderline.png)
 
 
 
@@ -15,12 +30,10 @@ Roslyn-based analyzer to provide diagnostics of static fields and properties ini
 # Installation
 
 - NuGet
-	- https://www.nuget.org/packages/SatorImaging.StaticMemberAnalyzer/
-- Visual Studio Marketplace
-	- Install as an extension per user local machine
-	- https://marketplace.visualstudio.com/items?itemName=sator-imaging.StaticMemberAnalyzer
-
-
+	- https://www.nuget.org/packages/SatorImaging.StaticMemberAnalyzer
+    - ```
+      PM> Install-Package SatorImaging.StaticMemberAnalyzer
+      ```
 
 
 
@@ -28,9 +41,7 @@ Roslyn-based analyzer to provide diagnostics of static fields and properties ini
 
 This analyzer can be used with Unity 2020.2 or above. See the following page for detail.
 
-https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer/tree/main/unity
-
-
+[SatorImaging.StaticMemberAnalyzer.Unity/](SatorImaging.StaticMemberAnalyzer.Unity)
 
 
 
@@ -84,7 +95,7 @@ public static class Test
 ```
 
 
-**C# Compiler Initialization Logic**
+**C# Compiler Initialization Sequence**
 
 - `A.Value = B.Other;`
     - // 'B' initialization is started by member access
@@ -98,6 +109,7 @@ When reading B value first, initialization order is changed and resulting value 
 
 - `B.Other = 620;`
 - `B.Value = A.Other;`
+    - // 'A' initialization is started by member access
     - `A.Value = B.Other;`  // correct: B.Other is initialized before reading value
     - `A.Other = 310;`
 
@@ -105,26 +117,122 @@ When reading B value first, initialization order is changed and resulting value 
 
 
 
+# Annotating / Underlining
+
+There is optional feature to draw underline on selected types, fields, properties, generic type/method arguments and parameters of method, delegate and lambda function.
+
+
+
+### Screenshot
+
+As of Visual Studio's UX design, `Info` severity diagnostic underlines are drawn only on a few leading chars, not drawn whole marked area. So for workaround, underline on keyword is dashed.
+
+
+> [!TIP]
+> `!`-starting message will add warning annotation on keyword instead of info diagnostic annotation.
+
+
+![Draw Underline](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/DrawUnderline.png)
+
+
+> [!NOTE]
+> To draw underline, need to add <code>[Description<b><i>Attribute</i></b>("...")]</code> (full attribute class name) instead of suffix-less class name.
+> When add `[Description("...")]` attribute, underline *WON'T* be drawn.
+
+
+
+## How to Use
+
+To avoid dependency to this analyzer, required attribute is chosen from builtin `System.ComponentModel` assembly so that syntax is little bit weird.
+
+Analyzer is checking identifier keyword in C# source code, not actual C# type. The text `DescriptionAttribute` in attribute syntax is only allowed to draw underline.
+
+```cs
+using System.ComponentModel;
+
+[DescriptionAttribute("Draw underline for IDE environment and show this message")]
+//          ^^^^^^^^^ `Attribute` suffix is required to draw underline
+public class WithUnderline
+{
+    [DescriptionAttribute]  // parameter-less will draw underline with default message
+    public static void Method() { }
+}
+
+// C# language spec allows to omit `Attribute` suffix but when omitted, underline won't be drawn
+[Description("No Underline")]
+public class NoUnderline { }
+
+// underline won't be drawn when namespace is specified
+[System.ComponentModel.DescriptionAttribute("...")]
+public static int Underline_Not_Drawn = 0;
+
+// this code will draw underline. 'Trivia' is allowed to being added in attribute syntax
+[ /**/  DescriptionAttribute   (   "Underline will be drawn" )   /* hello, world. */   ]
+public static int Underline_Drawn = 310;
+```
+
+
+
+## Verbosity Control
+
+There are 4 types of underline, line head, line leading, line end and keyword.
+
+By default, static field analyzer will draw most verbose underline.
+You can omit specific type of underline by using `#pragma` preprocessor directive or adding `SuppressMessage` attribute to assembly, class or etc.
+
+
+![Verbosity Control](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/VerbosityControl.png)
+
+
+
+## Unity Tips
+
+Underlining is achieved by using [Description](https://learn.microsoft.com/dotnet/api/system.componentmodel.descriptionattribute) attribute designed for Visual Studio's visual designer, formerly known as form designer.
+
+To remove unnecessary attribute from Unity build, add the following `link.xml` file in Unity project's `Assets` folder.
+
+```xml
+<linker>
+    <assembly fullname="System.ComponentModel">
+        <type fullname="System.ComponentModel.DescriptionAttribute" preserve="nothing"/>
+    </assembly>
+</linker>
+```
+
+
+
+
+
 <!--
-# Why not `const`?
+
+&nbsp;  
+&nbsp;  
+
+
+# Off-topic: Why not `const`?
 
 ## Effective C#
 
 In Effective C#, it describes that runtime constant `readonly static` is better than compile-time constant `const`.
 
 For example, when there are 2 libralies, MyLib.dll and External.dll
-- External.dll has public constant `10.1f`
-- MyLib.dll read that value and compiled to managed assembly
+- External.dll has public constant value `10.1f`
+- MyLib.dll read that value and compiled as managed assembly
 - Then, replacing External.dll which has updated constant value `20.2f`
 
-In this case, MyLib.dll will continue to use it's compile-time constant value `10.1f` until it is recompiled.
+In this case, MyLib.dll will continue to use it's compile-time constant value `10.1f` read from old External.dll, until it is recompiled.
 
 > ie. constant values are "burned" into compiled assembly.
 
 
-## `const string` can easily be listed up
+So, using runtime constant is better than `const` in shared libraries.
 
-When you store your api end point (costs each access) or api key or something secret as `const string`, those are easily retrieved by `strings YourApp.exe` command.
 
-Of course using `readonly static string` won't solve the problem perfectly, but worth to consider use.
+
+## `const string` can be easily listed up
+
+When you store your api end point (costs each access) or api key or something secret as `const string`, those are easily retrieved by `strings YourApp.exe` command, or by C# decompilers when compiled as managed code assembly.
+
+Of course using `readonly static string` won't solve the problem perfectly, but worth to consider use to obfuscate secrets keys/values.
+
 -->
