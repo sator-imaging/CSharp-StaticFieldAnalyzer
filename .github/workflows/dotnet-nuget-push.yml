@@ -15,14 +15,15 @@ env:
   push_source: 'StaticMemberAnalyzer.Package/bin/Release/*.nupkg'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
+  #checkout:
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #  - uses: actions/checkout@v4
 
-    - name: Build action
-      uses: ./.github/workflows/dotnet-build.yml
-      #secrets: inherit
+  # 'workflow_call' action must have no steps!
+  build:
+    uses: ./.github/workflows/dotnet-build.yml
+    secrets: inherit
 
   nuget:
     needs: build
