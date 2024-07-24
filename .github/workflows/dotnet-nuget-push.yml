@@ -1,0 +1,40 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET nuget push
+
+on:
+  #push:
+  #  branches: [ "main" ]
+  #pull_request:
+  #  branches: [ "main" ]
+  
+  workflow_dispatch:
+
+env:
+  push_source: 'StaticMemberAnalyzer/bin/release/*.nupkg'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build -c Release --no-restore
+    #- name: Test
+    #  run: dotnet test --no-build --verbosity normal
+
+    - name: NuGet push
+    - run: |
+        dotnet nuget push "${{ env.push_source  }}"  \
+          -k ${{ secrets.NUGET_API_KEY }}  \
+          -s https://api.nuget.org/v3/index.json
+          --timeout 60
