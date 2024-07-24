@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  push_source: 'StaticMemberAnalyzer/bin/release/*.nupkg'
+  push_source: 'StaticMemberAnalyzer.Package/bin/release/*.nupkg'
 
 jobs:
   build:
@@ -26,19 +26,17 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Restore dependencies
-      run: |
-        cd src
-        dotnet restore
+      working-directory: src
+      run: dotnet restore
     - name: Build
-      run: |
-        cd src
-        dotnet build -c Release --no-restore
+      working-directory: src
+      run: dotnet build -c Release --no-restore
     #- name: Test
     #  run: dotnet test --no-build --verbosity normal
 
     - name: NuGet push
-    - run: |
-        cd src
+      working-directory: src
+      run: |
         dotnet nuget push "${{ env.push_source  }}"  \
           -k ${{ secrets.NUGET_API_KEY }}  \
           -s https://api.nuget.org/v3/index.json
