@@ -10,6 +10,9 @@ on:
   #  branches: [ "main" ]
   workflow_dispatch:
 
+env:
+  artifact-retention-days: 7
+
 jobs:
   build:
 
@@ -37,3 +40,4 @@ jobs:
       with:
         name: 'nuget'
         path: 'src/**/*.nupkg'
+        retention-days: ${{  env.artifact-retention-days  }}
