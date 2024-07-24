@@ -8,7 +8,9 @@ on:
   #  branches: [ "main" ]
   #pull_request:
   #  branches: [ "main" ]
+
   workflow_dispatch:
+  workflow_call:
 
 env:
   artifact-retention-days: 7
