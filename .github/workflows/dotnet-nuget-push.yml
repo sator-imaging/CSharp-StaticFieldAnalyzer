@@ -1,7 +1,7 @@
 # This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
-name: .NET nuget push
+name: .NET build & nuget push
 
 on:
   #push:
@@ -20,21 +20,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-    - name: Restore dependencies
-      run: |
-        cd src
-        dotnet restore
-    - name: Build
-      run: |
-        cd src
-        dotnet build -c Release --no-restore
-    #- name: Test
-    #  run: dotnet test --no-build --verbosity normal
+    - name: Build action
+      uses: ./.github/workflows/dotnet-build.yml
 
     - name: NuGet push
       run: |
