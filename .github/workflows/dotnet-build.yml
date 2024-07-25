@@ -15,7 +15,7 @@ on:
   workflow_call:
     inputs:
       artifact-name:
-        required: false
+        required: true  # false won't set default value!
         type: string
         default: 'nupkg'
     outputs:
