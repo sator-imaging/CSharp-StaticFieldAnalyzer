@@ -24,6 +24,7 @@ on:
 
 env:
   artifact-retention-days: 7
+  unity-folder: 'SatorImaging.StaticMemberAnalyzer.Unity'
 
 jobs:
   build:
@@ -53,3 +54,14 @@ jobs:
         name: ${{ inputs.artifact-name }}
         path: 'src/**/*.nupkg'
         retention-days: ${{  env.artifact-retention-days  }}
+
+    - name: Commit for Unity
+      run: |
+        git config user.name  "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        mv -f  "src/StaticMemberAnalyzer.Package/bin/Release/*/*.dll"  "${{ env.unity-folder }}"
+        git add --update --ignore-removal  "${{ env.unity-folder }}/**/*"
+
+        git commit -m "Precompiled Assembly for Unity"
+        git push
