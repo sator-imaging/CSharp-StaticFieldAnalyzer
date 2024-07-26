@@ -94,10 +94,9 @@ jobs:
         # to omit `--set-upstream origin` for git push
         git config --global --add --bool push.autoSetupRemote true
 
-        ###git checkout -b release/${{ inputs.release_ver }}
+        # `git checkout <NO-OPTIONS> origin/*` will checkout remote if exists otherwise create it
         git fetch --all
-        git switch release/${{ inputs.release_ver }}  ## -c always create new branch doesn't checkout remote
-        git push  # this is required to set tracking information for new branch
+        git checkout origin/release/${{ inputs.release_ver }}
         git branch -vv
 
         mv -f  src/StaticMemberAnalyzer.Package/bin/Release/*/*.dll  ${{ env.unity_folder }}
