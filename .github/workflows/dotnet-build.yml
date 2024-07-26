@@ -96,7 +96,6 @@ jobs:
 
         ###git checkout -b release/${{ inputs.release_ver }}
         git switch -c release/${{ inputs.release_ver }}
-        git branch --track
         git branch -vv
         git pull || true
 
