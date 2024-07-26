@@ -15,6 +15,11 @@ on:
         required: false
         type: string
         default: 'nupkg'
+      release-ver:
+        description: 'Empty will skip release branch creation.'
+        required: false
+        type: string
+        default: ''
 
   # make this action reusable
   workflow_call:
@@ -23,6 +28,10 @@ on:
         required: false
         type: string
         default: 'nupkg'
+      release-ver:
+        required: false
+        type: string
+        default: ''
     outputs:
       artifact-name:
         value: ${{ inputs.artifact-name }}
@@ -60,6 +69,12 @@ jobs:
         path: 'src/**/*.nupkg'
         retention-days: ${{  env.artifact-retention-days  }}
 
+  commit:
+    if: ${{ inputs.release_ver != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
     - name: Commit for Unity
       continue-on-error: false
       run: |
@@ -68,6 +83,9 @@ jobs:
 
         mv -f  src/StaticMemberAnalyzer.Package/bin/Release/*/*.dll  ${{ env.unity-folder }}
         git add --update --ignore-removal  ${{ env.unity-folder }}
+
+        git branch ${{ inputs.release_ver }}
+        git checkout ${{ inputs.release_ver }}
 
         git commit -m "Precompiled Assembly for Unity"
         git push
