@@ -27,6 +27,9 @@ jobs:
 
   # 'workflow_call' action must have no steps!
   build:
+    permissions:
+      contents: write
+      pull-requests: write
     if: ${{ inputs.run_build }}
     uses: ./.github/workflows/dotnet-build.yml
     secrets: inherit
