@@ -95,7 +95,7 @@ jobs:
         git config --global --add --bool push.autoSetupRemote true
 
         ###git checkout -b release/${{ inputs.release_ver }}
-        git switch -c release/${{ inputs.release_ver }}
+        git switch --track -c release/${{ inputs.release_ver }}
         git branch -vv
         git pull
 
