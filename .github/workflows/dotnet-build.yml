@@ -106,4 +106,4 @@ jobs:
         git commit -m "Precompiled Assembly for Unity"
 
         ### try push and create PR if any changes otherwise exit successfully
-        (git push | gh pr create -B main -t 'release/${{ inputs.release_ver }}' -b '') || true
+        (git push && gh pr create -B main -t 'release/${{ inputs.release_ver }}' -b '') || true
