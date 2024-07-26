@@ -18,7 +18,7 @@ on:
         default: 'nupkg'
       release_ver:
         description: |
-          Leave empty to skip release branch creation.
+          Leave empty to skip creating release branch.
           NOTE: 'release' prefix is automatically added.
         required: false
         type: string
@@ -33,7 +33,7 @@ on:
         default: 'nupkg'
       release_ver:
         description: |
-          Leave empty to skip release branch creation.
+          Leave empty to skip creating release branch.
           NOTE: 'release' prefix is automatically added.
         required: false
         type: string
@@ -47,6 +47,7 @@ on:
 
 env:
   unity_folder: 'SatorImaging.StaticMemberAnalyzer.Unity'  # no spaces!
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
   build:
@@ -93,7 +94,10 @@ jobs:
         # to omit `--set-upstream origin` for git push
         git config --global --add --bool push.autoSetupRemote true
 
-        git checkout -b release/${{ inputs.release_ver }}
+        ###git checkout -b release/${{ inputs.release_ver }}
+        git switch -c release/${{ inputs.release_ver }}
+        git branch -vv
+        git pull
 
         mv -f  src/StaticMemberAnalyzer.Package/bin/Release/*/*.dll  ${{ env.unity_folder }}
         git add --update --ignore-removal  ${{ env.unity_folder }}
