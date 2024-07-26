@@ -27,7 +27,7 @@ jobs:
 
   # 'workflow_call' action must have no steps!
   build:
-    if: ${{{ inputs.run_build }}
+    if: ${{ inputs.run_build }}
     uses: ./.github/workflows/dotnet-build.yml
     secrets: inherit
 
