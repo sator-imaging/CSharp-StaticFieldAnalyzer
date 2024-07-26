@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       artifact-name:
-        required: true
+        required: false
         type: string
         default: 'nupkg'
 
@@ -20,7 +20,7 @@ on:
   workflow_call:
     inputs:
       artifact-name:
-        required: true
+        required: false
         type: string
         default: 'nupkg'
     outputs:
@@ -61,8 +61,12 @@ jobs:
         retention-days: ${{  env.artifact-retention-days  }}
 
     - name: Commit for Unity
-      continue-on-error: true
+      continue-on-error: false
       run: |
+        ls -al "src/StaticMemberAnalyzer.Package/bin/Release/"
+        ls -al "src/StaticMemberAnalyzer.Package/bin/Release/*"
+        ls -al "src/StaticMemberAnalyzer.Package/bin/Release/**/*"
+        
         git config user.name  "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
 
