@@ -10,12 +10,17 @@ on:
   #  branches: [ "main" ]
 
   workflow_dispatch:
+    inputs:
+      artifact-name:
+        required: true
+        type: string
+        default: 'nupkg'
 
   # make this action reusable
   workflow_call:
     inputs:
       artifact-name:
-        required: true  # false won't set default value!
+        required: true
         type: string
         default: 'nupkg'
     outputs:
@@ -56,6 +61,7 @@ jobs:
         retention-days: ${{  env.artifact-retention-days  }}
 
     - name: Commit for Unity
+      continue-on-error: true
       run: |
         git config user.name  "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
