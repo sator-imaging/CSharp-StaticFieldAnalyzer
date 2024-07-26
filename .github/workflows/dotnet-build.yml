@@ -10,6 +10,7 @@ on:
   #  branches: [ "main" ]
 
   workflow_dispatch:
+    # keep consistent with workflow_call
     inputs:
       artifact_name:
         required: false
@@ -54,6 +55,7 @@ jobs:
 
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
     - uses: actions/checkout@v4
@@ -76,9 +78,10 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.artifact_name }}
-        path: 'src/**/*.nupkg'
+        path: 'src/**/Release/*.nupkg'
 
 
+    # actions/cache can be used to share data across jobs
     - name: Commit for Unity
       if: ${{ inputs.release_ver != '' }}
       continue-on-error: false
@@ -87,6 +90,8 @@ jobs:
         
         git config --global user.name  "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        # to omit `--set-upstream origin` for git push
+        git config --global --add --bool push.autoSetupRemote true
 
         git checkout -b release/${{ inputs.release_ver }}
 
