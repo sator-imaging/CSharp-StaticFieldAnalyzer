@@ -8,8 +8,13 @@ on:
   #  branches: [ "main" ]
   #pull_request:
   #  branches: [ "main" ]
-  
+
   workflow_dispatch:
+    inputs:
+      run_build:
+        type: boolean
+        default: true
+        required: false
 
 env:
   push_source: 'StaticMemberAnalyzer.Package/bin/Release/*.nupkg'
@@ -22,6 +27,7 @@ jobs:
 
   # 'workflow_call' action must have no steps!
   build:
+    if: ${{{ inputs.run_build }}
     uses: ./.github/workflows/dotnet-build.yml
     secrets: inherit
 
