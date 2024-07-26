@@ -72,8 +72,9 @@ jobs:
       run: |
         cd src
 
-        # required to enable deterministic build: -p:ContinuousIntegrationBuild=true
-        # it seems that hash is calculated based on the whole git directory contents (ex: incl. github actions)
+        # required to enable deterministic build --> -p:ContinuousIntegrationBuild=true
+        # it seems that hash is calculated based on the whole git directory contents
+        # ex: including github actions yaml files
         dotnet build -c Release --no-restore  -p:ContinuousIntegrationBuild=true
     
     #- name: Test
