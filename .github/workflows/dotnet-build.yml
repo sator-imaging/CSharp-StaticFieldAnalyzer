@@ -94,10 +94,10 @@ jobs:
         # to omit `--set-upstream origin` for git push
         git config --global --add --bool push.autoSetupRemote true
 
-        # `git checkout <NO-OPTIONS> origin/*` will checkout remote if exists otherwise create it
         git fetch --all
-        git checkout origin/release/${{ inputs.release_ver }}
-        git branch -vv
+        ### no way!
+        git switch release/${{ inputs.release_ver }} || git switch -c release/${{ inputs.release_ver }}
+        git pull || true
 
         mv -f  src/StaticMemberAnalyzer.Package/bin/Release/*/*.dll  ${{ env.unity_folder }}
         git add --update --ignore-removal  ${{ env.unity_folder }}
