@@ -52,6 +52,9 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
@@ -75,14 +78,9 @@ jobs:
         name: ${{ inputs.artifact_name }}
         path: 'src/**/*.nupkg'
 
-  commit:
-    needs: build
-    if: ${{ inputs.release_ver != '' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
+
     - name: Commit for Unity
+      if: ${{ inputs.release_ver != '' }}
       continue-on-error: false
       run: |
         ls -al
@@ -96,3 +94,5 @@ jobs:
         git add --update --ignore-removal  ${{ env.unity_folder }}
         git commit -m "Precompiled Assembly for Unity"
         git push
+
+        gh pr create -B main -t 'release/${{ inputs.release_ver }}'
