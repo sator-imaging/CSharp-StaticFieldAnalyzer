@@ -71,7 +71,7 @@ jobs:
     - name: Build
       run: |
         cd src
-        dotnet build -c Release --no-restore  -p:Deterministic=true  #required?
+        dotnet build -c Release --no-restore  -p:ContinuousIntegrationBuild=true
     #- name: Test
     #  run: dotnet test --no-build --verbosity normal
 
