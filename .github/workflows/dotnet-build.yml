@@ -47,7 +47,7 @@ on:
 
 env:
   unity_folder: 'SatorImaging.StaticMemberAnalyzer.Unity'  # no spaces!
-  GH_TOKEN: ${{ github.token }}
+  GH_TOKEN: ${{ github.token }}  # for github CLI
 
 jobs:
   build:
@@ -98,7 +98,6 @@ jobs:
         git switch -c release/${{ inputs.release_ver }}
         git branch --track
         git branch -vv
-        git pull
 
         mv -f  src/StaticMemberAnalyzer.Package/bin/Release/*/*.dll  ${{ env.unity_folder }}
         git add --update --ignore-removal  ${{ env.unity_folder }}
