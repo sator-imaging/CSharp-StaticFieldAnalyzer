@@ -97,8 +97,8 @@ jobs:
         ###git checkout -b release/${{ inputs.release_ver }}
         git fetch --all
         git switch -c release/${{ inputs.release_ver }}
+        git push  # this is required to set tracking information for new branch
         git branch -vv
-        git pull || true
 
         mv -f  src/StaticMemberAnalyzer.Package/bin/Release/*/*.dll  ${{ env.unity_folder }}
         git add --update --ignore-removal  ${{ env.unity_folder }}
