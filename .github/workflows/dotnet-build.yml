@@ -71,7 +71,10 @@ jobs:
     - name: Build
       run: |
         cd src
+
+        # required to enable deterministic build: -p:ContinuousIntegrationBuild=true
         dotnet build -c Release --no-restore  -p:ContinuousIntegrationBuild=true
+    
     #- name: Test
     #  run: dotnet test --no-build --verbosity normal
 
@@ -103,8 +106,8 @@ jobs:
         # trailing slash is required to sync contents instead of directory
         rsync -avr --existing --checksum src/StaticMemberAnalyzer.Package/bin/Release/*/  ${{ env.unity_folder }}
         git add --update --ignore-removal  ${{ env.unity_folder }}
-        git commit -m "Precompiled Assembly for Unity"
 
         ### try push and create PR if any changes otherwise exit successfully
+        git commit -m "Precompiled Assembly for Unity" || true
         git push || true
         gh pr create -B main -t 'release/${{ inputs.release_ver }}' -b '' || true
