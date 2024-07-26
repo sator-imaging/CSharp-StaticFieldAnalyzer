@@ -16,7 +16,9 @@ on:
         type: string
         default: 'nupkg'
       release_ver:
-        description: 'Empty will skip release branch creation.'
+        description: |
+          Leave empty to skip release branch creation.
+          NOTE: 'release' prefix is automatically added.
         required: false
         type: string
         default: ''
@@ -29,7 +31,9 @@ on:
         type: string
         default: 'nupkg'
       release_ver:
-        description: 'Empty will skip release branch creation.'
+        description: |
+          Leave empty to skip release branch creation.
+          NOTE: 'release' prefix is automatically added.
         required: false
         type: string
         default: ''
@@ -37,6 +41,8 @@ on:
     outputs:
       artifact_name:
         value: ${{ inputs.artifact_name }}
+      release_ver:
+        value: ${{ inputs.release_ver }}
 
 env:
   unity_folder: 'SatorImaging.StaticMemberAnalyzer.Unity'  # no spaces!
@@ -70,6 +76,7 @@ jobs:
         path: 'src/**/*.nupkg'
 
   commit:
+    needs: build
     if: ${{ inputs.release_ver != '' }}
     runs-on: ubuntu-latest
     permissions:
