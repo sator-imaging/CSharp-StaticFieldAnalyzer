@@ -29,7 +29,7 @@ on:
 
 env:
   artifact-retention-days: 7
-  unity-folder: 'SatorImaging.StaticMemberAnalyzer.Unity'
+  unity-folder: 'SatorImaging.StaticMemberAnalyzer.Unity'  # no spaces!
 
 jobs:
   build:
@@ -63,14 +63,11 @@ jobs:
     - name: Commit for Unity
       continue-on-error: false
       run: |
-        ls -al "src/StaticMemberAnalyzer.Package/bin/Release/"
-        ls -al src/StaticMemberAnalyzer.Package/bin/Release/**/*
-        
         git config user.name  "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
 
-        mv -f  "src/StaticMemberAnalyzer.Package/bin/Release/*/*.dll"  "${{ env.unity-folder }}"
-        git add --update --ignore-removal  "${{ env.unity-folder }}/**/*"
+        mv -f  src/StaticMemberAnalyzer.Package/bin/Release/*/*.dll  ${{ env.unity-folder }}
+        git add --update --ignore-removal  ${{ env.unity-folder }}
 
         git commit -m "Precompiled Assembly for Unity"
         git push
