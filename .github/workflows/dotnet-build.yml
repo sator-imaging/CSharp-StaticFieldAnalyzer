@@ -96,7 +96,7 @@ jobs:
 
         ###git checkout -b release/${{ inputs.release_ver }}
         git fetch --all
-        git switch -c release/${{ inputs.release_ver }}
+        git switch release/${{ inputs.release_ver }}  ## -c always create new branch doesn't checkout remote
         git push  # this is required to set tracking information for new branch
         git branch -vv
 
