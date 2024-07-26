@@ -104,4 +104,4 @@ jobs:
         git commit -m "Precompiled Assembly for Unity"
         git push
 
-        gh pr create -B main -t 'release/${{ inputs.release_ver }}'
+        gh pr create -B main -t 'release/${{ inputs.release_ver }}' -b ''
