@@ -71,7 +71,7 @@ jobs:
     - name: Build
       run: |
         cd src
-        dotnet build -c Release --no-restore
+        dotnet build -c Release --no-restore  -p:Deterministic=true  #required?
     #- name: Test
     #  run: dotnet test --no-build --verbosity normal
 
@@ -106,4 +106,5 @@ jobs:
         git commit -m "Precompiled Assembly for Unity"
 
         ### try push and create PR if any changes otherwise exit successfully
-        (git push && gh pr create -B main -t 'release/${{ inputs.release_ver }}' -b '') || true
+        git push || true
+        gh pr create -B main -t 'release/${{ inputs.release_ver }}' -b '') || true
