@@ -31,7 +31,7 @@ jobs:
     steps:
     - uses: actions/download-artifact@v4
       with:
-        name: ${{ needs.build.outputs.artifact-name }}
+        name: ${{ needs.build.outputs.artifact_name }}
         path: src
     - name: NuGet push
       run: |
