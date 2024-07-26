@@ -81,11 +81,9 @@ jobs:
         git config user.name  "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
 
+        git checkout -b release/${{ inputs.release_ver }}
+
         mv -f  src/StaticMemberAnalyzer.Package/bin/Release/*/*.dll  ${{ env.unity_folder }}
         git add --update --ignore-removal  ${{ env.unity_folder }}
-
-        git branch ${{ inputs.release_ver }}
-        git checkout ${{ inputs.release_ver }}
-
         git commit -m "Precompiled Assembly for Unity"
         git push
