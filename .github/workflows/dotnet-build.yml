@@ -11,11 +11,11 @@ on:
 
   workflow_dispatch:
     inputs:
-      artifact-name:
+      artifact_name:
         required: false
         type: string
         default: 'nupkg'
-      release-ver:
+      release_ver:
         description: 'Empty will skip release branch creation.'
         required: false
         type: string
@@ -24,21 +24,22 @@ on:
   # make this action reusable
   workflow_call:
     inputs:
-      artifact-name:
+      artifact_name:
         required: false
         type: string
         default: 'nupkg'
-      release-ver:
+      release_ver:
+        description: 'Empty will skip release branch creation.'
         required: false
         type: string
         default: ''
+
     outputs:
-      artifact-name:
-        value: ${{ inputs.artifact-name }}
+      artifact_name:
+        value: ${{ inputs.artifact_name }}
 
 env:
-  artifact-retention-days: 7
-  unity-folder: 'SatorImaging.StaticMemberAnalyzer.Unity'  # no spaces!
+  unity_folder: 'SatorImaging.StaticMemberAnalyzer.Unity'  # no spaces!
 
 jobs:
   build:
@@ -65,9 +66,8 @@ jobs:
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.artifact-name }}
+        name: ${{ inputs.artifact_name }}
         path: 'src/**/*.nupkg'
-        retention-days: ${{  env.artifact-retention-days  }}
 
   commit:
     if: ${{ inputs.release_ver != '' }}
@@ -81,8 +81,8 @@ jobs:
         git config user.name  "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
 
-        mv -f  src/StaticMemberAnalyzer.Package/bin/Release/*/*.dll  ${{ env.unity-folder }}
-        git add --update --ignore-removal  ${{ env.unity-folder }}
+        mv -f  src/StaticMemberAnalyzer.Package/bin/Release/*/*.dll  ${{ env.unity_folder }}
+        git add --update --ignore-removal  ${{ env.unity_folder }}
 
         git branch ${{ inputs.release_ver }}
         git checkout ${{ inputs.release_ver }}
