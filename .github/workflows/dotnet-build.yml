@@ -95,13 +95,14 @@ jobs:
         git config --global --add --bool push.autoSetupRemote true
 
         git fetch --all
-        ### no way!
+        ### no way! no create-remote-if-not-exists option!!
         git switch release/${{ inputs.release_ver }} || git switch -c release/${{ inputs.release_ver }}
         git pull || true
+        git branch -vv
 
         mv -f  src/StaticMemberAnalyzer.Package/bin/Release/*/*.dll  ${{ env.unity_folder }}
         git add --update --ignore-removal  ${{ env.unity_folder }}
         git commit -m "Precompiled Assembly for Unity"
-        git push
 
-        gh pr create -B main -t 'release/${{ inputs.release_ver }}' -b ''
+        ### try push and create PR if any changes otherwise exit successfully
+        (git push | gh pr create -B main -t 'release/${{ inputs.release_ver }}' -b '') || true
