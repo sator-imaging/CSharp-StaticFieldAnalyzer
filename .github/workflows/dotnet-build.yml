@@ -100,7 +100,8 @@ jobs:
         git pull || true
         git branch -vv
 
-        mv -f  src/StaticMemberAnalyzer.Package/bin/Release/*/*.dll  ${{ env.unity_folder }}
+        # trailing slash is required to sync contents instead of directory
+        rsync -avr --existing --checksum src/StaticMemberAnalyzer.Package/bin/Release/*/  ${{ env.unity_folder }}
         git add --update --ignore-removal  ${{ env.unity_folder }}
         git commit -m "Precompiled Assembly for Unity"
 
