@@ -124,7 +124,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Partial type member &apos;{0}&apos; is declared in another file (AnotherFile) に類似しているローカライズされた文字列を検索します。
+        ///   Partial type member &apos;{0}&apos; is declared in another .cs file (AnotherFile) に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0003_MessageFormat {
             get {
@@ -151,7 +151,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   &apos;{0}&apos; is trying to read before declaration (LateDeclare) に類似しているローカライズされた文字列を検索します。
+        ///   &apos;{0}&apos; is reading this member before declaration (LateDeclare) に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0004_MessageFormat {
             get {
@@ -165,6 +165,33 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         internal static string SMA0004_Title {
             get {
                 return ResourceManager.GetString("SMA0004_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   &apos;TSelf&apos; type arg should be pointing itself. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0010_Description {
+            get {
+                return ResourceManager.GetString("SMA0010_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   &apos;{0}&apos; should be &apos;{1}&apos; (TSelf) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0010_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0010_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   TSelf is Not Self に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0010_Title {
+            get {
+                return ResourceManager.GetString("SMA0010_Title", resourceCulture);
             }
         }
         

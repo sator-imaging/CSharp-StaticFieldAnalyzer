@@ -1,4 +1,7 @@
 ﻿#define STMG_DEBUG_MESSAGE    // some try-catch will be enabled
+#if DEBUG == false
+#undef STMG_DEBUG_MESSAGE
+#endif
 
 #if STMG_DEBUG_MESSAGE
 //#define STMG_DEBUG_MESSAGE_VERBOSE    // for debugging. many of additional debug diagnostics will be emitted
@@ -36,7 +39,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
         // You can change these strings in the Resources.resx file. If you do not want your analyzer to be localize-able, you can use regular strings for Title and MessageFormat.
         // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Localizing%20Analyzers.md for more on localization
 
-        #region  /* =      STATIC MEMBER DESCRIPTOR      = */
+        #region     /* =      STATIC MEMBER DESCRIPTOR      = */
 
         public const string RuleId_WrongInit = "SMA0001";
         private static readonly DiagnosticDescriptor Rule_WrongInit = new(
@@ -81,7 +84,22 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
         #endregion
 
 
-        #region  /* =      DESCRIPTION DESCRIPTOR      = */
+        #region     /* =      TSELF DESCRIPTOR      = */
+
+        public const string RuleId_TSelf = "SMA0010";
+        private static readonly DiagnosticDescriptor Rule_TSelf = new(
+            RuleId_TSelf,
+            new LocalizableResourceString(nameof(Resources.SMA0010_Title), Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString(nameof(Resources.SMA0010_MessageFormat), Resources.ResourceManager, typeof(Resources)),
+            Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: new LocalizableResourceString(nameof(Resources.SMA0010_Description), Resources.ResourceManager, typeof(Resources)));
+
+        #endregion
+
+
+        #region     /* =      DESCRIPTION DESCRIPTOR      = */
 
         public const string RuleId_SymbolDesc = "SMA9000";
         private static readonly DiagnosticDescriptor Rule_SymbolDesc = new(
@@ -182,9 +200,10 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 
         #region  /* =      DEBUG DESCRIPTOR      = */
 
-        // NOTE: need to define in any case to avoid error but don't register to
-        //       analyzer when debug message flag is not set.
+        // NOTE: define in any case to avoid error.
+        //       but this is not registered to analyzer when debug message flag is not set.
         public const string RuleId_DEBUG = "SMAxDEBUG";  // no hyphens!
+        [DescriptionAttribute("use instead --> " + nameof(ReportDebugMessage))]
         private static readonly DiagnosticDescriptor Rule_DEBUG = new(
             RuleId_DEBUG,
             "SMAxDEBUG",
@@ -200,24 +219,22 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
         /*  DEBUG  ================================================================ */
 
         [Conditional("STMG_DEBUG_MESSAGE")]
-        [DescriptionAttribute]
-        private static void ReportDebugMessage(Action<Diagnostic> reportAction, string title, string? message, Location location)
+        private static void ReportDebugMessage(Action<Diagnostic> reportMethod, string title, string? message, Location location)
         {
-            ReportDebugMessage(reportAction, title, message, new Location[] { location });
+            ReportDebugMessage(reportMethod, title, message, new Location[] { location });
         }
 
         [Conditional("STMG_DEBUG_MESSAGE")]
-        [DescriptionAttribute]
-        private static void ReportDebugMessage<T>(Action<Diagnostic> reportAction, string title, string? message, T locations)
+        private static void ReportDebugMessage<T>(Action<Diagnostic> reportMethod, string title, string? message, T locations)
             where T : IEnumerable<Location>
         {
             if (locations == null)
                 return;
 
-            message = message == null ? message : title + "\n" + message;
+            message = message != null ? title + "\n" + message : title;
             foreach (var loc in locations)
             {
-                reportAction(Diagnostic.Create(Rule_DEBUG, loc, message));
+                reportMethod(Diagnostic.Create(Rule_DEBUG, loc, message));
             }
         }
 
@@ -265,7 +282,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
         /*  underlining analyzer  ================================================================ */
 
         [DiagnosticAnalyzer(LanguageNames.CSharp)]
-        public sealed class UnderliningImpl : DiagnosticAnalyzer
+        public sealed class Impl_Underlining : DiagnosticAnalyzer
         {
             public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
 #if STMG_DEBUG_MESSAGE
@@ -285,9 +302,37 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
                 );
 
 
-            static SyntaxKind[]? _descriptionTargetSyntaxes;
-            static SymbolKind[]? _descriptionTargetSymbols;
-            static OperationKind[]? _descriptionTargetOperations;
+            readonly static ImmutableArray<SyntaxKind> cache_descriptionTargetSyntaxes = ImmutableArray.Create(
+                SyntaxKind.IdentifierName,
+
+                //// NOTE: ImplicitObjectCreationExpression (`new()`) is not supported. use Operation instead.
+                //SyntaxKind.ObjectCreationExpression,
+
+                // ctor(...) : base(...) or this(...)
+                SyntaxKind.BaseConstructorInitializer,
+                SyntaxKind.ThisConstructorInitializer,
+
+                // required for lambda parameter
+                SyntaxKind.SimpleLambdaExpression,
+                SyntaxKind.ParenthesizedLambdaExpression
+                );
+
+            readonly static ImmutableArray<SymbolKind> cache_descriptionTargetSymbols = ImmutableArray.Create(
+                SymbolKind.NamedType,
+                SymbolKind.Method,
+                SymbolKind.ArrayType,
+                SymbolKind.Event,
+                SymbolKind.Field,
+                SymbolKind.Property,
+                SymbolKind.Parameter,
+                SymbolKind.TypeParameter
+                );
+
+            readonly static ImmutableArray<OperationKind> cache_descriptionTargetOperations = ImmutableArray.Create(
+                    //constructor
+                    OperationKind.ObjectCreation
+                );
+
 
             public override void Initialize(AnalysisContext context)
             {
@@ -299,51 +344,17 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 
                 /* =      symbol      = */
 
-                _descriptionTargetSymbols ??= new SymbolKind[]
-                {
-                    SymbolKind.NamedType,
-                    SymbolKind.Method,
-                    SymbolKind.ArrayType,
-                    SymbolKind.Event,
-                    SymbolKind.Field,
-                    SymbolKind.Property,
-                    SymbolKind.Parameter,
-                    SymbolKind.TypeParameter,
-                };
-
-                context.RegisterSymbolAction(DrawUnderlineOnSymbols, _descriptionTargetSymbols);
+                context.RegisterSymbolAction(DrawUnderlineOnSymbols, cache_descriptionTargetSymbols);
 
 
                 /* =      syntax      = */
 
-                _descriptionTargetSyntaxes ??= new SyntaxKind[]
-                {
-                    SyntaxKind.IdentifierName,
-
-                    //// NOTE: ImplicitObjectCreationExpression (`new()`) is not supported. use Operation instead.
-                    //SyntaxKind.ObjectCreationExpression,
-
-                    // ctor(...) : base(...) or this(...)
-                    SyntaxKind.BaseConstructorInitializer,
-                    SyntaxKind.ThisConstructorInitializer,
-
-                    // required for lambda parameter
-                    SyntaxKind.SimpleLambdaExpression,
-                    SyntaxKind.ParenthesizedLambdaExpression,
-                };
-
-                context.RegisterSyntaxNodeAction(DrawUnderlineOnSyntaxNodes, _descriptionTargetSyntaxes);
+                context.RegisterSyntaxNodeAction(DrawUnderlineOnSyntaxNodes, cache_descriptionTargetSyntaxes);
 
 
                 /* =      operation      = */
 
-                _descriptionTargetOperations ??= new OperationKind[]
-                {
-                    //constructor
-                    OperationKind.ObjectCreation,
-                };
-
-                context.RegisterOperationAction(DrawUnderlineOnOperators, _descriptionTargetOperations);
+                context.RegisterOperationAction(DrawUnderlineOnOperators, cache_descriptionTargetOperations);
 
 
                 /* =      cache      = */
@@ -362,6 +373,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
             {
                 /* =      clear cache      = */
 
+#pragma warning disable RS1012  // this is used to clearing cache
                 context.RegisterCodeBlockStartAction<SyntaxKind>(ctx =>
                 {
                     var descAttrToMessage = ts_descAttrToMessage;
@@ -375,6 +387,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
                             descAttrToMessage.Remove(attr);
                     }
                 });
+#pragma warning restore RS1012
 
                 // clear every 16 iterations
                 int iter = 0;
@@ -990,8 +1003,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
                 }
 
 
-            SKIP_FOREACH:
-
                 // NOTE: when searching base/overridden symbol perfectly, it makes analyzing EXTREMELY slow!!
                 if (recursiveCount++ < MAX_TRAVERSE_DEPTH)
                 {
@@ -1248,7 +1259,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
         /*  static member analysis  ================================================================ */
 
         [DiagnosticAnalyzer(LanguageNames.CSharp)]
-        public sealed class StaticMemberImpl : DiagnosticAnalyzer
+        public sealed class Impl_StaticMember : DiagnosticAnalyzer
         {
             public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
 #if STMG_DEBUG_MESSAGE
@@ -1284,7 +1295,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
             //}
 
 
-            /*  register  ================================================================ */
+            /*  impl  ================================================================ */
 
             const int DEFAULT_LIST_CAPACITY = 4;
 
@@ -1499,5 +1510,125 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
             }
 
         }
+
+
+        /*  TSelf analysis  ================================================================ */
+
+        [DiagnosticAnalyzer(LanguageNames.CSharp)]
+        public sealed class Impl_TSelf : DiagnosticAnalyzer
+        {
+            public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
+#if STMG_DEBUG_MESSAGE
+                Rule_DEBUG,
+#endif
+                Rule_TSelf
+                );
+
+
+            readonly static ImmutableArray<SyntaxKind> cache_targetSyntaxes = ImmutableArray.Create(
+                SyntaxKind.ClassDeclaration,
+                // TODO --> SyntaxKind.RecordDeclaration,
+                SyntaxKind.StructDeclaration,
+                SyntaxKind.InterfaceDeclaration
+               );
+
+
+            public override void Initialize(AnalysisContext context)
+            {
+                context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+                context.EnableConcurrentExecution();
+
+
+                //https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Analyzer%20Actions%20Semantics.md
+
+                context.RegisterSyntaxNodeAction(AnalyzeTSelf, cache_targetSyntaxes);
+
+
+                //context.RegisterCompilationStartAction(InitializeAndRegisterCallbacks);
+            }
+
+
+            /*  impl  ================================================================ */
+
+            private void AnalyzeTSelf(SyntaxNodeAnalysisContext context)
+            {
+                if (context.Node is not TypeDeclarationSyntax sourceDeclare)
+                    return;
+
+                // NOTE: `SingleOrDefault` should work but it throws exception on large code. ex) DescriptionTester.cs
+                var baseTypeList = context.Node.DescendantNodes().OfType<BaseListSyntax>().FirstOrDefault();
+                if (baseTypeList == null)
+                    return;
+
+                var compilation = context.Compilation;
+                SemanticModel? model;
+                foreach (var baseType in baseTypeList.Types)
+                {
+                    var genName = baseType.DescendantNodes().OfType<GenericNameSyntax>().SingleOrDefault();
+                    if (genName == null)
+                        continue;
+
+                    var typeArgList = genName.TypeArgumentList;
+                    if (typeArgList == null)
+                        continue;
+
+                    // find base declaration
+                    model = compilation.GetSemanticModel(baseType.Type.SyntaxTree);
+                    var baseSymbol = model.GetSymbolInfo(baseType.Type).Symbol as INamedTypeSymbol;
+                    if (baseSymbol == null)
+                    {
+                        ReportDebugMessage(context.ReportDiagnostic,
+                            "cannot get baseType symbol", null, sourceDeclare.GetLocation());
+
+                        continue;
+                    }
+
+                    int typeArgPosition = -1;
+                    foreach (var baseDeclareRef in baseSymbol.DeclaringSyntaxReferences)
+                    {
+                        if (baseDeclareRef.GetSyntax() is not TypeDeclarationSyntax baseDeclare)
+                            break;
+
+                        var baseTypeParamList = baseDeclare.DescendantNodes().OfType<TypeParameterListSyntax>().SingleOrDefault();
+                        if (baseTypeParamList == null)
+                            break;
+
+                        for (int i = 0; i < baseTypeParamList.Parameters.Count; i++)
+                        {
+                            if (baseTypeParamList.Parameters[i].Identifier.Text == "TSelf")
+                            {
+                                typeArgPosition = i;
+                                goto EXIT;
+                            }
+                        }
+
+                        continue;
+
+                    EXIT:
+                        break;
+                        ;
+                    }
+
+                    if (typeArgPosition < 0)
+                        continue;
+
+                    var TSelfTypeArg = typeArgList.DescendantNodes().ElementAtOrDefault(typeArgPosition);
+                    if (TSelfTypeArg == null)
+                        continue;
+
+                    // type arg can have namespace prefix or something but ok to check only identifier name
+                    var TSelfTypeIdentifier = TSelfTypeArg.ToString();
+                    var declaredTypeIdentifier = sourceDeclare.Identifier.ToString();
+
+                    if (TSelfTypeIdentifier != declaredTypeIdentifier)
+                    {
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            Rule_TSelf, TSelfTypeArg.GetLocation(), TSelfTypeIdentifier, declaredTypeIdentifier));
+                    }
+
+                }
+            }
+        }
+
     }
 }

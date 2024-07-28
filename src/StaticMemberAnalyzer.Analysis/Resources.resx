@@ -142,7 +142,7 @@
     <value>Initialization order of partial type files is undefined in language spec.</value>
   </data>
   <data name="SMA0003_MessageFormat" xml:space="preserve">
-    <value>Partial type member '{0}' is declared in another file (AnotherFile)</value>
+    <value>Partial type member '{0}' is declared in another .cs file (AnotherFile)</value>
   </data>
   <data name="SMA0003_Title" xml:space="preserve">
     <value>Static Member Declared in Another File</value>
@@ -151,10 +151,19 @@
     <value>Static field is read before initialize.</value>
   </data>
   <data name="SMA0004_MessageFormat" xml:space="preserve">
-    <value>'{0}' is trying to read before declaration (LateDeclare)</value>
+    <value>'{0}' is reading this member before declaration (LateDeclare)</value>
   </data>
   <data name="SMA0004_Title" xml:space="preserve">
     <value>Late Declaration</value>
+  </data>
+  <data name="SMA0010_Description" xml:space="preserve">
+    <value>'TSelf' type arg should be pointing itself.</value>
+  </data>
+  <data name="SMA0010_MessageFormat" xml:space="preserve">
+    <value>'{0}' should be '{1}' (TSelf)</value>
+  </data>
+  <data name="SMA0010_Title" xml:space="preserve">
+    <value>TSelf is Not Self</value>
   </data>
   <data name="SMA9000_Description" xml:space="preserve">
     <value>Diversion of attribute designed for Visual Studio form designer.</value>

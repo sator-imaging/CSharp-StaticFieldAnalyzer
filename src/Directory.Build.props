@@ -9,7 +9,7 @@
 		<GlobalPackageID>SatorImaging.StaticMemberAnalyzer</GlobalPackageID>
 		<GlobalPackageTitle>Static Member Analyzer</GlobalPackageTitle>
 		<GlobalPackageProduct>$(GlobalPackageTitle)</GlobalPackageProduct>
-		<GlobalPackageVersion>1.3.0</GlobalPackageVersion>
+		<GlobalPackageVersion>1.4.0</GlobalPackageVersion>
 		<GlobalPackageOwner>Sator Imaging</GlobalPackageOwner>
 		<GlobalPackageCompany>$(GlobalPackageOwner)</GlobalPackageCompany>
 		<GlobalPackageCopyright>(c) 2024 $(GlobalPackageOwner)</GlobalPackageCopyright>
@@ -27,5 +27,12 @@
 	<Target Name="GetVsixVersion" Outputs="$(GlobalPackageVersion)" />
 	<Target Name="GetVsixPublisher" Outputs="$(GlobalPackageOwner)" />
 	<Target Name="GetVsixRepository" Outputs="$(GlobalPackageRepository)" />
+
+	<ItemGroup>
+		<PackageReference Include="SatorImaging.StaticMemberAnalyzer" Version="*">
+		<PrivateAssets>all</PrivateAssets>
+		<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
 
 </Project>
