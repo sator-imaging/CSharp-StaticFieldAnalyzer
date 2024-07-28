@@ -19,7 +19,7 @@ public partial struct PartialStruct
                                               // if checking is NOT correct, error shown on AFTER in other type
 }
 
-public class Program
+public class StaticMember
 {
     public readonly static float F = OtherClass.F;  // error cross-ref
     public readonly static int I = 310;
@@ -79,7 +79,7 @@ public class Program
 public class OtherClass
 {
     public const string CONST_STR = "Hello, world.";
-    public readonly static int I = Program.I;
+    public readonly static int I = StaticMember.I;
     public readonly static double D = 3.10 + InterFileReferencing.PublicDouble;
     public readonly static float F = 0.31f;
 
