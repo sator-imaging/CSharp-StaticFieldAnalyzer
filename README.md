@@ -7,10 +7,13 @@ Roslyn-based analyzer to provide diagnostics of static fields and properties ini
 - Wrong order of static field and property declaration
 - Partial type member reference across files
 - [Cross-Referencing Problem](#cross-referencing-problem) of static field across type
+- `TSelf` generic type argument checker
 - Annotating / Underlining field, property or etc with custom message
 
 
 ![Analyzer in Action](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/InAction.gif)
+
+![TSelf Type Argument](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/GenericTypeArgTSelf.png)
 
 
 
@@ -36,20 +39,21 @@ See [the following section](#annotating--underlining) for details.
       ```
 
 
+## Visual Studio 2019 or Earlier
+
+Analyzer is tested on Visual Studio 2022.
+
+You could use this analyzer on older versions of Visual Studio. To do so, update `Vsix` project file by following instructions written in memo and build project.
+
+
+
+
 
 # Unity Integration
 
 This analyzer can be used with Unity 2020.2 or above. See the following page for detail.
 
 [SatorImaging.StaticMemberAnalyzer.Unity/](SatorImaging.StaticMemberAnalyzer.Unity)
-
-
-
-# Visual Studio 2019 or Earlier
-
-Analyzer is tested on Visual Studio 2022.
-
-You could use this analyzer on older versions of Visual Studio. To do so, update `Vsix` project file by following instructions written in memo and build project.
 
 
 
@@ -121,31 +125,26 @@ When reading B value first, initialization order is changed and resulting value 
 
 There is optional feature to draw underline on selected types, fields, properties, generic type/method arguments and parameters of method, delegate and lambda function.
 
-
-
-### Screenshot
-
 As of Visual Studio's UX design, `Info` severity diagnostic underlines are drawn only on a few leading chars, not drawn whole marked area. So for workaround, underline on keyword is dashed.
 
 
-> [!TIP]
-> `!`-starting message will add warning annotation on keyword instead of info diagnostic annotation.
+## Verbosity Control
+
+There are 4 types of underline, line head, line leading, line end and keyword.
+
+By default, static field analyzer will draw most verbose underline.
+You can omit specific type of underline by using `#pragma` preprocessor directive or adding `SuppressMessage` attribute or etc.
 
 
-![Draw Underline](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/DrawUnderline.png)
-
-
-> [!NOTE]
-> To draw underline, need to add <code>[Description<b><i>Attribute</i></b>("...")]</code> (full attribute class name) instead of suffix-less class name.
-> When add `[Description("...")]` attribute, underline *WON'T* be drawn.
+![Verbosity Control](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/VerbosityControl.png)
 
 
 
 ## How to Use
 
-To avoid dependency to this analyzer, required attribute is chosen from builtin `System.ComponentModel` assembly so that syntax is little bit weird.
+To avoid dependency to this analyzer, required attribute for underlining is chosen from builtin `System.ComponentModel` assembly so that syntax is little bit weird.
 
-Analyzer is checking identifier keyword in C# source code, not actual C# type. The text `DescriptionAttribute` in attribute syntax is only allowed to draw underline.
+Analyzer is checking identifier keyword in C# source code, not checking actual C# type. `DescriptionAttribute` in C# attribute syntax is the only keyword to draw underline. Omitting `Attribute` or adding namespace are not recognized.
 
 ```cs
 using System.ComponentModel;
@@ -159,6 +158,7 @@ public class WithUnderline
 }
 
 // C# language spec allows to omit `Attribute` suffix but when omitted, underline won't be drawn
+// to avoid conflict with originally designed usage for VS form designer
 [Description("No Underline")]
 public class NoUnderline { }
 
@@ -172,16 +172,13 @@ public static int Underline_Drawn = 310;
 ```
 
 
+### Screenshot
 
-## Verbosity Control
-
-There are 4 types of underline, line head, line leading, line end and keyword.
-
-By default, static field analyzer will draw most verbose underline.
-You can omit specific type of underline by using `#pragma` preprocessor directive or adding `SuppressMessage` attribute to assembly, class or etc.
+> [!TIP]
+> `!`-starting message will add warning annotation on keyword instead of info diagnostic annotation.
 
 
-![Verbosity Control](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/VerbosityControl.png)
+![Draw Underline](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/DrawUnderline.png)
 
 
 
@@ -198,6 +195,21 @@ To remove unnecessary attribute from Unity build, add the following `link.xml` f
     </assembly>
 </linker>
 ```
+
+
+
+&nbsp;  
+&nbsp;  
+
+# Devnote
+
+Steps to publish new version of nuget package
+- update nuget package version in `.props`
+- upload source code to github
+- run build action for test
+- merge pull request sent from build action
+- create github release
+- run nuget packaging action to push new version
 
 
 
