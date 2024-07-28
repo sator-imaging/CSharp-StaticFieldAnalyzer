@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SatorImaging.StaticMemberAn
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SatorImaging.StaticMemberAnalyzer.Test", "StaticMemberAnalyzer.Test\SatorImaging.StaticMemberAnalyzer.Test.csproj", "{3279ACEC-AF29-4F67-AE6B-A79B74718D50}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ソリューション項目", "ソリューション項目", "{68A6B7CD-B8C7-4852-B408-103A88080049}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{68A6B7CD-B8C7-4852-B408-103A88080049}"
 	ProjectSection(SolutionItems) = preProject
 		AssemblyInfo.cs = AssemblyInfo.cs
 		Directory.Build.props = Directory.Build.props
