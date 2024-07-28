@@ -49,10 +49,12 @@ namespace AnalyzerCheck.Tests
         virtual public void BaseMethod() { }
     }
 
+    interface ITSelfTester<TSelf> { }
+
     [Category("Category Attribute"), DisplayName("Display Name Attribute")]
     [DescriptionAttribute("Description for " + nameof(DescriptionTester) + "?" + "!")]
     [DebuggerDisplay("")]
-    public class DescriptionTester : List<Base>, IBase, INoUnderline<Base, long>
+    public class DescriptionTester : List<Base>, IBase, INoUnderline<Base, long>, ITSelfTester<AnalyzerCheck.Tests.DescriptionTester>
     {
         [DescriptionAttribute("??")] public DescriptionTester() { }
 

@@ -56,6 +56,19 @@ public class UnderliningTest
 
 
 
+public interface INumber<TSelf> { }
+
+public class GenericMath : INumber<GenericMath> { }
+public class OtherClass : INumber<GenericMath> { }  // type arg 'TSelf' should be pointing to itself
+
+
+
+
+
+
+
+
+
 
 
 public class VerbosityControlTest
