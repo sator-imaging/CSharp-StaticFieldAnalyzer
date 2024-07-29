@@ -2,12 +2,12 @@
 
 [![NuGet](https://img.shields.io/nuget/v/SatorImaging.StaticMemberAnalyzer)](https://www.nuget.org/packages/SatorImaging.StaticMemberAnalyzer)
 
-Roslyn-based analyzer to provide diagnostics of static fields and properties initialization.
+Roslyn-based analyzer to provide diagnostics of static fields and properties initialization and more.
 
 - Wrong order of static field and property declaration
 - Partial type member reference across files
 - [Cross-Referencing Problem](#cross-referencing-problem) of static field across type
-- `TSelf` generic type argument checker
+- `TSelf` generic type argument analysis
 - Annotating / Underlining field, property or etc with custom message
 
 
