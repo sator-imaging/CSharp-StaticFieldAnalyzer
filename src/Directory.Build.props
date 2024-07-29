@@ -26,7 +26,7 @@
 		<GlobalPackageVersion>1.4.0</GlobalPackageVersion>
 	</PropertyGroup>
 
-	<ItemGroup>
+	<ItemGroup Condition=" '$(ContinuousIntegrationBuild)' != 'true' ">
 		<!-- need to update exclusive maximum version to avoid cyclic reference -->
 		<PackageReference Include="SatorImaging.StaticMemberAnalyzer" Version="[,1.4.0)">
 
