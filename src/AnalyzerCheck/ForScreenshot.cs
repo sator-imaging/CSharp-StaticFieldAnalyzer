@@ -56,7 +56,7 @@ public class UnderliningTest
 
 
 
-public interface INumber<TSelf> { }
+public interface INumber<TSelf> where TSelf : INumber<TSelf> { }
 
 public class GenericMath : INumber<GenericMath> { }
 public class OtherClass : INumber<GenericMath> { }  // type arg 'TSelf' should be pointing to itself
