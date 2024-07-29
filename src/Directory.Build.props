@@ -9,7 +9,6 @@
 		<GlobalPackageID>SatorImaging.StaticMemberAnalyzer</GlobalPackageID>
 		<GlobalPackageTitle>Static Member Analyzer</GlobalPackageTitle>
 		<GlobalPackageProduct>$(GlobalPackageTitle)</GlobalPackageProduct>
-		<GlobalPackageVersion>1.4.0</GlobalPackageVersion>
 		<GlobalPackageOwner>Sator Imaging</GlobalPackageOwner>
 		<GlobalPackageCompany>$(GlobalPackageOwner)</GlobalPackageCompany>
 		<GlobalPackageCopyright>(c) 2024 $(GlobalPackageOwner)</GlobalPackageCopyright>
@@ -22,17 +21,22 @@
 		<GlobalPackageLicenseUrl>https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer/blob/main/LICENSE.md</GlobalPackageLicenseUrl>
 		<GlobalPackageLicenseSPDX>MIT</GlobalPackageLicenseSPDX>
 		<GlobalPackageIconUrl>https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer/raw/main/assets/icon-128px.png</GlobalPackageIconUrl>
+
+		<!-- don't forget to update the following PackageReference version range -->
+		<GlobalPackageVersion>1.4.0</GlobalPackageVersion>
 	</PropertyGroup>
 
-	<Target Name="GetVsixVersion" Outputs="$(GlobalPackageVersion)" />
-	<Target Name="GetVsixPublisher" Outputs="$(GlobalPackageOwner)" />
-	<Target Name="GetVsixRepository" Outputs="$(GlobalPackageRepository)" />
-
 	<ItemGroup>
-		<PackageReference Include="SatorImaging.StaticMemberAnalyzer" Version="*">
+		<!-- need to update exclusive maximum version to avoid cyclic reference -->
+		<PackageReference Include="SatorImaging.StaticMemberAnalyzer" Version="[,1.4.0)">
+
 		<PrivateAssets>all</PrivateAssets>
 		<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
+
+	<Target Name="GetVsixVersion" Outputs="$(GlobalPackageVersion)" />
+	<Target Name="GetVsixPublisher" Outputs="$(GlobalPackageOwner)" />
+	<Target Name="GetVsixRepository" Outputs="$(GlobalPackageRepository)" />
 
 </Project>
