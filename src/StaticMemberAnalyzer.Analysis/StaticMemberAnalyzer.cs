@@ -1358,8 +1358,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
                             bool isPartial = false;
                             if (refOpMemberContainingTypeDeclares.Length > 1)
                             {
-                                var a = refOp.Member.DeclaringSyntaxReferences.SingleOrDefault()?.SyntaxTree.FilePath;
-                                var b = declaredMemberSymbolList[i].DeclaringSyntaxReferences.SingleOrDefault()?.SyntaxTree.FilePath;
+                                var a = refOp.Member.DeclaringSyntaxReferences.FirstOrDefault()?.SyntaxTree.FilePath;
+                                var b = declaredMemberSymbolList[i].DeclaringSyntaxReferences.FirstOrDefault()?.SyntaxTree.FilePath;
 
                                 if (a != null && b != null && a != b)
                                 {
@@ -1373,7 +1373,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 
                             if (!isPartial)
                             {
-                                var prefix = GetMemberNamePrefix(refOp.Member.DeclaringSyntaxReferences.SingleOrDefault()?.GetSyntax(token));
+                                var prefix = GetMemberNamePrefix(refOp.Member.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax(token));
                                 if (!declaredMemberSet.Contains(SpanConcat(prefix.AsSpan(), refOp.Member.Name.AsSpan())))
                                 {
                                     context.ReportDiagnostic(
@@ -1462,7 +1462,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
                         continue;
 
                     //lambda??
-                    if (initOp.Children.SingleOrDefault() is IDelegateCreationOperation)
+                    if (initOp.Children.FirstOrDefault() is IDelegateCreationOperation)
                         continue;
 
                     ISymbol? foundSymbol = null;
@@ -1555,7 +1555,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
                 if (context.Node is not TypeDeclarationSyntax sourceDeclare)
                     return;
 
-                // NOTE: `SingleOrDefault` should work but it throws exception on large code. ex) DescriptionTester.cs
                 var baseTypeList = context.Node.DescendantNodes().OfType<BaseListSyntax>().FirstOrDefault();
                 if (baseTypeList == null)
                     return;
@@ -1564,7 +1563,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
                 SemanticModel? model;
                 foreach (var baseType in baseTypeList.Types)
                 {
-                    var genName = baseType.DescendantNodes().OfType<GenericNameSyntax>().SingleOrDefault();
+                    var genName = baseType.DescendantNodes().OfType<GenericNameSyntax>().FirstOrDefault();
                     if (genName == null)
                         continue;
 
@@ -1589,7 +1588,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
                         if (baseDeclareRef.GetSyntax() is not TypeDeclarationSyntax baseDeclare)
                             break;
 
-                        var baseTypeParamList = baseDeclare.DescendantNodes().OfType<TypeParameterListSyntax>().SingleOrDefault();
+                        var baseTypeParamList = baseDeclare.DescendantNodes().OfType<TypeParameterListSyntax>().FirstOrDefault();
                         if (baseTypeParamList == null)
                             break;
 
