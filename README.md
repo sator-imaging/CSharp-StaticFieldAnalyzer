@@ -103,8 +103,8 @@ public static class Test
 
 - `A.Value = B.Other;`
     - // 'B' initialization is started by member access
-    - `B.Value = A.Other;`  // B.Value will be 0 because reading uninitialized `A.Other`
     - `B.Other = 620;`
+    - `B.Value = A.Other;`  // B.Value will be 0 because reading uninitialized `A.Other`
     - // then, assign `B.Other` value (620) to `A.Value`
 - `A.Other = 310;`  // initialized here!! this value is not assigned to B.Value
 
