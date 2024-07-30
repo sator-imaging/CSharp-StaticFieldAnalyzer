@@ -110,6 +110,6 @@ jobs:
         git add --update --ignore-removal  ${{ env.unity_folder }}
 
         ### try push and create PR if any changes otherwise exit successfully
-        git commit -m "Precompiled Assembly for Unity" || true
+        git commit -m "[bot] Precompiled Assembly for Unity" || true
         git push || true
         gh pr create -B main -t 'release/${{ inputs.release_ver }}' -b '' || true
