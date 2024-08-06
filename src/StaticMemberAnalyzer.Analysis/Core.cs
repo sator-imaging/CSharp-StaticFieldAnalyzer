@@ -32,7 +32,7 @@ using System.Xml.Linq;
 namespace SatorImaging.StaticMemberAnalyzer.Analysis
 {
     //https://github.com/dotnet/roslyn/blob/main/docs/wiki/Roslyn-Overview.md#solutions-projects-documents
-    public sealed class StaticMemberAnalyzer
+    public sealed class Core
     {
         //https://github.com/dotnet/roslyn-analyzers/blob/main/src/Utilities/Compiler/DiagnosticCategoryAndIdRanges.txt
         private const string Category = "Usage";
