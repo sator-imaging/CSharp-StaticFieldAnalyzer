@@ -63,9 +63,7 @@ This analyzer can be used with Unity 2020.2 or above. See the following page for
 
 It is a design bug makes all things complex. Not only that but also it causes initialization error only when meet a specific condition.
 
-So it must be fixed even if app works correctly at a moment, to prevent simple but complicated bug which is hard to find in large code base by hand. As you know static fields will never report error when initialization failed!!
-
-> It could be happened when reordering field declarations on refactoring large code base.
+So it must be fixed even if app works correctly at a moment, to prevent simple but complicated potential bug which is hard to find in large code base by hand. As you know static fields will never report error when initialization failed!!
 
 
 ```cs
@@ -128,16 +126,10 @@ There is optional feature to draw underline on selected types, fields, propertie
 As of Visual Studio's UX design, `Info` severity diagnostic underlines are drawn only on a few leading chars, not drawn whole marked area. So for workaround, underline on keyword is dashed.
 
 
-## Verbosity Control
+![Draw Underline](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/DrawUnderline.png)
 
-There are 4 types of underline, line head, line leading, line end and keyword.
-
-By default, static field analyzer will draw most verbose underline.
-You can omit specific type of underline by using `#pragma` preprocessor directive or adding `SuppressMessage` attribute or etc.
-
-
-![Verbosity Control](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/VerbosityControl.png)
-
+> [!TIP]
+> `!`-starting message will add warning annotation on keyword instead of info diagnostic annotation.
 
 
 ## How to Use
@@ -172,13 +164,15 @@ public static int Underline_Drawn = 310;
 ```
 
 
-### Screenshot
+## Verbosity Control
 
-> [!TIP]
-> `!`-starting message will add warning annotation on keyword instead of info diagnostic annotation.
+There are 4 types of underline, line head, line leading, line end and keyword.
+
+By default, static field analyzer will draw most verbose underline.
+You can omit specific type of underline by using `#pragma` preprocessor directive or adding `SuppressMessage` attribute or etc.
 
 
-![Draw Underline](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/DrawUnderline.png)
+![Verbosity Control](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/VerbosityControl.png)
 
 
 
