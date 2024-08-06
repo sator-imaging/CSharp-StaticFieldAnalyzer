@@ -196,6 +196,60 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
+        ///   &apos;TSelf&apos; type arg should be pointing itself or its base type. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0011_Description {
+            get {
+                return ResourceManager.GetString("SMA0011_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Did you mean &apos;{0}&apos; or base type? (TSelfCovariant) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0011_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0011_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   TSelf is Not Self or Base に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0011_Title {
+            get {
+                return ResourceManager.GetString("SMA0011_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   &apos;TSelf&apos; type arg should be pointing itself or its derived type. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0012_Description {
+            get {
+                return ResourceManager.GetString("SMA0012_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Did you mean &apos;{0}&apos; or derived type? (TSelfContravariant) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0012_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0012_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   TSelf is Not Self or Derived に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0012_Title {
+            get {
+                return ResourceManager.GetString("SMA0012_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA9000_Description {

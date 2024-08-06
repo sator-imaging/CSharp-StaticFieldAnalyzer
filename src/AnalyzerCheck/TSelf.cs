@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+﻿using System;
 
 namespace AnalyzerCheck
 {
@@ -18,11 +18,38 @@ namespace AnalyzerCheck
     public class IFaceIFaceOK : ITest<IFaceIFaceOK, int> { }
     public class IFaceIFaceNG : ITest<IFaceIFaceOK, int> { }
 
-    public class ITypeArgRestriction<TSelf> where TSelf : ITypeArgRestriction<TSelf> { }
+    // variance check
+    interface ICovariance<out TSelf> { }
+    interface IContravariance<in TSelf> { }
+    class Something { }
+    public class VariantBase { }
+    // covariant
+    public class CovariantOK : ICovariance<object> { }
+    public class CovariantOK2 : ICovariance<Object> { }
+    public class CovariantOK3 : ICovariance<System.Object> { }
+    public class CovariantOK4 : ICovariance<CovariantOK4> { }
+    public class CovariantOK5 : VariantBase, ICovariance<VariantBase> { }
+    public class CovariantNG : ICovariance<VariantBase> { }
+    public class CovariantNG2 : ICovariance<CovariantNG3> { }
+    public class CovariantNG3 : CovariantNG2, ICovariance<Something> { }
+    // contravariant
+    public class ContravariantOK : IContravariance<ContravariantOK2> { }
+    public class ContravariantOK2 : ContravariantOK, IContravariance<ContravariantOK2> { }
+    public class ContravariantNG : IContravariance<ContravariantOK2> { }
+    public class ContravariantNG2 : IContravariance<Something> { }
+    public class ContravariantNG3 : IContravariance<object> { }
+    // invariant
+    public interface ITypeArgConstraint<TSelf> where TSelf : ITypeArgConstraint<TSelf> { }
+    public class InvariantOK : ITypeArgConstraint<InvariantOK> { };
+    public class InvariantNG : ITypeArgConstraint<InvariantOK> { };
 
-    [Category]
-    [DesignerCategory]
-    [DescriptionAttribute("" + nameof(TSelfWeirdSyntaxTester) + "")]
+    // namespace WON'T be considered
+    public class NamespaceNotConsidered
+        : TSelfBase<int, AnalyzerCheck.NamespaceNotConsidered>, ITest<NamespaceNotConsidered, long>
+    {
+    }
+
+    // weird trivia
     public class TSelfWeirdSyntaxTester
         :
         TSelfBase<
@@ -33,9 +60,4 @@ namespace AnalyzerCheck
 
     {
     }
-
-    // namespace WON'T be considered
-    public class NamespaceNotConsidered
-        : TSelfBase<int, AnalyzerCheck.NamespaceNotConsidered>, ITest<NamespaceNotConsidered, long>
-    { }
 }
