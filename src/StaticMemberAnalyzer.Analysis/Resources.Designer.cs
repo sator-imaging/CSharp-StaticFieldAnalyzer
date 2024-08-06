@@ -178,7 +178,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   &apos;{0}&apos; should be &apos;{1}&apos; (TSelf) に類似しているローカライズされた文字列を検索します。
+        ///   Did you mean &apos;{0}&apos;? (TSelf) に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0010_MessageFormat {
             get {

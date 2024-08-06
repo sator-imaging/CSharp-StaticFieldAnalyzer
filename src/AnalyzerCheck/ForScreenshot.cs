@@ -50,8 +50,21 @@ public class UnderliningTest
 
     [DescriptionAttribute("!! exclamation-starting message shows warning")]
     public static int AttentionPlease;
-    public static int Other = AttentionPlease;
+
+    class DrawingTest
+    {
+        void Main()
+        {
+            _ = NO_UNDERLINE;
+            _ = DRAW_UNDERLINE_ON_THIS_FIELD + 310;
+
+            (new UnderliningTest()).DefaultMsgWhenNoArgsSupplied();
+
+            _ = AttentionPlease;
+        }
+    }
 }
+
 
 
 
