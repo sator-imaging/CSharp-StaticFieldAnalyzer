@@ -1,7 +1,9 @@
-﻿#define STMG_DEBUG_MESSAGE    // some try-catch will be enabled
+﻿/*  Core  ================================================================ */
+#define STMG_DEBUG_MESSAGE    // some try-catch will be enabled
 #if DEBUG == false
 #undef STMG_DEBUG_MESSAGE
 #endif
+/*  /Core  ================================================================ */
 
 #if STMG_DEBUG_MESSAGE
 //#define STMG_DEBUG_MESSAGE_VERBOSE    // for debugging. many of additional debug diagnostics will be emitted
@@ -86,15 +88,35 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 
         #region     /* =      TSELF DESCRIPTOR      = */
 
-        public const string RuleId_TSelf = "SMA0010";
-        private static readonly DiagnosticDescriptor Rule_TSelf = new(
-            RuleId_TSelf,
+        public const string RuleId_TSelfInvariant = "SMA0010";
+        private static readonly DiagnosticDescriptor Rule_TSelfInvariant = new(
+            RuleId_TSelfInvariant,
             new LocalizableResourceString(nameof(Resources.SMA0010_Title), Resources.ResourceManager, typeof(Resources)),
             new LocalizableResourceString(nameof(Resources.SMA0010_MessageFormat), Resources.ResourceManager, typeof(Resources)),
             Category,
             DiagnosticSeverity.Warning,
             isEnabledByDefault: true,
             description: new LocalizableResourceString(nameof(Resources.SMA0010_Description), Resources.ResourceManager, typeof(Resources)));
+
+        public const string RuleId_TSelfCovariant = "SMA0011";
+        private static readonly DiagnosticDescriptor Rule_TSelfCovariant = new(
+            RuleId_TSelfCovariant,
+            new LocalizableResourceString(nameof(Resources.SMA0011_Title), Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString(nameof(Resources.SMA0011_MessageFormat), Resources.ResourceManager, typeof(Resources)),
+            Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: new LocalizableResourceString(nameof(Resources.SMA0011_Description), Resources.ResourceManager, typeof(Resources)));
+
+        public const string RuleId_TSelfContravariant = "SMA0012";
+        private static readonly DiagnosticDescriptor Rule_TSelfContravariant = new(
+            RuleId_TSelfContravariant,
+            new LocalizableResourceString(nameof(Resources.SMA0012_Title), Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString(nameof(Resources.SMA0012_MessageFormat), Resources.ResourceManager, typeof(Resources)),
+            Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: new LocalizableResourceString(nameof(Resources.SMA0012_Description), Resources.ResourceManager, typeof(Resources)));
 
         #endregion
 
@@ -373,7 +395,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
             {
                 /* =      clear cache      = */
 
-#pragma warning disable RS1012  // this is used to clearing cache
+#pragma warning disable RS1012  // better place to clear cache
                 context.RegisterCodeBlockStartAction<SyntaxKind>(ctx =>
                 {
                     var descAttrToMessage = ts_descAttrToMessage;
@@ -574,6 +596,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
                     par = par.Parent;
                     if (par is VariableDeclaratorSyntax && par.Parent is VariableDeclarationSyntax varDecl)
                     {
+                        // TODO: use GetTypeInfo
                         lambdaType = model.GetSymbolInfo(varDecl.Type, token).Symbol as INamedTypeSymbol;
                     }
                 }
@@ -826,8 +849,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
             //       - [DescriptionAttribute("Draw underline in VS source code editor")] int GetUnderline;
             readonly static string _descriptionAttributeName = nameof(DescriptionAttribute);
 
-            // NOTE: to apply attribute message update, don't cache description string directly.
-            //       cache symbol to attribute syntax mapping instead.
+            // NOTE: to apply attribute message parameter changes quickly,
+            //       don't cache description text string, instead cache symbol-to-AttributeSyntax mapping.
             private static string? GetAndUpdateDescriptionCache(ISymbol symbol,
                                                                 IDictionary<ISymbol, AttributeSyntax?> symbolToDescription,
                                                                 // works only on small source code file --> IDictionary<string, SemanticModel> filePathToModel,
@@ -1101,14 +1124,14 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 
                 if (string.IsNullOrWhiteSpace(description))
                 {
-                    var name = symbol.Name;
+                    //var name = symbol.Name;
 
-                    Span<char> span = stackalloc char[name.Length + 2];
-                    span[0] = '\'';
-                    name.AsSpan().CopyTo(span.Slice(1));
-                    span[span.Length - 1] = '\'';
+                    //Span<char> span = stackalloc char[name.Length + 2];
+                    //span[0] = '\'';
+                    //name.AsSpan().CopyTo(span.Slice(1));
+                    //span[span.Length - 1] = '\'';
 
-                    description = SpanConcat(span, " has Description attribute w/o args".AsSpan());
+                    description = "Take care to use (no details provided)";  //SpanConcat(span, " has Description attribute w/o args".AsSpan());
                 }
 
 #if STMG_DEBUG_MESSAGE_VERBOSE
@@ -1274,7 +1297,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 
             public override void Initialize(AnalysisContext context)
             {
-                context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+                context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
                 context.EnableConcurrentExecution();
 
 
@@ -1299,6 +1322,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 
             const int DEFAULT_LIST_CAPACITY = 4;
 
+#pragma warning disable RS1008  // OK: always clear on method startup
             [ThreadStatic, DescriptionAttribute] static Dictionary<string, SemanticModel>? ts_filePathToModel;
             [ThreadStatic, DescriptionAttribute] static HashSet<string>? ts_declaredMemberSet;
             [ThreadStatic, DescriptionAttribute] static HashSet<IMemberReferenceOperation>? ts_crossRefReportedSet;
@@ -1306,6 +1330,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
             [ThreadStatic, DescriptionAttribute] static List<ISymbol>? ts_foundSymbolList;
             [ThreadStatic, DescriptionAttribute] static List<IMemberReferenceOperation>? ts_refOperatorList;
             [ThreadStatic, DescriptionAttribute] static List<IMemberReferenceOperation>? ts_crossRefOperatorList;
+#pragma warning restore RS1008
 
 
             // NOTE: async method causes error on complex source code
@@ -1329,7 +1354,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
                 // it seems that model cannot be reusable. all reports are gone after opening other file in VisualStudio
                 var filePathToModel = (ts_filePathToModel ??= new());
                 filePathToModel.Clear();
-                //if (!filePathToModel.ContainsKey(context.SemanticModel.SyntaxTree.FilePath))
                 filePathToModel[context.SemanticModel.SyntaxTree.FilePath] = context.SemanticModel;
 
                 var token = context.CancellationToken;
@@ -1521,7 +1545,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 #if STMG_DEBUG_MESSAGE
                 Rule_DEBUG,
 #endif
-                Rule_TSelf
+                Rule_TSelfInvariant,
+                Rule_TSelfCovariant,
+                Rule_TSelfContravariant
                 );
 
 
@@ -1535,7 +1561,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 
             public override void Initialize(AnalysisContext context)
             {
-                context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+                context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
                 context.EnableConcurrentExecution();
 
 
@@ -1552,15 +1578,19 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 
             private void AnalyzeTSelf(SyntaxNodeAnalysisContext context)
             {
-                if (context.Node is not TypeDeclarationSyntax sourceDeclare)
+                if (context.Node is not TypeDeclarationSyntax targetTypeDeclare)
                     return;
 
                 var baseTypeList = context.Node.DescendantNodes().OfType<BaseListSyntax>().FirstOrDefault();
                 if (baseTypeList == null)
                     return;
 
+                string? targetTypeIdentifier = null;
                 var compilation = context.Compilation;
                 SemanticModel? model;
+                ITypeSymbol? targetBaseTypeSymbol = null;
+                bool isCovariant = false;
+                bool isContravariant = false;
                 foreach (var baseType in baseTypeList.Types)
                 {
                     var genName = baseType.DescendantNodes().OfType<GenericNameSyntax>().FirstOrDefault();
@@ -1573,58 +1603,126 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 
                     // find base declaration
                     model = compilation.GetSemanticModel(baseType.Type.SyntaxTree);
-                    var baseSymbol = model.GetSymbolInfo(baseType.Type).Symbol as INamedTypeSymbol;
+                    var baseSymbol = model.GetTypeInfo(baseType.Type).Type;// as INamedTypeSymbol;
                     if (baseSymbol == null)
                     {
                         ReportDebugMessage(context.ReportDiagnostic,
-                            "cannot get baseType symbol", null, sourceDeclare.GetLocation());
+                            "cannot get baseType symbol", null, targetTypeDeclare.GetLocation());
 
                         continue;
                     }
 
-                    int typeArgPosition = -1;
+                    int TSelfTypeArgPosition = -1;
                     foreach (var baseDeclareRef in baseSymbol.DeclaringSyntaxReferences)
                     {
                         if (baseDeclareRef.GetSyntax() is not TypeDeclarationSyntax baseDeclare)
-                            break;
+                            continue;
 
                         var baseTypeParamList = baseDeclare.DescendantNodes().OfType<TypeParameterListSyntax>().FirstOrDefault();
                         if (baseTypeParamList == null)
-                            break;
+                            continue;
 
                         for (int i = 0; i < baseTypeParamList.Parameters.Count; i++)
                         {
-                            if (baseTypeParamList.Parameters[i].Identifier.Text == "TSelf")
+                            var param = baseTypeParamList.Parameters[i];
+                            if (param.Identifier.Text == "TSelf")
                             {
-                                typeArgPosition = i;
-                                goto EXIT;
+                                TSelfTypeArgPosition = i;
+
+                                isCovariant = param.VarianceKeyword.IsKind(SyntaxKind.OutKeyword);
+                                isContravariant = param.VarianceKeyword.IsKind(SyntaxKind.InKeyword);
+
+                                goto EXIT_FOREACH;
                             }
                         }
-
-                        continue;
-
-                    EXIT:
-                        break;
-                        ;
                     }
 
-                    if (typeArgPosition < 0)
+                EXIT_FOREACH:
+                    ;
+
+                    if (TSelfTypeArgPosition < 0)
                         continue;
 
-                    var TSelfTypeArg = typeArgList.DescendantNodes().ElementAtOrDefault(typeArgPosition);
-                    if (TSelfTypeArg == null)
+                    var foundTypeArgNode = typeArgList.DescendantNodes().ElementAtOrDefault(TSelfTypeArgPosition);
+                    if (foundTypeArgNode == null)
                         continue;
 
                     // type arg can have namespace prefix or something but ok to check only identifier name
-                    var TSelfTypeIdentifier = TSelfTypeArg.ToString();
-                    var declaredTypeIdentifier = sourceDeclare.Identifier.ToString();
+                    targetTypeIdentifier ??= targetTypeDeclare.Identifier.ToString();
+                    var foundTypeArgIdentifier = foundTypeArgNode.ToString();
 
-                    if (TSelfTypeIdentifier != declaredTypeIdentifier)
+                    if (foundTypeArgIdentifier != targetTypeIdentifier)
                     {
-                        context.ReportDiagnostic(Diagnostic.Create(
-                            Rule_TSelf, TSelfTypeArg.GetLocation(), TSelfTypeIdentifier, declaredTypeIdentifier));
-                    }
+                        if (isCovariant)
+                        {
+                            // check omittable base type
+                            bool isFound = foundTypeArgIdentifier is "object" or nameof(System.Object) or (nameof(System) + "." + nameof(Object));
+                            if (!isFound)
+                            {
+                                var foundTypeArgSymbol = model.GetTypeInfo(foundTypeArgNode).Type;
+                                if (foundTypeArgSymbol != null)
+                                {
+                                    if (targetBaseTypeSymbol == null)
+                                    {
+                                        var targetBaseType = baseTypeList.Types.FirstOrDefault()?.Type;
+                                        if (targetBaseType != null)
+                                        {
+                                            targetBaseTypeSymbol = model.GetTypeInfo(targetBaseType).Type;
+                                        }
+                                    }
 
+                                    var candidateSymbol = targetBaseTypeSymbol;
+                                    while (candidateSymbol != null)
+                                    {
+                                        if (SymbolEqualityComparer.Default.Equals(candidateSymbol, foundTypeArgSymbol))
+                                        {
+                                            isFound = true;
+                                            break;
+                                        }
+
+                                        candidateSymbol = candidateSymbol.BaseType;
+                                    }
+                                }
+                            }
+
+                            if (!isFound)
+                            {
+                                context.ReportDiagnostic(Diagnostic.Create(
+                                    Rule_TSelfCovariant, foundTypeArgNode.GetLocation(), targetTypeIdentifier));
+                            }
+                        }
+
+                        //contravariant!!
+                        else if (isContravariant)
+                        {
+                            bool isFound = false;
+
+                            var contraSymbol = compilation.GetSemanticModel(foundTypeArgNode.SyntaxTree).GetTypeInfo(foundTypeArgNode).Type;
+                            while (contraSymbol != null)
+                            {
+                                if (contraSymbol.Name == targetTypeIdentifier)
+                                {
+                                    isFound = true;
+                                    break;
+                                }
+
+                                contraSymbol = contraSymbol.BaseType;
+                            }
+
+                            if (!isFound)
+                            {
+                                context.ReportDiagnostic(Diagnostic.Create(
+                                    Rule_TSelfContravariant, foundTypeArgNode.GetLocation(), targetTypeIdentifier));
+                            }
+                        }
+
+                        //invariant!!
+                        else
+                        {
+                            context.ReportDiagnostic(Diagnostic.Create(
+                                Rule_TSelfInvariant, foundTypeArgNode.GetLocation(), targetTypeIdentifier));
+                        }
+                    }
                 }
             }
         }
