@@ -26,11 +26,9 @@
 		<GlobalPackageVersion>1.4.0</GlobalPackageVersion>
 	</PropertyGroup>
 
-	<!-- dotnet restore -p:DontReferenceItself=true -->
+	<!-- CMD: dotnet restore -p:DontReferenceItself=true  other-options... -->
 	<ItemGroup Condition=" '$(DontReferenceItself)' != 'true' ">
-		<!-- need to update exclusive maximum version to avoid cyclic reference -->
-		<PackageReference Include="SatorImaging.StaticMemberAnalyzer" Version="[,1.4.0)">
-
+		<PackageReference Include="SatorImaging.StaticMemberAnalyzer" Version="*">
 		<PrivateAssets>all</PrivateAssets>
 		<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
