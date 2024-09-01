@@ -54,7 +54,7 @@ internal class EnumTests
 
 
     // expect warnings on all lines
-    int EnumConstraintGenericType<T>(T value) where T : Enum
+    void EnumCastTests()
     {
         // cast from enum
         _ = (sbyte)EInt.Other;
@@ -69,30 +69,37 @@ internal class EnumTests
         _ = (EULong)(EInt)(EUInt.Value);
         _ = (EULong)(Enum)(EUInt.Value);
         _ = (EULong)(object)(EUInt.Value);
+    }
 
-        // all of Enum methods get warning
-        _ = Enum.GetName(EInt.Value);
-        _ = Enum.ToObject(typeof(EInt), 0);
-        _ = Enum.TryParse<EInt>("", out _);
-
-        // cast to enum
+    void BasicTests(EUInt value)
+    {
+        // cast to enum can lead invalid value creation
         _ = (EInt)310;
         _ = (EUInt)(-310 * -1);
         _ = (EULong)ulong.MaxValue;
 
-        // cast from enum
+        // cast from enum makes value untyped and untraceable
         _ = (int)EInt.Value;
         _ = (EULong)EUInt.Value;
         object obj = EInt.Value;
         Enum @enum = EInt.Other;
 
-        // to string
+        // all of Enum methods get warning to avoid user-level conversion
+        _ = Enum.GetName(EInt.Value);
+        _ = Enum.ToObject(typeof(EInt), 0);
+        _ = Enum.TryParse<EInt>("", out _);
+
+        // string conversion should be encapsulated and centerized to
+        // main app's enum utility. it should not be done freely in user code
         string name = EInt.Value.ToString();
         string generic = value.ToString();
+    }
 
-        // generic type parameter
+    int EnumConstraintGenericType<T>(T value) where T : Enum
+    {
+        // casting to generic enum type needs intermediate cast
         _ = (T)(object)(310 + 310);
-        return (int)(object)value;  // casting to int needs intermediate object cast
+        return (int)(object)value;
     }
 
 
@@ -103,4 +110,10 @@ internal class EnumTests
         return (int)(object)value;
     }
 
+}
+
+public enum EnumTypeShouldBeExcludedFromObfuscation
+{
+    Value = -1,
+    Other = 1,
 }
