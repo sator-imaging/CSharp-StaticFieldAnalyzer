@@ -88,7 +88,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Trying to read value from static field declared in cross-referencing type に類似しているローカライズされた文字列を検索します。
+        ///   Trying to read value from static field declared in cross-referencing type. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0002_Description {
             get {
@@ -246,6 +246,195 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         internal static string SMA0012_Title {
             get {
                 return ResourceManager.GetString("SMA0012_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Unchecked value conversion to enum type. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0020_Description {
+            get {
+                return ResourceManager.GetString("SMA0020_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Unchecked value of &apos;{0}&apos; (CastToEnum) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0020_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0020_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Unchecked Cast to Enum Type に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0020_Title {
+            get {
+                return ResourceManager.GetString("SMA0020_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Casting enum type to other. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0021_Description {
+            get {
+                return ResourceManager.GetString("SMA0021_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Conversion of &apos;{0}&apos; (CastFromEnum) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0021_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0021_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Cast from Enum Type to Other に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0021_Title {
+            get {
+                return ResourceManager.GetString("SMA0021_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Unchecked value conversion to generic enum type. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0022_Description {
+            get {
+                return ResourceManager.GetString("SMA0022_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Unchecked value of &apos;{0}&apos; (CastToGenericEnum) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0022_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0022_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Unchecked Cast to Generic Enum Type に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0022_Title {
+            get {
+                return ResourceManager.GetString("SMA0022_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Casting generic enum type to other. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0023_Description {
+            get {
+                return ResourceManager.GetString("SMA0023_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Conversion of &apos;{0}&apos; (CastFromGenericEnum) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0023_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0023_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Cast from Generic Enum Type to Other に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0023_Title {
+            get {
+                return ResourceManager.GetString("SMA0023_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Trying to convert enum value to string. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0024_Description {
+            get {
+                return ResourceManager.GetString("SMA0024_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   String representation of &apos;{0}&apos; could be modified by obfuscation tool (EnumToString) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0024_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0024_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Enum to String に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0024_Title {
+            get {
+                return ResourceManager.GetString("SMA0024_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Calling enum system method. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0025_Description {
+            get {
+                return ResourceManager.GetString("SMA0025_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Enum handling should be encapsulated into own utility class (EnumMethod) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0025_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0025_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Enum System Method に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0025_Title {
+            get {
+                return ResourceManager.GetString("SMA0025_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Enum obfuscation should be controlled. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0026_Description {
+            get {
+                return ResourceManager.GetString("SMA0026_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Obfuscation attribute should be added to prevent name changes (EnumObfuscation) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0026_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0026_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Enum Obfuscation に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0026_Title {
+            get {
+                return ResourceManager.GetString("SMA0026_Title", resourceCulture);
             }
         }
         
