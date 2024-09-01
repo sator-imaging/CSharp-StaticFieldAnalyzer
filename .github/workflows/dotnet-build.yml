@@ -68,7 +68,7 @@ jobs:
     - name: Restore dependencies
       run: |
         cd src
-        dotnet restore  -p:DontReferenceItself=true  # required to avoid cyclic ref error
+        dotnet restore -c Release  -p:DontReferenceItself=true  # required to avoid cyclic ref error
     - name: Build
       run: |
         cd src
@@ -76,12 +76,12 @@ jobs:
         # required to enable deterministic build --> -p:ContinuousIntegrationBuild=true
         # it seems that hash is calculated based on the whole git directory contents
         # ex: including github actions yaml files
-        dotnet build -c Release --no-restore  -p:ContinuousIntegrationBuild=true
+        dotnet build -c Release --no-restore  -p:ContinuousIntegrationBuild=true  -p:DontReferenceItself=true
     
     - name: Test
       run: |
         cd src
-        dotnet test ${{ env.test_csproj }} --no-build --verbosity normal  -p:DontReferenceItself=true
+        dotnet test ${{ env.test_csproj }} -c Release --no-build --verbosity normal  -p:DontReferenceItself=true
 
     - name: Upload
       uses: actions/upload-artifact@v4
