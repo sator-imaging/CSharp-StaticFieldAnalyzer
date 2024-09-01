@@ -130,7 +130,7 @@
     <comment>The title of the diagnostic.</comment>
   </data>
   <data name="SMA0002_Description" xml:space="preserve">
-    <value>Trying to read value from static field declared in cross-referencing type</value>
+    <value>Trying to read value from static field declared in cross-referencing type.</value>
   </data>
   <data name="SMA0002_MessageFormat" xml:space="preserve">
     <value>Type '{0}' is referencing static field in type '{1}' (CrossRef)</value>
@@ -271,5 +271,68 @@
   </data>
   <data name="SMA9100_Title" xml:space="preserve">
     <value>Underlining as Warning</value>
+  </data>
+  <data name="SMA0020_Title" xml:space="preserve">
+    <value>Unchecked Cast to Enum Type</value>
+  </data>
+  <data name="SMA0020_Description" xml:space="preserve">
+    <value>Unchecked value conversion to enum type.</value>
+  </data>
+  <data name="SMA0020_MessageFormat" xml:space="preserve">
+    <value>Unchecked value of '{0}' (CastToEnum)</value>
+  </data>
+  <data name="SMA0021_Description" xml:space="preserve">
+    <value>Casting enum type to other.</value>
+  </data>
+  <data name="SMA0021_Title" xml:space="preserve">
+    <value>Cast from Enum Type to Other</value>
+  </data>
+  <data name="SMA0021_MessageFormat" xml:space="preserve">
+    <value>Conversion of '{0}' (CastFromEnum)</value>
+  </data>
+  <data name="SMA0022_Title" xml:space="preserve">
+    <value>Unchecked Cast to Generic Enum Type</value>
+  </data>
+  <data name="SMA0022_Description" xml:space="preserve">
+    <value>Unchecked value conversion to generic enum type.</value>
+  </data>
+  <data name="SMA0022_MessageFormat" xml:space="preserve">
+    <value>Unchecked value of '{0}' (CastToGenericEnum)</value>
+  </data>
+  <data name="SMA0023_Title" xml:space="preserve">
+    <value>Cast from Generic Enum Type to Other</value>
+  </data>
+  <data name="SMA0023_Description" xml:space="preserve">
+    <value>Casting generic enum type to other.</value>
+  </data>
+  <data name="SMA0023_MessageFormat" xml:space="preserve">
+    <value>Conversion of '{0}' (CastFromGenericEnum)</value>
+  </data>
+  <data name="SMA0024_Title" xml:space="preserve">
+    <value>Enum to String</value>
+  </data>
+  <data name="SMA0024_Description" xml:space="preserve">
+    <value>Trying to convert enum value to string.</value>
+  </data>
+  <data name="SMA0024_MessageFormat" xml:space="preserve">
+    <value>String representation of '{0}' could be modified by obfuscation tool (EnumToString)</value>
+  </data>
+  <data name="SMA0025_Title" xml:space="preserve">
+    <value>Enum System Method</value>
+  </data>
+  <data name="SMA0025_Description" xml:space="preserve">
+    <value>Calling enum system method.</value>
+  </data>
+  <data name="SMA0025_MessageFormat" xml:space="preserve">
+    <value>Enum handling should be encapsulated into own utility class (EnumMethod)</value>
+  </data>
+  <data name="SMA0026_Title" xml:space="preserve">
+    <value>Enum Obfuscation</value>
+  </data>
+  <data name="SMA0026_MessageFormat" xml:space="preserve">
+    <value>Obfuscation attribute should be added to prevent name changes (EnumObfuscation)</value>
+  </data>
+  <data name="SMA0026_Description" xml:space="preserve">
+    <value>Enum obfuscation should be controlled.</value>
   </data>
 </root>

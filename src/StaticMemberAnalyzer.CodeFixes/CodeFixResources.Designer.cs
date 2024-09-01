@@ -61,11 +61,11 @@ namespace SatorImaging.StaticMemberAnalyzer.CodeFixes {
         }
         
         /// <summary>
-        ///   Make uppercase に類似しているローカライズされた文字列を検索します。
+        ///   Exclude Enum Member from Obfuscation に類似しているローカライズされた文字列を検索します。
         /// </summary>
-        internal static string CodeFixTitle {
+        internal static string CodeFix_EnumObfuscation {
             get {
-                return ResourceManager.GetString("CodeFixTitle", resourceCulture);
+                return ResourceManager.GetString("CodeFix_EnumObfuscation", resourceCulture);
             }
         }
     }
