@@ -68,7 +68,7 @@ jobs:
     - name: Restore dependencies
       run: |
         cd src
-        dotnet restore -c Release  -p:DontReferenceItself=true  # required to avoid cyclic ref error
+        dotnet restore  -p:DontReferenceItself=true  # required to avoid cyclic ref error
     - name: Build
       run: |
         cd src
