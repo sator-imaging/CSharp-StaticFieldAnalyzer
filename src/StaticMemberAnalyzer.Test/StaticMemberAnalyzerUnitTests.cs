@@ -186,6 +186,28 @@ namespace Test
         }
 
 
+        /* =      other attr      = */
+
+        [TestMethod]
+        public async Task BasicTest_AttrExists_OtherAttr()
+        {
+            var test = @"
+using System.Reflection;
+
+namespace Test
+{
+    [System.ComponentModel.Category]
+    [Obfuscation(StripAfterObfuscation = true)]
+    public enum {|#0:" + TEST_ENUM_NAME + @"|} { Value }
+}
+";
+            var expected = VerifyCS.Diagnostic(EnumAnalyzer.RuleId_EnumObfuscation).WithLocation(0).WithArguments(TEST_ENUM_NAME);
+            await VerifyCS.VerifyCodeFixAsync(test, expected,
+                GetExpectedResult(@"[System.ComponentModel.Category]
+    [Obfuscation(Exclude = true, ApplyToMembers = true, StripAfterObfuscation = true)]"));
+        }
+
+
         /* =      attr namings      = */
 
         [TestMethod]

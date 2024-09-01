@@ -85,7 +85,8 @@ namespace SatorImaging.StaticMemberAnalyzer.CodeFixes.Providers
                     )
                 );
 
-                // NOTE: replacing root WON'T work as expected...??????
+                // NOTE: replacing root instance WON'T work as expected...??????
+                //       it seems that only once is allowed to update content. do it at last for all code paths. don't do here.
                 //root = root.WithUsings(updatedUsings);
             }
 
@@ -153,7 +154,7 @@ namespace SatorImaging.StaticMemberAnalyzer.CodeFixes.Providers
                     })
                     ;
 
-                // NOTE: to prevent error on no parentheses syntax --> [Obfuscation]
+                // NOTE: to prevent error on no parentheses syntax --> `[Obfuscation]` (no '()' at end)
                 var updatedArgList = foundAttr.ArgumentList ?? SyntaxFactory.AttributeArgumentList();
                 var updatedArgs = updatedArgList.Arguments.Where(static x =>
                 {
@@ -161,6 +162,7 @@ namespace SatorImaging.StaticMemberAnalyzer.CodeFixes.Providers
                 });
 
                 updatedArgs = updatedArgs.ToImmutableArray()
+                    //1st
                     .Insert(0, SyntaxFactory.AttributeArgument(
                         SyntaxFactory.NameEquals(
                             SyntaxFactory.IdentifierName(nameof(ObfuscationAttribute.Exclude))
@@ -168,6 +170,7 @@ namespace SatorImaging.StaticMemberAnalyzer.CodeFixes.Providers
                         null,
                         SyntaxFactory.LiteralExpression(SyntaxKind.TrueLiteralExpression)
                     ))
+                    //2nd
                     .Insert(1, SyntaxFactory.AttributeArgument(
                         SyntaxFactory.NameEquals(
                             SyntaxFactory.IdentifierName(nameof(ObfuscationAttribute.ApplyToMembers))

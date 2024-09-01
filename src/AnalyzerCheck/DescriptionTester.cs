@@ -1,5 +1,4 @@
 ﻿#pragma warning disable IDE0079
-
 #pragma warning disable IDE0062
 #pragma warning disable IDE0059
 #pragma warning disable IDE0039
@@ -49,6 +48,7 @@ namespace AnalyzerCheck.Tests
         virtual public void BaseMethod() { }
     }
 
+    [DescriptionAttribute]
     interface ITSelfTester<TSelf> { }
 
     [Category("Category Attribute"), DisplayName("Display Name Attribute")]
@@ -187,6 +187,6 @@ namespace AnalyzerCheck.Tests
 }
 
 
-// NOTE: this will show many of underlines (CompilationUnitSyntax)
-//       must ignore
-void Test() { }
+//// NOTE: this will show many of underlines (CompilationUnitSyntax)
+////       must ignore
+//void Test() { }

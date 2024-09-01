@@ -1,7 +1,24 @@
-﻿using System;
+﻿#pragma warning disable IDE0079
+#pragma warning disable IDE0062
+#pragma warning disable IDE0059
+#pragma warning disable IDE0039
+#pragma warning disable CS0168
+#pragma warning disable IDE0060
+#pragma warning disable IDE0052
+#pragma warning disable IDE0044
+#pragma warning disable IDE0051
+#pragma warning disable CS8618
+#pragma warning disable CA1822
+#pragma warning disable CA2211
+
+using System;
+using System.ComponentModel;
 
 namespace AnalyzerCheck
 {
+    [DescriptionAttribute]
+    public class Value { }
+
     /// <summary>
     /// <see cref="ITest{TSelf, T}"/>
     /// <see cref="TSelfWeirdSyntaxTester"/>
@@ -29,8 +46,8 @@ namespace AnalyzerCheck
     public class CovariantOK3 : ICovariance<System.Object> { }
     public class CovariantOK4 : ICovariance<CovariantOK4> { }
     public class CovariantOK5 : VariantBase, ICovariance<VariantBase> { }
-    public class CovariantNG : ICovariance<VariantBase> { }
-    public class CovariantNG2 : ICovariance<CovariantNG3> { }
+    public class CovariantNG : ICovariance<VariantBase> { }    // not inherit
+    public class CovariantNG2 : ICovariance<CovariantNG3> { }  // contravariant
     public class CovariantNG3 : CovariantNG2, ICovariance<Something> { }
     // contravariant
     public class ContravariantOK : IContravariance<ContravariantOK2> { }
@@ -43,11 +60,12 @@ namespace AnalyzerCheck
     public class InvariantOK : ITypeArgConstraint<InvariantOK> { };
     public class InvariantNG : ITypeArgConstraint<InvariantOK> { };
 
-    // namespace WON'T be considered
-    public class NamespaceNotConsidered
-        : TSelfBase<int, AnalyzerCheck.NamespaceNotConsidered>, ITest<NamespaceNotConsidered, long>
-    {
-    }
+    // generic type
+    public interface IGenericTSelf<TSelf, TOther> where TSelf : IGenericTSelf<TSelf, TOther> { }
+    public class GenericTSelfOK : IGenericTSelf<GenericTSelfOK, int> { }
+    public class GenericTSelfOK2<T, U> : IGenericTSelf<GenericTSelfOK2<T /**/, /**/ U>, U> { }
+    public class GenericTSelfNG<T, U> : IGenericTSelf<GenericTSelfNG</**/ T, /**/ int>, T> { }
+    public class GenericTSelfNG2 : IGenericTSelf<GenericTSelfOK, int> { }
 
     // weird trivia
     public class TSelfWeirdSyntaxTester
