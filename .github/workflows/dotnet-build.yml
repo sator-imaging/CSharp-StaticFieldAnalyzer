@@ -47,6 +47,7 @@ on:
 
 env:
   unity_folder: 'SatorImaging.StaticMemberAnalyzer.Unity'  # no spaces!
+  test_csproj: 'StaticMemberAnalyzer.Test/StaticMemberAnalyzer.Test.csproj'
   GH_TOKEN: ${{ github.token }}  # for github CLI
 
 jobs:
@@ -80,7 +81,7 @@ jobs:
     - name: Test
       run: |
         cd src
-        dotnet test --no-build --verbosity normal  -p:DontReferenceItself=true
+        dotnet test ${{ env.test_csproj }} --no-build --verbosity normal  -p:DontReferenceItself=true
 
     - name: Upload
       uses: actions/upload-artifact@v4
