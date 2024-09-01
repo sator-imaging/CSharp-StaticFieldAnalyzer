@@ -47,7 +47,7 @@ on:
 
 env:
   unity_folder: 'SatorImaging.StaticMemberAnalyzer.Unity'  # no spaces!
-  test_csproj: 'StaticMemberAnalyzer.Test/StaticMemberAnalyzer.Test.csproj'
+  test_csproj: 'StaticMemberAnalyzer.Test/SatorImaging.StaticMemberAnalyzer.Test.csproj'
   GH_TOKEN: ${{ github.token }}  # for github CLI
 
 jobs:
