@@ -78,7 +78,9 @@ jobs:
         dotnet build -c Release --no-restore  -p:ContinuousIntegrationBuild=true
     
     - name: Test
-      run: dotnet test --no-build --verbosity normal  -p:DontReferenceItself=true
+      run: |
+        cd src
+        dotnet test --no-build --verbosity normal  -p:DontReferenceItself=true
 
     - name: Upload
       uses: actions/upload-artifact@v4
