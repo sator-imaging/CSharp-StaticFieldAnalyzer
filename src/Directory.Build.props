@@ -23,11 +23,11 @@
 		<GlobalPackageIconUrl>https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer/raw/main/assets/icon-128px.png</GlobalPackageIconUrl>
 
 		<!-- don't forget to update the following PackageReference version range -->
-		<GlobalPackageVersion>1.4.0</GlobalPackageVersion>
+		<GlobalPackageVersion>1.5.0</GlobalPackageVersion>
 	</PropertyGroup>
 
 	<!-- CMD: dotnet restore -p:DontReferenceItself=true  other-options... -->
-	<ItemGroup Condition=" '$(DontReferenceItself)' != 'true' ">
+	<ItemGroup Condition=" '$(DontReferenceItself)' != 'true' and '$(MSBuildProjectFile)' != 'AnalyzerCheck.csproj' ">
 		<PackageReference Include="SatorImaging.StaticMemberAnalyzer" Version="*">
 		<PrivateAssets>all</PrivateAssets>
 		<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
