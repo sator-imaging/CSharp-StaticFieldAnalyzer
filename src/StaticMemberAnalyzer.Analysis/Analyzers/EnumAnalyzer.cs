@@ -19,6 +19,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
@@ -29,7 +30,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class EnumAnalyzer : DiagnosticAnalyzer
     {
-        #region     /* =      STATIC MEMBER DESCRIPTOR      = */
+        #region     /* =      DESCRIPTOR      = */
 
         public const string RuleId_CastToEnum = "SMA0020";
         private static readonly DiagnosticDescriptor Rule_CastToEnum = new(
@@ -105,6 +106,28 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             isEnabledByDefault: true,
             description: new LocalizableResourceString(nameof(Resources.SMA0026_Description), Resources.ResourceManager, typeof(Resources)));
 
+
+        public const string RuleId_UnusualEnum = "SMA0027";
+        private static readonly DiagnosticDescriptor Rule_UnusualEnum = new(
+            RuleId_UnusualEnum,
+            new LocalizableResourceString(nameof(Resources.SMA0027_Title), Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString(nameof(Resources.SMA0027_MessageFormat), Resources.ResourceManager, typeof(Resources)),
+            Core.Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: new LocalizableResourceString(nameof(Resources.SMA0027_Description), Resources.ResourceManager, typeof(Resources)));
+
+
+        public const string RuleId_EnumLike = "SMA0028";
+        private static readonly DiagnosticDescriptor Rule_EnumLike = new(
+            RuleId_EnumLike,
+            new LocalizableResourceString(nameof(Resources.SMA0028_Title), Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString(nameof(Resources.SMA0028_MessageFormat), Resources.ResourceManager, typeof(Resources)),
+            Core.Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: new LocalizableResourceString(nameof(Resources.SMA0028_Description), Resources.ResourceManager, typeof(Resources)));
+
         #endregion
 
 
@@ -118,7 +141,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             Rule_CastFromGenericEnum,
             Rule_EnumToString,
             Rule_EnumMethod,
-            Rule_EnumObfuscation
+            Rule_EnumObfuscation,
+            Rule_UnusualEnum,
+            Rule_EnumLike
             );
 
 
@@ -133,8 +158,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             context.RegisterOperationAction(AnalyzeEnumOperations,
                 ImmutableArray.Create(OperationKind.Conversion, OperationKind.Invocation));
 
-            //context.RegisterSyntaxNodeAction(AnalyzeExplicitCast,
-            //    ImmutableArray.Create(SyntaxKind.CastExpression));
+            context.RegisterSyntaxNodeAction(AnalyzeEnumLikePattern,
+                ImmutableArray.Create(SyntaxKind.ClassDeclaration));
 
             context.RegisterSymbolAction(AnalyzeEnumDeclaration,
                 ImmutableArray.Create(SymbolKind.NamedType));
@@ -220,39 +245,254 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         }
 
 
-        /*
-        private static void AnalyzeExplicitCast(SyntaxNodeAnalysisContext context)
+        [ThreadStatic] static List<IFieldSymbol>? ts_enumLikePatternFieldSymbolList;
+        [ThreadStatic] static List<IFieldSymbol>? ts_enumLikePatternEntriesSymbolList;
+
+        private static void AnalyzeEnumLikePattern(SyntaxNodeAnalysisContext context)
         {
-            if (context.Node is not CastExpressionSyntax castStx)
+            if (context.Node is not ClassDeclarationSyntax clsDeclStx)
                 return;
 
             var model = context.SemanticModel;
-            if (model.GetTypeInfo(castStx.Type).ConvertedType is not ITypeSymbol castToSymbol)
+            if (model.GetDeclaredSymbol(clsDeclStx) is not INamedTypeSymbol fieldContainerSymbol)
                 return;
 
-            // generic type parameter??
-            if (castToSymbol is ITypeParameterSymbol typeParamSymbol)
+            if (fieldContainerSymbol.IsAbstract
+             || fieldContainerSymbol.IsStatic
+             || fieldContainerSymbol.IsImplicitlyDeclared
+             )
             {
-                if (HasEnumConstraint(typeParamSymbol))
-                {
-                    context.ReportDiagnostic(Diagnostic.Create(
-                        Rule_CastToGenericEnum, castStx.GetLocation(), typeParamSymbol.Name));
-                }
                 return;
             }
 
-            var castToEnum = IsEnumDerivedType(castToSymbol);
-            if (castToEnum)
+            const string TARGET_FIELD_NAME = "Entries";
+            const int LIST_CAPACITY = 8;
+
+            var enumFieldList = (ts_enumLikePatternFieldSymbolList ??= new(capacity: LIST_CAPACITY));
+            enumFieldList.Clear();
+
+            var enumEntriesList = (ts_enumLikePatternEntriesSymbolList ??= new(capacity: LIST_CAPACITY));
+            enumEntriesList.Clear();
+
+            foreach (var memberSymbol in fieldContainerSymbol.GetMembers())
             {
-                context.ReportDiagnostic(Diagnostic.Create(
-                    Rule_CastToEnum, castStx.GetLocation(), castStx.Type.ToString()));
+                if (memberSymbol is not IFieldSymbol fieldSymbol)
+                    continue;
+
+                //if (model.GetDeclaredSymbol(fieldDeclStx.Declaration.Variables[0]) is not IFieldSymbol fieldSymbol)
+                //{
+                //    continue;
+                //}
+
+                // check static AND readonly modifiers only here!!
+                if (!fieldSymbol.IsStatic || !fieldSymbol.IsReadOnly)
+                    continue;
+
+                if (fieldSymbol.IsImplicitlyDeclared)
+                    continue;
+
+                // is enum member?
+                if (SymbolEqualityComparer.Default.Equals(fieldSymbol.Type, fieldContainerSymbol))
+                {
+                    //public?
+                    if ((fieldSymbol.DeclaredAccessibility & Accessibility.Public) == Accessibility.Public)
+                    {
+                        enumFieldList.Add(fieldSymbol);
+                    }
+
+                    continue;
+                }
+
+                //entries??
+                string fieldSymbolName = fieldSymbol.Name;
+                if (!fieldSymbolName.StartsWith(TARGET_FIELD_NAME, StringComparison.Ordinal/*IgnoreCase*/)
+                 && !fieldSymbolName.EndsWith(TARGET_FIELD_NAME, StringComparison.OrdinalIgnoreCase)
+                )
+                {
+                    continue;
+                }
+
+                //type??
+                if (fieldSymbol.Type is IArrayTypeSymbol arr && SymbolEqualityComparer.Default.Equals(arr.ElementType, fieldContainerSymbol))
+                {
+                    goto ENTRIES_FOUND;
+                }
+
+                if (IsReadOnlyMemory(fieldSymbol.Type, fieldContainerSymbol))
+                {
+                    goto ENTRIES_FOUND;
+                }
+
+                // not found
+                continue;
+
+            //entries!!
+            ENTRIES_FOUND:
+                enumEntriesList.Add(fieldSymbol);
+
+                // check and report public modifier existence
+                if ((fieldSymbol.DeclaredAccessibility & Accessibility.Public) != Accessibility.Public)
+                {
+                    foreach (var stxRef in fieldSymbol.DeclaringSyntaxReferences)
+                    {
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            Rule_EnumLike, stxRef.GetSyntax().GetLocation(), fieldContainerSymbol.Name,
+                            "'Entries' field is not 'public'"));
+                    }
+                }
+            }
+
+
+            /* =      class      = */
+
+            // only when 'Entries' found
+            if (enumEntriesList.Count > 0)
+            {
+                const Accessibility ACCESS_HIDDEN = Accessibility.Protected | Accessibility.Private | Accessibility.NotApplicable;
+
+                string? fieldContainerSymbolName = null;
+
+                var ctors = fieldContainerSymbol.InstanceConstructors;
+                if ((ctors.Length == 1 && ctors[0].IsImplicitlyDeclared)
+                  || ctors.Any(static x => (x.DeclaredAccessibility & ~ACCESS_HIDDEN) != 0)
+                  || ctors.Length == 0
+                )
+                {
+                    fieldContainerSymbolName ??= fieldContainerSymbol.Name;
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        Rule_EnumLike, clsDeclStx.Identifier.GetLocation(), fieldContainerSymbolName,
+                        "constructor is not 'private' or 'protected'"));
+                }
+
+                if (!fieldContainerSymbol.IsSealed)
+                {
+                    fieldContainerSymbolName ??= fieldContainerSymbol.Name;
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        Rule_EnumLike, clsDeclStx.Identifier.GetLocation(), fieldContainerSymbolName,
+                        "type should be 'sealed'"));
+                }
+            }
+
+
+            /* =      entries fields      = */
+
+            for (int i = 0; i < enumEntriesList.Count; i++)
+            {
+                AnalyzeEnumLikeEntriesField(context, enumEntriesList[i], enumFieldList);
+            }
+        }
+
+        private static void AnalyzeEnumLikeEntriesField(SyntaxNodeAnalysisContext context,
+                                                        IFieldSymbol entriesSymbol,
+                                                        List<IFieldSymbol> enumFieldList
+            )
+        {
+            var entriesContainerSymbol = entriesSymbol.ContainingType;
+            string? entriesContainerSymbolName = null;
+
+            /* =      Entries initializer      = */
+
+            var initializerStx = entriesSymbol.DeclaringSyntaxReferences[0]?.GetSyntax()
+                .DescendantNodes().OfType<EqualsValueClauseSyntax>().FirstOrDefault();
+
+            if (initializerStx == null)
+            {
+                foreach (var stxRef in entriesSymbol.DeclaringSyntaxReferences)
+                {
+                    entriesContainerSymbolName ??= entriesContainerSymbol.Name;
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        Rule_EnumLike, stxRef.GetSyntax().GetLocation(), entriesContainerSymbolName,
+                        "'Entries' doesn't have field initializer"));
+                }
+
+                return;
+            }
+
+
+            InitializerExpressionSyntax? initExprStx =
+                initializerStx.DescendantNodes().OfType<ArrayCreationExpressionSyntax>().FirstOrDefault()?.Initializer
+             ?? initializerStx.DescendantNodes().OfType<ImplicitArrayCreationExpressionSyntax>().FirstOrDefault()?.Initializer
+            ;
+
+            if (initExprStx == null)
+            {
+                goto REPORT_INITIALIZER;
             }
             else
             {
-                AnalyzeCastFromEnum(castStx, castToSymbol, model, context.ReportDiagnostic);
+                var initRefSyntaxes = initExprStx.DescendantNodes().OfType<IdentifierNameSyntax>()
+                    .ToImmutableArray();
+
+                if (initRefSyntaxes.Length != enumFieldList.Count)
+                {
+                    goto REPORT_INITIALIZER;
+                }
+                else
+                {
+                    var model = context.Compilation.GetSemanticModel(initExprStx.SyntaxTree);
+
+                    var initExprSymbols = initRefSyntaxes
+                        .Select(x =>
+                        {
+                            if (model.GetOperation(x) is IFieldReferenceOperation fieldRefOp)
+                            {
+                                return fieldRefOp;
+                            }
+                            return null;
+                        })
+                        .Where(static x => x != null)
+                        .ToImmutableArray();
+
+                    for (int i = 0; i < enumFieldList.Count; i++)
+                    {
+                        if (!SymbolEqualityComparer.Default.Equals(initExprSymbols[i]/*checked*/!.Member, enumFieldList[i]))
+                        {
+                            goto REPORT_INITIALIZER;
+                        }
+                    }
+
+                    return;
+                }
             }
+
+
+        REPORT_INITIALIZER:
+            entriesContainerSymbolName ??= entriesContainerSymbol.Name;
+            context.ReportDiagnostic(Diagnostic.Create(
+                Rule_EnumLike, initializerStx.GetLocation(), entriesContainerSymbolName,
+                "'Entries' doesn't have all of 'public static readonly' field of type '" + entriesContainerSymbolName + "' in declared order"));
         }
-        */
+
+        private static bool IsReadOnlyMemory(ITypeSymbol memoryCandidateType,
+                                             ITypeSymbol elementType
+            )
+        {
+            if (memoryCandidateType is not INamedTypeSymbol targetType)
+                return false;
+
+            if (targetType.TypeArguments.Length != 1)
+                return false;
+
+            if (!SymbolEqualityComparer.Default.Equals(targetType.TypeArguments[0], elementType))
+                return false;
+
+            //Core.ReportDebugMessage(reportAction,
+            //    "TARGET TYPE NAME: ", targetType.ContainingNamespace.ContainingNamespace.IsGlobalNamespace.ToString(), syntax.GetLocation());
+
+            if (targetType.Name != nameof(System.ReadOnlyMemory<int>))
+                return false;
+
+            if (!(
+                targetType.ContainingNamespace.Name == nameof(System)
+             && targetType.ContainingNamespace.ContainingNamespace.IsGlobalNamespace
+                )
+            )
+            {
+                return false;
+            }
+
+            return true;
+        }
 
 
         private static void AnalyzeEnumDeclaration(SymbolAnalysisContext context)
@@ -260,26 +500,98 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (context.Symbol is not INamedTypeSymbol { TypeKind: TypeKind.Enum } namedSymbol)
                 return;
 
-            const string attrFullName = nameof(System) + "." + nameof(System.Reflection) + "." + nameof(ObfuscationAttribute);
-            foreach (var attr in namedSymbol.GetAttributes())
+            var attrs = namedSymbol.GetAttributes();
+
+            const string ATTR_OBFUSCATION_NAME_FULL = nameof(System) + "." + nameof(System.Reflection) + "." + nameof(System.Reflection.ObfuscationAttribute);
+            const string ATTR_FLAGS_NAME_FULL = nameof(System) + "." + nameof(System.FlagsAttribute);
+
+            bool hasObfuscationAttr = false;
+            bool hasFlagsAttr = false;
+            foreach (var attr in attrs)
             {
-                if (attr.AttributeClass.Name == nameof(System.Reflection.ObfuscationAttribute)
-                 && attr.AttributeClass.ToString() == attrFullName
-                )
+                var attrName = attr.AttributeClass.Name;
+                switch (attrName)
                 {
-                    if (attr.NamedArguments.Any(static x => x.Key == nameof(ObfuscationAttribute.Exclude) && x.Value.Value is bool BOOL && BOOL)
-                     && attr.NamedArguments.Any(static x => x.Key == nameof(ObfuscationAttribute.ApplyToMembers) && x.Value.Value is bool BOOL && BOOL)
-                    )
-                    {
-                        return;
-                    }
+                    case nameof(System.Reflection.ObfuscationAttribute):
+                        {
+                            if (attr.AttributeClass.ToString() == ATTR_OBFUSCATION_NAME_FULL)
+                            {
+                                if (attr.NamedArguments.Any(static x => x.Key == nameof(ObfuscationAttribute.Exclude) && x.Value.Value is bool BOOL && BOOL)
+                                 && attr.NamedArguments.Any(static x => x.Key == nameof(ObfuscationAttribute.ApplyToMembers) && x.Value.Value is bool BOOL && BOOL)
+                                )
+                                {
+                                    hasObfuscationAttr = true;
+                                }
+                            }
+                        }
+                        break;
+
+                    case nameof(System.FlagsAttribute):
+                        {
+                            if (attr.AttributeClass.ToString() == ATTR_FLAGS_NAME_FULL)
+                            {
+                                hasFlagsAttr = true;
+                            }
+                        }
+                        break;
                 }
             }
 
-            foreach (var loc in namedSymbol.Locations)
+            if (!hasObfuscationAttr)
             {
-                context.ReportDiagnostic(Diagnostic.Create(
-                    Rule_EnumObfuscation, loc));
+                foreach (var loc in namedSymbol.Locations)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        Rule_EnumObfuscation, loc));
+                }
+            }
+
+            if (!hasFlagsAttr)
+            {
+                AnalyzeUnusualEnum(context, namedSymbol);
+            }
+        }
+
+        private static void AnalyzeUnusualEnum(SymbolAnalysisContext context,
+                                               INamedTypeSymbol namedSymbol
+            )
+        {
+            // partial enum is not allowed, take first one
+            var declareStx = namedSymbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
+            if (declareStx == null)
+                return;
+
+            //underlyingType
+            if (namedSymbol.EnumUnderlyingType.SpecialType != SpecialType.System_Int32)
+            {
+                var baseStx = declareStx.DescendantNodes().OfType<BaseTypeSyntax>().FirstOrDefault();
+                if (baseStx != null)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        Rule_UnusualEnum, baseStx.GetLocation()));
+                }
+            }
+
+            //initializer
+            foreach (var memberDeclare in declareStx.DescendantNodes().OfType<EnumMemberDeclarationSyntax>())
+            {
+                foreach (var childNode in memberDeclare.ChildNodes())
+                {
+                    //var grandNodes = childNode.ChildNodes();
+                    //if (grandNodes.Any())
+                    //{
+                    //    foreach (var grand in grandNodes)
+                    //    {
+                    //        context.ReportDiagnostic(Diagnostic.Create(
+                    //            Rule_UnusualEnum, grand.GetLocation()));
+                    //    }
+                    //}
+                    //else
+                    {
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            Rule_UnusualEnum, childNode.GetLocation()));
+                    }
+                }
             }
         }
 
@@ -299,7 +611,11 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         }
 
 
-        private static void AnalyzeCastFromEnum(SyntaxNode syntax, ITypeSymbol castToSymbol, SemanticModel model, Action<Diagnostic> reportAction)
+        private static void AnalyzeCastFromEnum(SyntaxNode syntax,
+                                                ITypeSymbol castToSymbol,
+                                                SemanticModel model,
+                                                Action<Diagnostic> reportAction
+            )
         {
             ITypeSymbol? castFromSymbol = null;
 
@@ -341,10 +657,15 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             //    Core.ReportDebugMessage(reportAction, "Underlying Type Mismatch", null, syntax.GetLocation());
             //}
             //else
+
+            if (IsEnumDerivedType(castFromSymbol))
             {
                 reportAction.Invoke(Diagnostic.Create(
                     Rule_CastFromEnum, syntax.GetLocation(), castFromSymbol.Name));
             }
+
+            //Core.ReportDebugMessage(reportAction,
+            //    nameof(Rule_CastFromEnum) + ": " + syntax.Kind(), syntax.ToString(), syntax.GetLocation());
         }
 
     }
