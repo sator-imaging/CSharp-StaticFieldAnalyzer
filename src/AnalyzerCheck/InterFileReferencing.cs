@@ -10,15 +10,18 @@
 #pragma warning disable CS8618
 #pragma warning disable CA1822
 #pragma warning disable CA2211
+#pragma warning disable CA1825
+#pragma warning disable IDE0300
+#pragma warning disable CS0219
 
-using System.ComponentModel;
+using System;
 
 namespace AnalyzerCheck;
 
 internal class InterFileReferencing
 {
     public readonly static int CrossRef = 10 + OtherClass.I + 20;
-    public readonly static double PublicDouble = 99.99;
+    public readonly static Double PublicDouble = 99.99;
 }
 
 partial struct PartialStruct

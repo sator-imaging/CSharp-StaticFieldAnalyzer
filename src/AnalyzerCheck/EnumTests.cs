@@ -10,17 +10,21 @@
 #pragma warning disable CS8618
 #pragma warning disable CA1822
 #pragma warning disable CA2211
+#pragma warning disable CA1825
+#pragma warning disable IDE0300
+#pragma warning disable CS0219
 
 using System;
 using System.ComponentModel;
 using System.Reflection;
+using ShortAlias = System.Int16;
 
 namespace AnalyzerCheck;
 
 internal class EnumTests
 {
     [Category]
-    public enum EShort : short { Value }
+    public enum EShort : ShortAlias { Value }
     public enum EUShort : ushort { Value }
 
     [Obfuscation()] public enum EByte : byte { Value }
@@ -29,27 +33,31 @@ internal class EnumTests
     [Obfuscation(StripAfterObfuscation = true)]
     public enum ELong : long { Value }
 
+    // unusual enum definition?
     [Obfuscation(ApplyToMembers = true)]
-    public enum EInt : int
+    public enum EULong : ulong
     {
-        Value = -1,
-        Other = 1,
+        Value = 10,
+        Other = 20,
     }
 
+    // unusual definition check is disabled by adding 'Flags' attribute
+    [Flags]
     [Obfuscation(Exclude = true)]
     public enum EUInt : uint
     {
-        Value,
-        Other,
+        Value = 0,
+        Other = 1,
     }
 
-    // both Exclude and ApplyToMembers are set to true
-    // * `true` or something produces boolean result are accepted
-    [Obfuscation(Exclude = true, ApplyToMembers = "A" != "B")]
-    public enum EULong : ulong
+    // obfuscation have controlled?
+    //   check both Exclude and ApplyToMembers are set to true
+    //   expression resulting `true` are accepted
+    [Obfuscation(ApplyToMembers = "A" != "B", Exclude = true)]
+    public enum EInt : int
     {
-        Value,
-        Other,
+        Value = 0,
+        Other = 1,
     }
 
 
@@ -71,7 +79,7 @@ internal class EnumTests
         _ = (EULong)(object)(EUInt.Value);
     }
 
-    void BasicTests(EUInt value)
+    void BasicTests(EInt value)
     {
         // cast to enum can lead invalid value creation
         _ = (EInt)310;
@@ -89,16 +97,20 @@ internal class EnumTests
         _ = Enum.ToObject(typeof(EInt), 0);
         _ = Enum.TryParse<EInt>("", out _);
 
-        // string conversion should be encapsulated and centerized to
-        // main app's enum utility. it should not be done freely in user code
+        // string conversion should be encapsulated and controlled only in
+        // app's enum utility. it should not be done freely in user code
         string name = EInt.Value.ToString();
-        string generic = value.ToString();
+        string other = value.ToString();
+
+        // only allow handling value as is
+        _ = EnumConstraintGenericType(value);
     }
 
     int EnumConstraintGenericType<T>(T value) where T : Enum
     {
-        // casting to generic enum type needs intermediate cast
-        _ = (T)(object)(310 + 310);
+        _ = value.ToString();
+        _ = (T)(object)(310 + 310);  // require intermediate cast
+        _ = (T)(object)value;
         return (int)(object)value;
     }
 
@@ -106,11 +118,14 @@ internal class EnumTests
     // expect no warnings
     int NonEnumGenericTypeParameter<T>(T value) where T : struct
     {
+        _ = value.ToString();
         _ = (T)(object)310;
         return (int)(object)value;
     }
 
 }
+
+
 
 public enum EnumTypeShouldBeExcludedFromObfuscation
 {

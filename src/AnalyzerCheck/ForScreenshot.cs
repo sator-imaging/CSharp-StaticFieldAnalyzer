@@ -10,6 +10,9 @@
 #pragma warning disable CS8618
 #pragma warning disable CA1822
 #pragma warning disable CA2211
+#pragma warning disable CA1825
+#pragma warning disable IDE0300
+#pragma warning disable CS0219
 
 using System.ComponentModel;
 
