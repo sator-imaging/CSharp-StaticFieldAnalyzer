@@ -5,6 +5,7 @@
 
 # added
 .*/
+*/**/.*
 
 # User-specific files
 *.rsuser
