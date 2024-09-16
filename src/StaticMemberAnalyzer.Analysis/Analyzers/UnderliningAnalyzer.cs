@@ -30,7 +30,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class UnderliningAnalyzer : DiagnosticAnalyzer
     {
-        #region     /* =      DESCRIPTION DESCRIPTOR      = */
+        #region     /* =      DESCRIPTOR      = */
 
         public const string RuleId_SymbolDesc = "SMA9000";
         private static readonly DiagnosticDescriptor Rule_SymbolDesc = new(

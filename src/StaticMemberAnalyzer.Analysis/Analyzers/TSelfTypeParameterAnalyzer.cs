@@ -25,7 +25,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class TSelfTypeParameterAnalyzer : DiagnosticAnalyzer
     {
-        #region     /* =      TSELF DESCRIPTOR      = */
+        #region     /* =      DESCRIPTOR      = */
 
         public const string RuleId_TSelfInvariant = "SMA0010";
         private static readonly DiagnosticDescriptor Rule_TSelfInvariant = new(

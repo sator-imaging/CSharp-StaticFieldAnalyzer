@@ -29,7 +29,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class StaticMemberAnalyzer : DiagnosticAnalyzer
     {
-        #region     /* =      STATIC MEMBER DESCRIPTOR      = */
+        #region     /* =      DESCRIPTOR      = */
 
         public const string RuleId_WrongInit = "SMA0001";
         private static readonly DiagnosticDescriptor Rule_WrongInit = new(
