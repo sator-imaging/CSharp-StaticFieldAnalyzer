@@ -61,6 +61,15 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
+        ///   Static Field Analysis に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0001__MD_TITLE__ {
+            get {
+                return ResourceManager.GetString("SMA0001__MD_TITLE__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Static field declaration order is wrong. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0001_Description {
@@ -169,7 +178,16 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   &apos;TSelf&apos; type arg should be pointing itself. に類似しているローカライズされた文字列を検索します。
+        ///   `TSelf` Type Arg Analysis に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0010__MD_TITLE__ {
+            get {
+                return ResourceManager.GetString("SMA0010__MD_TITLE__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   `TSelf` type arg should be pointing itself. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0010_Description {
             get {
@@ -196,7 +214,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   &apos;TSelf&apos; type arg should be pointing itself or its base type. に類似しているローカライズされた文字列を検索します。
+        ///   `TSelf` type arg should be pointing itself or its base type. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0011_Description {
             get {
@@ -223,7 +241,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   &apos;TSelf&apos; type arg should be pointing itself or its derived type. に類似しているローカライズされた文字列を検索します。
+        ///   `TSelf` type arg should be pointing itself or its derived type. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0012_Description {
             get {
@@ -246,6 +264,15 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         internal static string SMA0012_Title {
             get {
                 return ResourceManager.GetString("SMA0012_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Enum Type Analysis に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0020__MD_TITLE__ {
+            get {
+                return ResourceManager.GetString("SMA0020__MD_TITLE__", resourceCulture);
             }
         }
         
@@ -394,7 +421,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Enum handling should be encapsulated into own utility class (EnumMethod) に類似しているローカライズされた文字列を検索します。
+        ///   Enum handling should be encapsulated in utility class (EnumMethod) に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0025_MessageFormat {
             get {
@@ -412,7 +439,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Enum obfuscation should be controlled. に類似しているローカライズされた文字列を検索します。
+        ///   Enum obfuscation should have controlled. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0026_Description {
             get {
@@ -421,7 +448,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Obfuscation attribute should be added to prevent name changes (EnumObfuscation) に類似しているローカライズされた文字列を検索します。
+        ///   &apos;Obfuscation&apos; attribute should be added to prevent name changes (EnumObfuscation) に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0026_MessageFormat {
             get {
@@ -439,7 +466,143 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        ///   Enum w/o `Flags` attribute should be defined as usual. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0027_Description {
+            get {
+                return ResourceManager.GetString("SMA0027_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Non-Flags enum type should have int-typed and no index modifier (UnusualEnum) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0027_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0027_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Unusual Enum Definition に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0027_Title {
+            get {
+                return ResourceManager.GetString("SMA0027_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Enum-like pattern implementation is not complete. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0028_Description {
+            get {
+                return ResourceManager.GetString("SMA0028_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Enum-like type &apos;{0}&apos; (EnumLike)
+        ///&gt; {1} に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0028_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0028_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Invalid Enum-like Pattern に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0028_Title {
+            get {
+                return ResourceManager.GetString("SMA0028_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Struct Analysis に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0030__MD_TITLE__ {
+            get {
+                return ResourceManager.GetString("SMA0030__MD_TITLE__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Parameter-less constructor should not be used. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0030_Description {
+            get {
+                return ResourceManager.GetString("SMA0030_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   &apos;{0}&apos; has applicable constructor (InvalidStructCtor) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0030_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0030_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Invalid Struct Constructor に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0030_Title {
+            get {
+                return ResourceManager.GetString("SMA0030_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Disposable Analysis に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0040__MD_TITLE__ {
+            get {
+                return ResourceManager.GetString("SMA0040__MD_TITLE__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   No `using` statement found. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0040_Description {
+            get {
+                return ResourceManager.GetString("SMA0040_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   &apos;{0}&apos; has public &apos;void Dispose()&apos; method (NotUsing) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0040_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0040_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   No Using Statement Found に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0040_Title {
+            get {
+                return ResourceManager.GetString("SMA0040_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Annotating and Underling に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9000__MD_TITLE__ {
+            get {
+                return ResourceManager.GetString("SMA9000__MD_TITLE__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Draw underline in IDE. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA9000_Description {
             get {
@@ -467,7 +630,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        ///   Draw underline in IDE. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA9001_Description {
             get {
@@ -495,7 +658,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        ///   Draw underline in IDE. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA9002_Description {
             get {
@@ -523,7 +686,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        ///   Draw underline in IDE. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA9010_Description {
             get {
@@ -551,7 +714,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        ///   Draw underline in IDE. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA9020_Description {
             get {
@@ -579,7 +742,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        ///   Draw underline in IDE. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA9021_Description {
             get {
@@ -607,7 +770,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        ///   Draw underline in IDE. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA9022_Description {
             get {
@@ -626,7 +789,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Underlining on Modifiers に類似しているローカライズされた文字列を検索します。
+        ///   Underlining on Identifier に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA9022_Title {
             get {
@@ -635,7 +798,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        ///   Draw underline in IDE. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA9023_Description {
             get {
@@ -663,7 +826,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Diversion of attribute designed for Visual Studio form designer. に類似しているローカライズされた文字列を検索します。
+        ///   Draw underline in IDE. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA9100_Description {
             get {
