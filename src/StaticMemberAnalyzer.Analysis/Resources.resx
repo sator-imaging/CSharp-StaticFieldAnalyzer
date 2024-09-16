@@ -157,7 +157,7 @@
     <value>Late Declaration</value>
   </data>
   <data name="SMA0010_Description" xml:space="preserve">
-    <value>'TSelf' type arg should be pointing itself.</value>
+    <value>`TSelf` type arg should be pointing itself.</value>
   </data>
   <data name="SMA0010_MessageFormat" xml:space="preserve">
     <value>Did you mean '{0}'? (TSelf)</value>
@@ -166,7 +166,7 @@
     <value>TSelf is Not Self</value>
   </data>
   <data name="SMA0011_Description" xml:space="preserve">
-    <value>'TSelf' type arg should be pointing itself or its base type.</value>
+    <value>`TSelf` type arg should be pointing itself or its base type.</value>
   </data>
   <data name="SMA0011_MessageFormat" xml:space="preserve">
     <value>Did you mean '{0}' or base type? (TSelfCovariant)</value>
@@ -175,7 +175,7 @@
     <value>TSelf is Not Self or Base</value>
   </data>
   <data name="SMA0012_Description" xml:space="preserve">
-    <value>'TSelf' type arg should be pointing itself or its derived type.</value>
+    <value>`TSelf` type arg should be pointing itself or its derived type.</value>
   </data>
   <data name="SMA0012_MessageFormat" xml:space="preserve">
     <value>Did you mean '{0}' or derived type? (TSelfContravariant)</value>
@@ -184,7 +184,7 @@
     <value>TSelf is Not Self or Derived</value>
   </data>
   <data name="SMA9000_Description" xml:space="preserve">
-    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+    <value>Draw underline in IDE.</value>
   </data>
   <data name="SMA9000_MessageFormat" xml:space="preserve">
     <value>[identifier] {0}
@@ -194,7 +194,7 @@
     <value>Underlining on Identifier Symbols</value>
   </data>
   <data name="SMA9001_Description" xml:space="preserve">
-    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+    <value>Draw underline in IDE.</value>
   </data>
   <data name="SMA9001_MessageFormat" xml:space="preserve">
     <value>[localvar] {0}
@@ -204,7 +204,7 @@
     <value>Underlining on Local Variables</value>
   </data>
   <data name="SMA9002_Description" xml:space="preserve">
-    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+    <value>Draw underline in IDE.</value>
   </data>
   <data name="SMA9002_MessageFormat" xml:space="preserve">
     <value>[param] {0}
@@ -214,7 +214,7 @@
     <value>Underlining on Method or Lambda Parameters</value>
   </data>
   <data name="SMA9010_Description" xml:space="preserve">
-    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+    <value>Draw underline in IDE.</value>
   </data>
   <data name="SMA9010_MessageFormat" xml:space="preserve">
     <value>[declaration] {0}
@@ -224,7 +224,7 @@
     <value>Underlining on Declarations</value>
   </data>
   <data name="SMA9020_Description" xml:space="preserve">
-    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+    <value>Draw underline in IDE.</value>
   </data>
   <data name="SMA9020_MessageFormat" xml:space="preserve">
     <value>[linehead] {0}
@@ -234,7 +234,7 @@
     <value>Underlining at Line Head</value>
   </data>
   <data name="SMA9021_Description" xml:space="preserve">
-    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+    <value>Draw underline in IDE.</value>
   </data>
   <data name="SMA9021_MessageFormat" xml:space="preserve">
     <value>[linelead] {0}
@@ -244,17 +244,17 @@
     <value>Underlining at Line Leading</value>
   </data>
   <data name="SMA9022_Description" xml:space="preserve">
-    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+    <value>Draw underline in IDE.</value>
   </data>
   <data name="SMA9022_MessageFormat" xml:space="preserve">
     <value>[linefill] {0}
 &gt; {1}</value>
   </data>
   <data name="SMA9022_Title" xml:space="preserve">
-    <value>Underlining on Modifiers</value>
+    <value>Underlining on Identifier</value>
   </data>
   <data name="SMA9023_Description" xml:space="preserve">
-    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+    <value>Draw underline in IDE.</value>
   </data>
   <data name="SMA9023_MessageFormat" xml:space="preserve">
     <value>[lineend] {0}
@@ -264,7 +264,7 @@
     <value>Underlining at Line End</value>
   </data>
   <data name="SMA9100_Description" xml:space="preserve">
-    <value>Diversion of attribute designed for Visual Studio form designer.</value>
+    <value>Draw underline in IDE.</value>
   </data>
   <data name="SMA9100_MessageFormat" xml:space="preserve">
     <value>{1} ({0})</value>
@@ -324,15 +324,70 @@
     <value>Calling enum system method.</value>
   </data>
   <data name="SMA0025_MessageFormat" xml:space="preserve">
-    <value>Enum handling should be encapsulated into own utility class (EnumMethod)</value>
+    <value>Enum handling should be encapsulated in utility class (EnumMethod)</value>
   </data>
   <data name="SMA0026_Title" xml:space="preserve">
     <value>Enum Obfuscation</value>
   </data>
   <data name="SMA0026_MessageFormat" xml:space="preserve">
-    <value>Obfuscation attribute should be added to prevent name changes (EnumObfuscation)</value>
+    <value>'Obfuscation' attribute should be added to prevent name changes (EnumObfuscation)</value>
   </data>
   <data name="SMA0026_Description" xml:space="preserve">
-    <value>Enum obfuscation should be controlled.</value>
+    <value>Enum obfuscation should have controlled.</value>
+  </data>
+  <data name="SMA0027_Title" xml:space="preserve">
+    <value>Unusual Enum Definition</value>
+  </data>
+  <data name="SMA0027_Description" xml:space="preserve">
+    <value>Enum w/o `Flags` attribute should be defined as usual.</value>
+  </data>
+  <data name="SMA0027_MessageFormat" xml:space="preserve">
+    <value>Non-Flags enum type should have int-typed and no index modifier (UnusualEnum)</value>
+  </data>
+  <data name="SMA0001__MD_TITLE__" xml:space="preserve">
+    <value>Static Field Analysis</value>
+  </data>
+  <data name="SMA0010__MD_TITLE__" xml:space="preserve">
+    <value>`TSelf` Type Arg Analysis</value>
+  </data>
+  <data name="SMA0020__MD_TITLE__" xml:space="preserve">
+    <value>Enum Type Analysis</value>
+  </data>
+  <data name="SMA9000__MD_TITLE__" xml:space="preserve">
+    <value>Annotating and Underling</value>
+  </data>
+  <data name="SMA0030__MD_TITLE__" xml:space="preserve">
+    <value>Struct Analysis</value>
+  </data>
+  <data name="SMA0030_Title" xml:space="preserve">
+    <value>Invalid Struct Constructor</value>
+  </data>
+  <data name="SMA0030_Description" xml:space="preserve">
+    <value>Parameter-less constructor should not be used.</value>
+  </data>
+  <data name="SMA0030_MessageFormat" xml:space="preserve">
+    <value>'{0}' has applicable constructor (InvalidStructCtor)</value>
+  </data>
+  <data name="SMA0040__MD_TITLE__" xml:space="preserve">
+    <value>Disposable Analysis</value>
+  </data>
+  <data name="SMA0040_Title" xml:space="preserve">
+    <value>No Using Statement Found</value>
+  </data>
+  <data name="SMA0040_MessageFormat" xml:space="preserve">
+    <value>'{0}' has public 'void Dispose()' method (NotUsing)</value>
+  </data>
+  <data name="SMA0040_Description" xml:space="preserve">
+    <value>Instance has public `void Dispose()` method but `using` statement is not used.</value>
+  </data>
+  <data name="SMA0028_Title" xml:space="preserve">
+    <value>Invalid Enum-like Pattern</value>
+  </data>
+  <data name="SMA0028_Description" xml:space="preserve">
+    <value>Enum-like pattern implementation is not complete.</value>
+  </data>
+  <data name="SMA0028_MessageFormat" xml:space="preserve">
+    <value>Enum-like type '{0}' (EnumLike)
+&gt; {1}</value>
   </data>
 </root>
