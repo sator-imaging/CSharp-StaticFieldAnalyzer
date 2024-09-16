@@ -49,6 +49,7 @@ env:
   unity_folder: 'SatorImaging.StaticMemberAnalyzer.Unity'  # no spaces!
   test_csproj: 'StaticMemberAnalyzer.Test/SatorImaging.StaticMemberAnalyzer.Test.csproj'
   GH_TOKEN: ${{ github.token }}  # for github CLI
+  docsgen_file_name: 'RULES.md'
 
 jobs:
   build:
@@ -86,6 +87,11 @@ jobs:
       run: |
         cd src
         dotnet test ${{ env.test_csproj }} -c Release --no-build --verbosity normal  -p:DontReferenceItself=true
+
+    - name: docsgen
+      run: |
+        cd src
+        dotnet run -c Release  "StaticMemberAnalyzer.Analysis/Resources.resx"  "../${{ env.docsgen_file_name }}"
 
     - name: Upload
       uses: actions/upload-artifact@v4
