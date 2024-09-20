@@ -56,8 +56,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             //https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Analyzer%20Actions%20Semantics.md
 
-            context.RegisterOperationAction(AnalyzeStructConstructor,
-                ImmutableArray.Create(OperationKind.ObjectCreation, OperationKind.AnonymousObjectCreation));
+            context.RegisterOperationAction(AnalyzeStructConstructor, ImmutableArray.Create(
+                OperationKind.ObjectCreation
+                ));
 
 
             //context.RegisterCompilationStartAction(InitializeAndRegisterCallbacks);

@@ -155,14 +155,18 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             //https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Analyzer%20Actions%20Semantics.md
 
-            context.RegisterOperationAction(AnalyzeEnumOperations,
-                ImmutableArray.Create(OperationKind.Conversion, OperationKind.Invocation));
+            context.RegisterOperationAction(AnalyzeEnumOperations, ImmutableArray.Create(
+                OperationKind.Conversion,
+                OperationKind.Invocation
+                ));
 
-            context.RegisterSyntaxNodeAction(AnalyzeEnumLikePattern,
-                ImmutableArray.Create(SyntaxKind.ClassDeclaration));
+            context.RegisterSyntaxNodeAction(AnalyzeEnumLikePattern, ImmutableArray.Create(
+                SyntaxKind.ClassDeclaration
+                ));
 
-            context.RegisterSymbolAction(AnalyzeEnumDeclaration,
-                ImmutableArray.Create(SymbolKind.NamedType));
+            context.RegisterSymbolAction(AnalyzeEnumDeclaration, ImmutableArray.Create(
+                SymbolKind.NamedType
+                ));
 
 
             //context.RegisterCompilationStartAction(InitializeAndRegisterCallbacks);
@@ -482,11 +486,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (targetType.Name != nameof(System.ReadOnlyMemory<int>))
                 return false;
 
-            if (!(
-                targetType.ContainingNamespace.Name == nameof(System)
-             && targetType.ContainingNamespace.ContainingNamespace.IsGlobalNamespace
-                )
-            )
+            var targetNS = targetType.ContainingNamespace;
+            if (targetNS.Name != nameof(System) || !targetNS.ContainingNamespace.IsGlobalNamespace)
             {
                 return false;
             }

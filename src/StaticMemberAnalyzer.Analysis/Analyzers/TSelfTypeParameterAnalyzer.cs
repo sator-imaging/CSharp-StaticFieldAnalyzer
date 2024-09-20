@@ -70,14 +70,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             );
 
 
-        readonly static ImmutableArray<SyntaxKind> cache_targetSyntaxes = ImmutableArray.Create(
-            SyntaxKind.ClassDeclaration,
-            // TODO --> SyntaxKind.RecordDeclaration,
-            SyntaxKind.StructDeclaration,
-            SyntaxKind.InterfaceDeclaration
-           );
-
-
         public override void Initialize(AnalysisContext context)
         {
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -86,7 +78,12 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             //https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Analyzer%20Actions%20Semantics.md
 
-            context.RegisterSyntaxNodeAction(AnalyzeTSelf, cache_targetSyntaxes);
+            context.RegisterSyntaxNodeAction(AnalyzeTSelf, ImmutableArray.Create(
+                SyntaxKind.ClassDeclaration,
+                // TODO --> SyntaxKind.RecordDeclaration,
+                SyntaxKind.StructDeclaration,
+                SyntaxKind.InterfaceDeclaration
+                ));
 
 
             //context.RegisterCompilationStartAction(InitializeAndRegisterCallbacks);
@@ -191,11 +188,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 {
                     if (isCovariant)
                     {
-                        // check omittable base type
-                        bool isFound = foundTypeArgSymbol.Name == nameof(System.Object)
-                                    && foundTypeArgSymbol.ContainingNamespace.ConstituentNamespaces.FirstOrDefault()?.Name == nameof(System)
-                                    ;
-                        if (!isFound)
+                        bool isOmittableBaseType = foundTypeArgSymbol.SpecialType == SpecialType.System_Object;
+                        if (!isOmittableBaseType)
                         {
                             if (targetBaseSymbol == null)
                             {
@@ -211,7 +205,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                             {
                                 if (SymbolEqualityComparer.Default.Equals(candidateSymbol, foundTypeArgSymbol))
                                 {
-                                    isFound = true;
+                                    isOmittableBaseType = true;
                                     break;
                                 }
 
@@ -219,7 +213,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                             }
                         }
 
-                        if (!isFound)
+                        if (!isOmittableBaseType)
                         {
                             context.ReportDiagnostic(Diagnostic.Create(
                                 Rule_TSelfCovariant, foundTypeArgNode.GetLocation(), targetTypeSymbol.ToString()));
