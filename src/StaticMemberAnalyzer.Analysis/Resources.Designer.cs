@@ -530,7 +530,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Parameter-less constructor should not be used. に類似しているローカライズされた文字列を検索します。
+        ///   Constructor has declared explicitly so should not use parameter-less one. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0030_Description {
             get {
@@ -566,7 +566,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   No `using` statement found. に類似しているローカライズされた文字列を検索します。
+        ///   `using` statement should be used for instance that has public `void Dispose()` or `ValueTask DisposeAsync()` method. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0040_Description {
             get {
@@ -575,7 +575,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   &apos;{0}&apos; has public &apos;void Dispose()&apos; method (NotUsing) に類似しているローカライズされた文字列を検索します。
+        ///   &apos;{0}&apos; has public &apos;void Dispose()&apos; method (MissingUsing) に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0040_MessageFormat {
             get {

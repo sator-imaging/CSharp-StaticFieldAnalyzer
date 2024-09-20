@@ -30,9 +30,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
     {
         #region     /* =      DESCRIPTOR      = */
 
-        public const string RuleId_NotUsing = "SMA0040";
-        private static readonly DiagnosticDescriptor Rule_NotUsing = new(
-            RuleId_NotUsing,
+        public const string RuleId_MissingUsing = "SMA0040";
+        private static readonly DiagnosticDescriptor Rule_MissingUsing = new(
+            RuleId_MissingUsing,
             new LocalizableResourceString(nameof(Resources.SMA0040_Title), Resources.ResourceManager, typeof(Resources)),
             new LocalizableResourceString(nameof(Resources.SMA0040_MessageFormat), Resources.ResourceManager, typeof(Resources)),
             Core.Category,
@@ -47,7 +47,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 #if STMG_DEBUG_MESSAGE
             Core.Rule_DEBUG,
 #endif
-            Rule_NotUsing
+            Rule_MissingUsing
             );
 
 
@@ -153,7 +153,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             // NOT FOUND...!!
             context.ReportDiagnostic(Diagnostic.Create(
-                Rule_NotUsing, syntax.GetLocation(), disposableSymbol.Name));
+                Rule_MissingUsing, syntax.GetLocation(), disposableSymbol.Name));
         }
 
 
