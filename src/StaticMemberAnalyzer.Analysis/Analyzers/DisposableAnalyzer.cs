@@ -21,6 +21,7 @@ using Microsoft.CodeAnalysis.Operations;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 {
@@ -58,8 +59,11 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             //https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Analyzer%20Actions%20Semantics.md
 
-            context.RegisterOperationAction(AnalyzeDisposableUsage,
-                ImmutableArray.Create(OperationKind.ObjectCreation, OperationKind.AnonymousObjectCreation));
+            context.RegisterOperationAction(AnalyzeDisposableUsage, ImmutableArray.Create(
+                OperationKind.ObjectCreation,
+                OperationKind.Invocation,
+                OperationKind.Conversion
+                ));
 
 
             //context.RegisterCompilationStartAction(InitializeAndRegisterCallbacks);
@@ -85,9 +89,15 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     }
                     break;
 
-                case IAnonymousObjectCreationOperation anonyCreateOp:
+                case IInvocationOperation invokeOp:
                     {
-                        disposableSymbol = anonyCreateOp.Type as INamedTypeSymbol;
+                        disposableSymbol = invokeOp.TargetMethod.ReturnType as INamedTypeSymbol;
+                    }
+                    break;
+
+                case IConversionOperation castOp:
+                    {
+                        disposableSymbol = castOp.Type as INamedTypeSymbol;
                     }
                     break;
             }
@@ -96,19 +106,22 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (disposableSymbol == null)
                 return;
 
-            const Accessibility ACCESS_HIDDEN = Accessibility.Protected | Accessibility.Private | Accessibility.NotApplicable;
-
-            var methods = disposableSymbol.GetMembers().OfType<IMethodSymbol>()
-                .Where(static x => x.Parameters.Length == 0 && x.ReturnType.SpecialType == SpecialType.System_Void)
-                .Where(static x => (x.DeclaredAccessibility & ~ACCESS_HIDDEN) != 0)
-                .Where(static x => x.Name == nameof(IDisposable.Dispose))
-                ;
-
-            if (!methods.Any())
+            if (!IsSymbolDisposable(context, disposableSymbol))
                 return;
 
-            // find using
-            if (context.Operation.Syntax.Parent is EqualsValueClauseSyntax equalsStx
+
+            // find `using` statement and return
+            var syntax = context.Operation.Syntax;
+
+            // > using(new Disposable()) { ... }
+            if (syntax.Parent is UsingStatementSyntax)
+            {
+                return;
+            }
+
+            // > using var x = new Disposable();
+            // > using(var x = new Disposable()) { ... }
+            if (syntax.Parent is EqualsValueClauseSyntax equalsStx
              && equalsStx.Parent is VariableDeclaratorSyntax declaratorStx
              && declaratorStx.Parent is VariableDeclarationSyntax varDeclStx
             )
@@ -119,14 +132,106 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     return;
                 }
 
-                if (parentStx is LocalDeclarationStatementSyntax localVarStx && localVarStx.GetFirstToken().IsKind(SyntaxKind.UsingKeyword))
+                if (parentStx is LocalDeclarationStatementSyntax localVarStx)
                 {
-                    return;
+                    var token = localVarStx.GetFirstToken();
+                    if (token.IsKind(SyntaxKind.UsingKeyword))
+                    {
+                        return;
+                    }
+                    else if (token.IsKind(SyntaxKind.AwaitKeyword))
+                    {
+                        token = token.GetNextToken();
+                        if (token.IsKind(SyntaxKind.UsingKeyword))
+                        {
+                            return;
+                        }
+                    }
                 }
             }
 
+
+            // NOT FOUND...!!
             context.ReportDiagnostic(Diagnostic.Create(
-                Rule_NotUsing, context.Operation.Syntax.GetLocation(), disposableSymbol.Name));
+                Rule_NotUsing, syntax.GetLocation(), disposableSymbol.Name));
         }
+
+
+        readonly static Func<INamedTypeSymbol, bool> IsDisposableFunc = static x =>
+        {
+            if (x.SpecialType is SpecialType.System_IDisposable)
+            {
+                return true;
+            }
+            // TODO: SpecialType enum item for 'IAsyncDisposable'
+            else if (x.Name == "IAsyncDisposable")
+            {
+                var ns = x.ContainingNamespace;
+                if (ns.Name == nameof(System) && ns.ContainingNamespace.IsGlobalNamespace)
+                {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        private static bool IsSymbolDisposable(OperationAnalysisContext context,
+                                               INamedTypeSymbol disposableSymbol
+            )
+        {
+            if (!disposableSymbol.IsRefLikeType)
+            {
+                if (disposableSymbol.Interfaces.Any(IsDisposableFunc)
+                 || disposableSymbol.AllInterfaces.Any(IsDisposableFunc)
+                )
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+
+            const Accessibility ACCESS_HIDDEN = Accessibility.Protected | Accessibility.Private | Accessibility.NotApplicable;
+
+            var candidateMethods = disposableSymbol.GetMembers().OfType<IMethodSymbol>()
+                .Where(static x => x.Parameters.Length == 0 && (x.DeclaredAccessibility & ~ACCESS_HIDDEN) != 0)
+                ;
+
+            var isDisposable = candidateMethods
+                .Where(static x => x.Name == nameof(IDisposable.Dispose))
+                .Any(static x => x.ReturnType.SpecialType == SpecialType.System_Void)
+                ;
+            if (!isDisposable)
+            {
+                var isAsyncDisposable = candidateMethods
+                    .Where(static x => x.Name == "DisposeAsync")
+                    .Any(static x =>
+                    {
+                        // TODO: SpecialType enum item for 'ValueTask'
+                        if (x.ReturnType.Name != nameof(ValueTask))
+                            return false;
+
+                        var ns = x.ReturnType.ContainingNamespace;
+                        if (ns.Name != nameof(System.Threading.Tasks)
+                         || ns.ContainingNamespace.Name != nameof(System.Threading)
+                         || ns.ContainingNamespace.ContainingNamespace.Name != nameof(System)
+                         || !ns.ContainingNamespace.ContainingNamespace.ContainingNamespace.IsGlobalNamespace
+                        )
+                        {
+                            return false;
+                        }
+
+                        return true;
+                    })
+                    ;
+
+                if (!isAsyncDisposable)
+                    return false;
+            }
+
+            return true;
+        }
+
     }
 }
