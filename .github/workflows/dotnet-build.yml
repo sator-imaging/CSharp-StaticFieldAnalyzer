@@ -88,17 +88,17 @@ jobs:
         cd src
         dotnet test ${{ env.test_csproj }} -c Release --no-build --verbosity normal  -p:DontReferenceItself=true
 
-    - name: docsgen
-      run: |
-        cd src
-        dotnet run -c Release  "StaticMemberAnalyzer.Analysis/Resources.resx"  "../${{ env.docsgen_file_name }}"
-
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.artifact_name }}
         path: 'src/**/Release/*.nupkg'
-
+          
+    - name: docsgen
+      run: |
+        cd src
+        dotnet run -c Release  "StaticMemberAnalyzer.Analysis/Resources.resx"  "../${{ env.docsgen_file_name }}"
+  
 
     # actions/cache can be used to share data across jobs
     - name: Commit for Unity
@@ -118,7 +118,13 @@ jobs:
         git pull || true
         git branch -vv
 
-        # trailing slash is required to sync contents instead of directory
+        # commit docsgen result
+        git add ${{ env.docsgen_file_name }}
+        git commit -m "[bot] ${{ env.docsgen_file_name }}" || true
+        git push || true
+
+        # upload compiled assembly
+        # trailing slash is required to sync (copy) contents instead of directory
         rsync -avr --existing --checksum src/StaticMemberAnalyzer.Package/bin/Release/*/  ${{ env.unity_folder }}
         git add --update --ignore-removal  ${{ env.unity_folder }}
 
