@@ -96,8 +96,8 @@ jobs:
           
     - name: docsgen
       run: |
-        cd src
-        dotnet run -c Release  "StaticMemberAnalyzer.Analysis/Resources.resx"  "../${{ env.docsgen_file_name }}"
+        cd src/DocsGen
+        dotnet run -c Release  "../StaticMemberAnalyzer.Analysis/Resources.resx"  "../../${{ env.docsgen_file_name }}"
   
 
     # actions/cache can be used to share data across jobs
