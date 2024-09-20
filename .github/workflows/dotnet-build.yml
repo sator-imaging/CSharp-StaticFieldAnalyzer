@@ -93,12 +93,25 @@ jobs:
       with:
         name: ${{ inputs.artifact_name }}
         path: 'src/**/Release/*.nupkg'
-          
+
+    - name: git setup
+      run: |
+        git config --global user.name  "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        # to omit `--set-upstream origin` for git push
+        git config --global --add --bool push.autoSetupRemote true
+        git fetch --all
+
     - name: docsgen
       run: |
         cd src/DocsGen
         dotnet run -c Release  "../StaticMemberAnalyzer.Analysis/Resources.resx"  "../../${{ env.docsgen_file_name }}"
   
+        # commit docsgen result
+        cd ../..
+        git add ${{ env.docsgen_file_name }}
+        git commit -m "[bot] ${{ env.docsgen_file_name }}" || true
+        git push || true
 
     # actions/cache can be used to share data across jobs
     - name: Commit for Unity
@@ -107,21 +120,10 @@ jobs:
       run: |
         ls -al
         
-        git config --global user.name  "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        # to omit `--set-upstream origin` for git push
-        git config --global --add --bool push.autoSetupRemote true
-
-        git fetch --all
         ### no way! no create-remote-if-not-exists option!!
         git switch release/${{ inputs.release_ver }} || git switch -c release/${{ inputs.release_ver }}
         git pull || true
         git branch -vv
-
-        # commit docsgen result
-        git add ${{ env.docsgen_file_name }}
-        git commit -m "[bot] ${{ env.docsgen_file_name }}" || true
-        git push || true
 
         # upload compiled assembly
         # trailing slash is required to sync (copy) contents instead of directory
