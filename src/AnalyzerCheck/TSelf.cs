@@ -75,7 +75,7 @@ namespace AnalyzerCheck
         :
         TSelfBase<
             int,
-            /**/ TSelfWeirdSyntaxTester /**/ >,
+            /**/ TSelfWeirdSyntaxTester /* <-- change this to 'int' will show warning */ >,
         ITest</**/ TSelfWeirdSyntaxTester                        /**/, long
             >
 
