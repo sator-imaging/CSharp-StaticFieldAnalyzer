@@ -372,7 +372,7 @@
     <value>Disposable Analysis</value>
   </data>
   <data name="SMA0040_Title" xml:space="preserve">
-    <value>No Using Statement Found</value>
+    <value>Missing Using Statement</value>
   </data>
   <data name="SMA0040_MessageFormat" xml:space="preserve">
     <value>'{0}' has public 'void Dispose()' method (MissingUsing)</value>
