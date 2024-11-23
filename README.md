@@ -1,17 +1,34 @@
 # Static Field Analyzer for C# / .NET
 
 [![NuGet](https://img.shields.io/nuget/v/SatorImaging.StaticMemberAnalyzer)](https://www.nuget.org/packages/SatorImaging.StaticMemberAnalyzer)
+<sup>[Devnote](#devnote)</sup>
 
 Roslyn-based analyzer to provide diagnostics of static fields and properties initialization and more.
 
 - Wrong order of static field and property declaration
 - Partial type member reference across files
 - [Cross-Referencing Problem](#cross-referencing-problem) of static field across type
-- `TSelf` generic type argument analysis
-- Annotating / Underlining field, property or etc with custom message
+- [`Enum` type analysis](#enum-analyzer-and-code-fix-provider) to prevent user-level value conversion & [more](#kotlin-like-enum-pattern)
+- `struct` parameter-less constructor misuse analysis
+- `Disposable` missing using statement analysis
+- `TSelf` generic type argument & type constraint analysis
+- Annotating and underlining field, property or etc with custom message
+- Find out all diagnostic rules: [RULES.md](RULES.md)
 
+
+## Static Field Analysis
 
 ![Analyzer in Action](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/InAction.gif)
+
+## Enum Type Analysis
+
+Restrict both cast from/to integer number! Disallow user-level enum value conversion completely!!
+
+![Enum Analyzer](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/EnumAnalyzer.png)
+
+## `TSelf` Type Argument Analysis
+
+Analyze `TSelf` type argument mismatch and `where` clause mismatch.
 
 ![TSelf Type Argument](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/GenericTypeArgTSelf.png)
 
@@ -102,7 +119,7 @@ public static class Test
 - `A.Value = B.Other;`
     - // 'B' initialization is started by member access
     - `B.Other = 620;`
-    - `B.Value = A.Other;`  // B.Value will be 0 because reading uninitialized `A.Other`
+    - `B.Value = A.Other;`  // BUG: B.Value will be 0 because reading uninitialized `A.Other`
     - // then, assign `B.Other` value (620) to `A.Value`
 - `A.Other = 310;`  // initialized here!! this value is not assigned to B.Value
 
@@ -114,6 +131,100 @@ When reading B value first, initialization order is changed and resulting value 
     - // 'A' initialization is started by member access
     - `A.Value = B.Other;`  // correct: B.Other is initialized before reading value
     - `A.Other = 310;`
+
+
+
+
+
+# `Enum` Analyzer and Code Fix Provider
+
+Enum type handling is really headaching. To make enum operation under control, good to avoid user-level enum handling such as converting to integer or string, parse from string and etc.
+
+This analyzer will help centerizing and encapsulating enum handling in app's central enum utility.
+
+![Enum Analyzer](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/EnumAnalyzer.png)
+
+
+## Excluding Enum Type from Obfuscation
+
+Helpful annotation and code fix for enum types to prevent modification of string representation by obfuscation tool.
+
+![Enum Code Fix](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/EnumCodeFix.png)
+
+> [!NOTE]
+> `Obfuscation` attribute is from C# base library and it does NOT provide feature to obfuscate compiled assembly. It just provides configuration option to obfuscation tools which recognizing this attribute.
+
+
+## Kotlin-like Enum Pattern
+
+Analysis to help implementing Kotlin-style enum class.
+
+```cs
+public class EnumLike
+//           ^^^^^^^^ should have `sealed` modifier and constructor should
+//                    be `private` or `protected`
+//                    * annotation appears only if type has 'Entries' field
+{
+    public static readonly EnumLike A = new();
+    public static readonly EnumLike B = new();
+
+    // 'Entries' should have all of 'public static readonly' field of declaring type
+    public static readonly EnumLike[] Entries; //= new[] { A, B };
+    //                                ~~~~~~~
+
+    // 'ReadOnlyMemory<T>' can be used instead of array
+    public static readonly ReadOnlyMemory<EnumLike> Entries = new(new[] { A, B });
+}
+```
+
+
+<p><details lang="en" --open><summary>Benefits</summary>
+
+Kotlin-like enum (algebraic data type) can prevent invalid value creation.
+
+```cs
+var invalid = Activator.CreateInstance(typeof(EnumLike));
+
+if (EnumLike.A == invalid || EnumLike.B == invalid)
+{
+    // this code path won't be reached
+    // each enum like entry is a class instance and ReferenceEquals match required
+}
+```
+
+
+Unfortunately, use in `switch` statement is a bit weird.
+
+```cs
+var val = EnumLike.A;
+
+switch (val)
+{
+    // pattern matching with case guard...!!
+    case EnumLike when val == EnumLike.A:
+        System.Console.WriteLine(val);
+        break;
+
+    case EnumLike when val == EnumLike.B:
+        System.Console.WriteLine(val);
+        break;
+}
+
+// this pattern generates same AOT compiled code
+switch (val)
+{
+    // typeless case guard
+    case {} when val == EnumLike.A:
+        System.Console.WriteLine(val);
+        break;
+
+    case {} when val == EnumLike.B:
+        System.Console.WriteLine(val);
+        break;
+}
+```
+
+<!------- End of Details EN Tag -------></details></p>
 
 
 
@@ -163,6 +274,9 @@ public static int Underline_Not_Drawn = 0;
 public static int Underline_Drawn = 310;
 ```
 
+> [!TIP]
+> `CategoryAttribute` can be used instead of `DescriptionAttribute`. It will draw underline only on type which has Category attribute. ie. inherited type won't get underline.
+
 
 ## Verbosity Control
 
@@ -204,6 +318,26 @@ Steps to publish new version of nuget package
 - merge pull request sent from build action
 - create github release
 - run nuget packaging action to push new version
+
+
+## TODO
+
+This case will lead invalid initialization but cannot be detected.
+
+```cs
+// NG: auto getter/setter
+static int BEFORE { get; set; } = AFTER;
+static int AFTER { get; set; } = 310;
+
+// OK: can detect
+static int BEFORE { get; set; } = AFTER;
+static int AFTER = 310;
+```
+
+### Optimization
+
+- Implement `IViewTaggerProvider` for underlining analyzer.
+- Separate analyzer method as possible. registering small actions instead of one god method could improve performance.
 
 
 
