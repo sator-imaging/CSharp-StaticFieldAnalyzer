@@ -121,7 +121,7 @@ internal class Program
             }
             else if (number != lastNumber + 1)  //separator
             {
-                sb.AppendLine("| -");
+                sb.AppendLine("||");
             }
 
             sb.AppendLine($"| {data.diagnosticId} | {data.title.PadRight(maxTitleLength)} | {data.description}");
