@@ -268,6 +268,33 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
+        ///   `TSelf` type constraint is not pointing itself. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0015_Description {
+            get {
+                return ResourceManager.GetString("SMA0015_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Did you mean &apos;{0}&apos;? (TSelfPointingOther) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0015_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0015_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   TSelf Constraint is Not Self に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0015_Title {
+            get {
+                return ResourceManager.GetString("SMA0015_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Enum Type Analysis に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0020__MD_TITLE__ {
@@ -575,7 +602,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   &apos;{0}&apos; has public &apos;void Dispose()&apos; method (MissingUsing) に類似しているローカライズされた文字列を検索します。
+        ///   &apos;{0}&apos; has &apos;IDisposable&apos; pattern implemented (MissingUsing) に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0040_MessageFormat {
             get {
@@ -584,7 +611,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   No Using Statement Found に類似しているローカライズされた文字列を検索します。
+        ///   Missing Using Statement に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0040_Title {
             get {
@@ -710,6 +737,34 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         internal static string SMA9010_Title {
             get {
                 return ResourceManager.GetString("SMA9010_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Draw underline in IDE. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9015_Description {
+            get {
+                return ResourceManager.GetString("SMA9015_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   [designated] {0}
+        ///&gt; {1} に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9015_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA9015_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Underlining on Designated Type only に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA9015_Title {
+            get {
+                return ResourceManager.GetString("SMA9015_Title", resourceCulture);
             }
         }
         

@@ -375,7 +375,7 @@
     <value>Missing Using Statement</value>
   </data>
   <data name="SMA0040_MessageFormat" xml:space="preserve">
-    <value>'{0}' has public 'void Dispose()' method (MissingUsing)</value>
+    <value>'{0}' has 'IDisposable' pattern implemented (MissingUsing)</value>
   </data>
   <data name="SMA0040_Description" xml:space="preserve">
     <value>`using` statement should be used for instance that has public `void Dispose()` or `ValueTask DisposeAsync()` method.</value>
@@ -389,5 +389,24 @@
   <data name="SMA0028_MessageFormat" xml:space="preserve">
     <value>Enum-like type '{0}' (EnumLike)
 &gt; {1}</value>
+  </data>
+  <data name="SMA9015_Title" xml:space="preserve">
+    <value>Underlining on Designated Type only</value>
+  </data>
+  <data name="SMA9015_MessageFormat" xml:space="preserve">
+    <value>[designated] {0}
+&gt; {1}</value>
+  </data>
+  <data name="SMA9015_Description" xml:space="preserve">
+    <value>Draw underline in IDE.</value>
+  </data>
+  <data name="SMA0015_Title" xml:space="preserve">
+    <value>TSelf Constraint is Not Self</value>
+  </data>
+  <data name="SMA0015_MessageFormat" xml:space="preserve">
+    <value>Did you mean '{0}'? (TSelfPointingOther)</value>
+  </data>
+  <data name="SMA0015_Description" xml:space="preserve">
+    <value>`TSelf` type constraint is not pointing itself.</value>
   </data>
 </root>

@@ -26,6 +26,33 @@ using System.Diagnostics;
 
 namespace AnalyzerCheck.Tests
 {
+    // v1.5: CategoryAttribute does NOT draw underline on inherited types
+    //       uncomment next line to see difference.
+    //       it's nice to use when annotating abstract/base type which requires to get attention on inheriting
+    //       ex) [CategoryAttribute("don't forget to add 'XXX' attribute to inheritance!!"]
+    //[DescriptionAttribute("too eyesore!!")]
+    [CategoryAttribute("Hi, there")]
+    class CategoryAttr
+    {
+        // no underline on this line
+    }
+
+    class TestCategoryAttrInheritance : CategoryAttr
+    {
+        CategoryAttr value;
+        TestCategoryAttrInheritance(CategoryAttr value)
+        {
+            this.value = value;
+            var x = value;
+            TestCategoryAttrInheritance y = this;
+        }
+    }
+
+    // no underline if 'Attribute' suffix doesn't exist
+    [Category("Hi, there")] class CategoryOnly { }
+    class TestCategoryOnlyInheritance : CategoryOnly { }
+
+
     // no underlining on xml document comment
     /// <summary>
     /// <see cref="INoUnderline{TWithDesc, TNoDesc}"/>
