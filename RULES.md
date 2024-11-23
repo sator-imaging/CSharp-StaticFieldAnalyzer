@@ -17,6 +17,8 @@ Resource suffix: `_Title` `_Description` `__MD_TITLE__`
 | SMA0010 | TSelf is Not Self                          | `TSelf` type arg should be pointing itself.
 | SMA0011 | TSelf is Not Self or Base                  | `TSelf` type arg should be pointing itself or its base type.
 | SMA0012 | TSelf is Not Self or Derived               | `TSelf` type arg should be pointing itself or its derived type.
+||
+| SMA0015 | TSelf Constraint is Not Self               | `TSelf` type constraint is not pointing itself.
 
 ## Enum Type Analysis
 | ID      | Diagnostic                                 | Description
@@ -34,12 +36,12 @@ Resource suffix: `_Title` `_Description` `__MD_TITLE__`
 ## Struct Analysis
 | ID      | Diagnostic                                 | Description
 |---------|--------------------------------------------|-------------
-| SMA0030 | Invalid Struct Constructor                 | Parameter-less constructor should not be used.
+| SMA0030 | Invalid Struct Constructor                 | Constructor has declared explicitly so should not use parameter-less one.
 
 ## Disposable Analysis
 | ID      | Diagnostic                                 | Description
 |---------|--------------------------------------------|-------------
-| SMA0040 | No Using Statement Found                   | Instance has public `void Dispose()` method but `using` statement is not used.
+| SMA0040 | Missing Using Statement                    | `using` statement should be used for instance that has public `void Dispose()` or `ValueTask DisposeAsync()` method.
 
 ## Annotating and Underling
 | ID      | Diagnostic                                 | Description
@@ -47,12 +49,14 @@ Resource suffix: `_Title` `_Description` `__MD_TITLE__`
 | SMA9000 | Underlining on Identifier Symbols          | Draw underline in IDE.
 | SMA9001 | Underlining on Local Variables             | Draw underline in IDE.
 | SMA9002 | Underlining on Method or Lambda Parameters | Draw underline in IDE.
-| -
+||
 | SMA9010 | Underlining on Declarations                | Draw underline in IDE.
-| -
+||
+| SMA9015 | Underlining on Designated Type only        | Draw underline in IDE.
+||
 | SMA9020 | Underlining at Line Head                   | Draw underline in IDE.
 | SMA9021 | Underlining at Line Leading                | Draw underline in IDE.
 | SMA9022 | Underlining on Identifier                  | Draw underline in IDE.
 | SMA9023 | Underlining at Line End                    | Draw underline in IDE.
-| -
+||
 | SMA9100 | Underlining as Warning                     | Draw underline in IDE.
