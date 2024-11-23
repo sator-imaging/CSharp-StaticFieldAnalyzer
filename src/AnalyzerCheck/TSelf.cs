@@ -29,6 +29,14 @@ namespace AnalyzerCheck
     public interface ITest<TSelf, T> { }
     public class TSelfBase<T, TSelf> { }
 
+    // chaining TSelf
+    class TSelfBase<TSelf> where TSelf : TSelfBase<TSelf> { }
+    class TSelfDerived<TSelf, TOther> : TSelfBase<TSelf>  // TSelfBase<> can accept TOther but shows warning.
+                                                          // only type parameter 'TSelf' is ignored to being warning
+        where TSelf : TSelfDerived<  TSelf, TOther  >     // change this line will show warning (trivia is ignored)
+        where TOther : TSelfDerived<TSelf, TOther>
+    { }
+
     public class ClassOK : TSelfBase<byte, ClassOK> { }
     public class ClassNG : TSelfBase<byte, ClassOK> { }
     public struct IFaceOK : ITest<IFaceOK, short> { }

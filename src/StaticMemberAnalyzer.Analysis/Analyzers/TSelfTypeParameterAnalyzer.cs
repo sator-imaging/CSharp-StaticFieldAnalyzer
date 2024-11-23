@@ -57,6 +57,17 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             isEnabledByDefault: true,
             description: new LocalizableResourceString(nameof(Resources.SMA0012_Description), Resources.ResourceManager, typeof(Resources)));
 
+
+        public const string RuleId_TSelfPointingOther = "SMA0015";
+        private static readonly DiagnosticDescriptor Rule_TSelfPointingOther = new(
+            RuleId_TSelfPointingOther,
+            new LocalizableResourceString(nameof(Resources.SMA0015_Title), Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString(nameof(Resources.SMA0015_MessageFormat), Resources.ResourceManager, typeof(Resources)),
+            Core.Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: new LocalizableResourceString(nameof(Resources.SMA0015_Description), Resources.ResourceManager, typeof(Resources)));
+
         #endregion
 
 
@@ -66,7 +77,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 #endif
             Rule_TSelfInvariant,
             Rule_TSelfCovariant,
-            Rule_TSelfContravariant
+            Rule_TSelfContravariant,
+
+            Rule_TSelfPointingOther
             );
 
 
@@ -85,12 +98,16 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 SyntaxKind.InterfaceDeclaration
                 ));
 
+            context.RegisterSyntaxNodeAction(AnalyzeTypeConstraint, SyntaxKind.TypeParameterConstraintClause);
+
 
             //context.RegisterCompilationStartAction(InitializeAndRegisterCallbacks);
         }
 
 
         /*  impl  ================================================================ */
+
+        const string TSELF_NAME = "TSelf";
 
         private void AnalyzeTSelf(SyntaxNodeAnalysisContext context)
         {
@@ -141,7 +158,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     for (int i = 0; i < baseTypeParamList.Parameters.Count; i++)
                     {
                         var param = baseTypeParamList.Parameters[i];
-                        if (param.Identifier.Text == "TSelf")
+                        if (param.Identifier.Text == TSELF_NAME)
                         {
                             TSelfTypeArgPosition = i;
 
@@ -186,7 +203,14 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 //go!!
                 if (!SymbolEqualityComparer.Default.Equals(foundTypeArgSymbol, targetTypeSymbol))
                 {
-                    if (isCovariant)
+                    // allow TSelf chaining
+                    if (foundTypeArgSymbol.Kind == SymbolKind.TypeParameter && foundTypeArgSymbol.Name == TSELF_NAME)
+                    {
+                        //ignore!!
+                    }
+
+                    //covariant!!
+                    else if (isCovariant)
                     {
                         bool isOmittableBaseType = foundTypeArgSymbol.SpecialType == SpecialType.System_Object;
                         if (!isOmittableBaseType)
@@ -251,6 +275,39 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                             Rule_TSelfInvariant, foundTypeArgNode.GetLocation(), targetTypeSymbol.ToString()));
                     }
                 }
+            }
+        }
+
+
+        private void AnalyzeTypeConstraint(SyntaxNodeAnalysisContext context)
+        {
+            if (context.Node is not TypeParameterConstraintClauseSyntax syntax)
+                return;
+
+            if (syntax.Name.Span.Length != TSELF_NAME.Length && syntax.Name.ToString() != TSELF_NAME)
+                return;
+
+            if (syntax.Parent is not ClassDeclarationSyntax classDecl)
+                return;
+
+            var model = context.Compilation.GetSemanticModel(syntax.SyntaxTree);
+            var expectedSymbol = model.GetDeclaredSymbol(classDecl);
+
+            bool found = false;
+            foreach (var typeConst in syntax.DescendantNodes().OfType<TypeConstraintSyntax>())
+            {
+                var symbol = model.GetSymbolInfo(typeConst.Type).Symbol;
+                if (symbol == null)
+                    continue;
+
+                if (SymbolEqualityComparer.Default.Equals(symbol, expectedSymbol))
+                    found = true;
+            }
+
+            if (!found)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(Rule_TSelfPointingOther,
+                    syntax.GetLocation(), expectedSymbol));
             }
         }
 
