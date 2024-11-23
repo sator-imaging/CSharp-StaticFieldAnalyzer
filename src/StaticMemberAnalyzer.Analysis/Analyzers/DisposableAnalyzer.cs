@@ -62,7 +62,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             context.RegisterOperationAction(AnalyzeDisposableUsage, ImmutableArray.Create(
                 OperationKind.ObjectCreation,
                 OperationKind.Invocation,
-                OperationKind.Conversion
+                OperationKind.Conversion,
+                OperationKind.PropertyReference
                 ));
 
 
@@ -79,28 +80,14 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
         private static void AnalyzeDisposableUsage(OperationAnalysisContext context)
         {
-            INamedTypeSymbol? disposableSymbol = null;
-
-            switch (context.Operation)
+            INamedTypeSymbol? disposableSymbol = context.Operation switch
             {
-                case IObjectCreationOperation createOp:
-                    {
-                        disposableSymbol = createOp.Type as INamedTypeSymbol;
-                    }
-                    break;
-
-                case IInvocationOperation invokeOp:
-                    {
-                        disposableSymbol = invokeOp.TargetMethod.ReturnType as INamedTypeSymbol;
-                    }
-                    break;
-
-                case IConversionOperation castOp:
-                    {
-                        disposableSymbol = castOp.Type as INamedTypeSymbol;
-                    }
-                    break;
-            }
+                IObjectCreationOperation createOp => createOp.Type as INamedTypeSymbol,
+                IInvocationOperation invokeOp => invokeOp.TargetMethod.ReturnType as INamedTypeSymbol,
+                IConversionOperation castOp => castOp.Type as INamedTypeSymbol,
+                IPropertyReferenceOperation propRefOp => propRefOp.Type as INamedTypeSymbol,
+                _ => null
+            };
 
 
             if (disposableSymbol == null)
@@ -110,8 +97,29 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 return;
 
 
-            // find `using` statement and return
             var syntax = context.Operation.Syntax;
+
+            // > (((new Dispopsable()))) --> new Disposable()
+            while (syntax.Parent is ParenthesizedExpressionSyntax)
+            {
+                syntax = syntax.Parent;
+            }
+
+            // > new Disposable().Return();
+            // > new Disposable().Property;
+            if (syntax.Parent is InvocationExpressionSyntax or MemberAccessExpressionSyntax)
+            {
+                return;
+            }
+            // > disposable?.XXX...
+            else if (syntax.Parent is ConditionalAccessExpressionSyntax conditionalStx)
+            {
+                if (conditionalStx.WhenNotNull.Kind() is SyntaxKind.InvocationExpression or SyntaxKind.SimpleMemberAccessExpression)
+                {
+                    return;
+                }
+            }
+
 
             // > using(new Disposable()) { ... }
             if (syntax.Parent is UsingStatementSyntax)
@@ -131,10 +139,21 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 {
                     return;
                 }
-
-                if (parentStx is LocalDeclarationStatementSyntax localVarStx)
+                else if (parentStx is LocalDeclarationStatementSyntax localVarStx)
                 {
-                    var token = localVarStx.GetFirstToken();
+                    var model = context.Compilation.GetSemanticModel(localVarStx.SyntaxTree);
+                    if (model.GetTypeInfo(localVarStx.Declaration.Type).ConvertedType is INamedTypeSymbol localVarSymbol
+                    && !IsSymbolDisposable(context, localVarSymbol))
+                    {
+                        return;
+                    }
+
+                    if (localVarStx.UsingKeyword != default)
+                    {
+                        return;
+                    }
+
+                    /* var token = localVarStx.GetFirstToken();
                     if (token.IsKind(SyntaxKind.UsingKeyword))
                     {
                         return;
@@ -147,6 +166,28 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                             return;
                         }
                     }
+                    */
+                }
+            }
+            // > Field = new Disposable();
+            // > Property = new Disposable();
+            else if (syntax.Parent is AssignmentExpressionSyntax assignStx)
+            {
+                var model = context.Compilation.GetSemanticModel(assignStx.SyntaxTree);
+                var leftSymbol = model.GetSymbolInfo(assignStx.Left).Symbol;
+
+                INamedTypeSymbol? foundSymbol = leftSymbol switch
+                {
+                    IFieldSymbol fieldSymbol => fieldSymbol.Type as INamedTypeSymbol,
+                    IPropertySymbol propertySymbol => propertySymbol.Type as INamedTypeSymbol,
+                    ILocalSymbol localVarSymbol => localVarSymbol.Type as INamedTypeSymbol,
+                    ILocalReferenceOperation localRefSymbol => localRefSymbol.Type as INamedTypeSymbol,
+                    _ => null
+                };
+
+                if (foundSymbol != null && !IsSymbolDisposable(context, foundSymbol))
+                {
+                    return;
                 }
             }
 
@@ -157,7 +198,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         }
 
 
-        readonly static Func<INamedTypeSymbol, bool> IsDisposableFunc = static x =>
+        readonly static Func<INamedTypeSymbol, bool> func_HasDisposableImplemented = static x =>
         {
             if (x.SpecialType is SpecialType.System_IDisposable)
             {
@@ -181,8 +222,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         {
             if (!disposableSymbol.IsRefLikeType)
             {
-                if (disposableSymbol.Interfaces.Any(IsDisposableFunc)
-                 || disposableSymbol.AllInterfaces.Any(IsDisposableFunc)
+                if (func_HasDisposableImplemented.Invoke(disposableSymbol)
+                 || disposableSymbol.Interfaces.Any(func_HasDisposableImplemented)
+                 || disposableSymbol.AllInterfaces.Any(func_HasDisposableImplemented)
                 )
                 {
                     return true;
