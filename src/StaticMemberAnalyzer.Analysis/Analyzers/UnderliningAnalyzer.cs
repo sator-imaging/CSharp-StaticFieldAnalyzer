@@ -72,6 +72,16 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             isEnabledByDefault: true,
             description: new LocalizableResourceString(nameof(Resources.SMA9010_Description), Resources.ResourceManager, typeof(Resources)));
 
+        public const string RuleId_DesignatedTypeDesc = "SMA9015";
+        private static readonly DiagnosticDescriptor Rule_DesignatedTypeDesc = new(
+            RuleId_DesignatedTypeDesc,
+            new LocalizableResourceString(nameof(Resources.SMA9015_Title), Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString(nameof(Resources.SMA9015_MessageFormat), Resources.ResourceManager, typeof(Resources)),
+            Core.Category,
+            DiagnosticSeverity.Info,
+            isEnabledByDefault: true,
+            description: new LocalizableResourceString(nameof(Resources.SMA9015_Description), Resources.ResourceManager, typeof(Resources)));
+
 
         // line annotators
         public const string RuleId_LineHeadDesc = "SMA9020";
@@ -137,6 +147,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             Rule_LocalVarDesc,
             Rule_ParameterDesc,
             Rule_DeclarationDesc,
+
+            Rule_DesignatedTypeDesc,
 
             Rule_LineHeadDesc,
             Rule_LineLeadingDesc,
@@ -272,6 +284,19 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             Action<Diagnostic> reportAction = context.ReportDiagnostic;
 
 
+            //sp:CategoryAttribute
+            if (symbol.Kind == SymbolKind.NamedType)
+            {
+                foreach (var syntaxRef in symbol.DeclaringSyntaxReferences)
+                {
+                    if (syntaxRef.GetSyntax() is not BaseTypeDeclarationSyntax typeDecl)
+                        continue;
+
+                    DrawCategoryAnnotation(compilation, symbol, typeDecl.Identifier.GetLocation(), reportAction, token);
+                }
+            }
+
+
             var symbolToDescription = (ts_symbolToDescription ??= new());
             var descAttrToMessage = (ts_descAttrToMessage ??= new());
 
@@ -311,9 +336,15 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         //syntax
         private static void DrawUnderlineOnSyntaxNodes(SyntaxNodeAnalysisContext context)
         {
+            //Core.ReportDebugMessage(context.ReportDiagnostic,
+            //    nameof(DrawUnderlineOnSyntaxNodes),
+            //    $"=== {context.Node} ===",
+            //    context.Node.GetLocation());
+
             var syntax = context.Node;
             var tree = syntax.SyntaxTree;
             var compilation = context.Compilation;
+
 
             // NOTE: don't use cached one!
             //var filePathToModel = (ts_filePathToModel ??= new());
@@ -406,6 +437,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (symbol.IsImplicitlyDeclared)
                 return;
 
+            DrawCategoryAnnotation(compilation, symbol, syntax.GetLocation(), context.ReportDiagnostic, token);
 
             Underlining(singleLocation, symbol, rule,
                 reportAction, symbolToDescription, /*filePathToModel,*/ descAttrToMessage, compilation, token,
@@ -496,6 +528,74 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 Core.SpanConcat("[SMA UNSUPPORTED]: ".AsSpan(), syntax.Kind().ToString().AsSpan()),
                 "TypeArguments.Count: " + typeArgsCount
                 ));
+        }
+
+
+        const string ATTR_CATEGORY = nameof(CategoryAttribute);
+
+        private static void DrawCategoryAnnotation(Compilation compilation,
+                                                   ISymbol symbol,
+                                                   Location loc,
+                                                   Action<Diagnostic> reportAction,
+                                                   CancellationToken token
+            )
+        {
+            string? description = null;
+
+            foreach (var syntaxRef in symbol.DeclaringSyntaxReferences)
+            {
+                if (syntaxRef.GetSyntax() is /*MemberDeclarationSyntax*/ BaseTypeDeclarationSyntax memberDecl)
+                {
+                    foreach (var attrList in memberDecl.AttributeLists)
+                    {
+                        foreach (var attr in attrList.Attributes)
+                        {
+                            if (attr.Name.Span.Length == ATTR_CATEGORY.Length && attr.Name.ToString() == ATTR_CATEGORY)
+                            {
+                                // NOTE: parameter-less attribute constructor has null argument list
+                                if (attr.ArgumentList != null
+                                && (attr.ArgumentList.Arguments).Count == 1)
+                                {
+                                    //Core.ReportDebugMessage(reportAction,
+                                    //    "CATEGORY",
+                                    //    $"=== {symbol.Name} ({symbol.Kind}) ===",
+                                    //    syntax.GetLocation());
+
+                                    var attrArgs0 = attr.ArgumentList.Arguments[0];
+                                    var attrTree = attrArgs0.SyntaxTree;
+                                    var attrModel = compilation.GetSemanticModel(attrTree);
+
+                                    var attrValue = attrModel.GetConstantValue((attrArgs0.Expression as ExpressionSyntax), token);
+                                    if (attrValue.HasValue)
+                                    {
+                                        description ??= attrValue.ToString();
+
+                                        //identifierToken = memberDecl.Identifier;//(memberDecl as BaseTypeDeclarationSyntax)?.Identifier;
+                                        //identifierToken ??= (memberDecl as MethodDeclarationSyntax)?.Identifier;
+                                        //identifierToken ??= (memberDecl as PropertyDeclarationSyntax)?.Identifier;
+
+                                        goto EXIT;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            EXIT:
+                ;
+            }
+
+            if (description != null)
+            {
+                __DrawUnderlinePerChar(
+                    reportAction,
+                    loc.SourceTree,
+                    loc.SourceSpan.Start,
+                    loc.SourceSpan.End,
+                    Rule_DesignatedTypeDesc,
+                    GetMessageFormatArgs(symbol, description)
+                    );
+            }
         }
 
 
@@ -628,31 +728,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     description += $" cache:{new Random().Next()}";
 #endif
 
-                    var assem = targetSymbol.ContainingAssembly?.Name;
-                    if (assem == null)
-                    {
-                        if (targetSymbol.ContainingNamespace != null)
-                        {
-                            assem = string.Join(".", targetSymbol.ContainingNamespace.ConstituentNamespaces);
-                        }
-                        else
-                        {
-                            assem = "UNKNOWN ASSEMBLY";
-                        }
-                    }
-                    //TODO
-                    const string PREFIX_SYMBOL = " in ";
-                    Span<char> span = stackalloc char[assem.Length + PREFIX_SYMBOL.Length];
-                    PREFIX_SYMBOL.AsSpan().CopyTo(span);
-                    assem.AsSpan().CopyTo(span.Slice(PREFIX_SYMBOL.Length));
-
-                    var targetName = targetSymbol.Name;
-                    Span<char> quoted = stackalloc char[targetName.Length + 2];
-                    quoted[0] = '\'';
-                    targetName.AsSpan().CopyTo(quoted.Slice(1));
-                    quoted[quoted.Length - 1] = '\'';
-
-                    var args = new object[] { Core.SpanConcat(quoted, span), description };
+                    var args = GetMessageFormatArgs(targetSymbol, description);
                     foreach (var location in locations)
                     {
                         ReportDiagnosticPerChar(reportAction, location, rule, args);
@@ -679,11 +755,42 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         }
 
 
+        private static object[] GetMessageFormatArgs(ISymbol targetSymbol, string description)
+        {
+            var assem = targetSymbol.ContainingAssembly?.Name;
+            if (assem == null)
+            {
+                if (targetSymbol.ContainingNamespace != null)
+                {
+                    assem = string.Join(".", targetSymbol.ContainingNamespace.ConstituentNamespaces);
+                }
+                else
+                {
+                    assem = "UNKNOWN ASSEMBLY";
+                }
+            }
+            //TODO
+            const string PREFIX_SYMBOL = " in ";
+            Span<char> span = stackalloc char[assem.Length + PREFIX_SYMBOL.Length];
+            PREFIX_SYMBOL.AsSpan().CopyTo(span);
+            assem.AsSpan().CopyTo(span.Slice(PREFIX_SYMBOL.Length));
+
+            var targetName = targetSymbol.Name;
+            Span<char> quoted = stackalloc char[targetName.Length + 2];
+            quoted[0] = '\'';
+            targetName.AsSpan().CopyTo(quoted.Slice(1));
+            quoted[quoted.Length - 1] = '\'';
+
+            var args = new object[] { Core.SpanConcat(quoted, span), description };
+            return args;
+        }
+
+
         // NOTE: don't collect "[Description]". collect only "[DescriptionAttribute]" to prevent
         //       underlining by original Description attribute usage.
         //       - [Description("Description for VS Visual Designer")] int NoUnderlineOnMe;
         //       - [DescriptionAttribute("Draw underline in VS source code editor")] int GetUnderline;
-        readonly static string _descriptionAttributeName = nameof(DescriptionAttribute);
+        const string ATTR_DESCRIPTION = nameof(DescriptionAttribute);
 
         // NOTE: to apply attribute message parameter changes quickly,
         //       don't cache description text string, instead cache symbol-to-AttributeSyntax mapping.
@@ -732,40 +839,40 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     case MemberDeclarationSyntax memberDecl:
                         attr = memberDecl.AttributeLists.SelectMany(static x => x.Attributes).FirstOrDefault(static x =>
                         {
-                            return x.Name.Span.Length == _descriptionAttributeName.Length
-                                && x.Name.ToString() == _descriptionAttributeName;
+                            return x.Name.Span.Length == ATTR_DESCRIPTION.Length
+                                && x.Name.ToString() == ATTR_DESCRIPTION;
                         });
                         break;
 
                     case AccessorDeclarationSyntax accessorDecl:
                         attr = accessorDecl.AttributeLists.SelectMany(static x => x.Attributes).FirstOrDefault(static x =>
                         {
-                            return x.Name.Span.Length == _descriptionAttributeName.Length
-                                && x.Name.ToString() == _descriptionAttributeName;
+                            return x.Name.Span.Length == ATTR_DESCRIPTION.Length
+                                && x.Name.ToString() == ATTR_DESCRIPTION;
                         });
                         break;
 
                     case ParameterSyntax paramDecl:
                         attr = paramDecl.AttributeLists.SelectMany(static x => x.Attributes).FirstOrDefault(static x =>
                         {
-                            return x.Name.Span.Length == _descriptionAttributeName.Length
-                                && x.Name.ToString() == _descriptionAttributeName;
+                            return x.Name.Span.Length == ATTR_DESCRIPTION.Length
+                                && x.Name.ToString() == ATTR_DESCRIPTION;
                         });
                         break;
 
                     case TypeParameterSyntax typeParam:
                         attr = typeParam.AttributeLists.SelectMany(static x => x.Attributes).FirstOrDefault(static x =>
                         {
-                            return x.Name.Span.Length == _descriptionAttributeName.Length
-                                && x.Name.ToString() == _descriptionAttributeName;
+                            return x.Name.Span.Length == ATTR_DESCRIPTION.Length
+                                && x.Name.ToString() == ATTR_DESCRIPTION;
                         });
                         break;
 
                     case LocalFunctionStatementSyntax localFunc:
                         attr = localFunc.ChildNodes().OfType<AttributeListSyntax>().FirstOrDefault()?.Attributes.FirstOrDefault(static x =>
                         {
-                            return x.Name.Span.Length == _descriptionAttributeName.Length
-                                && x.Name.ToString() == _descriptionAttributeName;
+                            return x.Name.Span.Length == ATTR_DESCRIPTION.Length
+                                && x.Name.ToString() == ATTR_DESCRIPTION;
                         });
                         break;
 
