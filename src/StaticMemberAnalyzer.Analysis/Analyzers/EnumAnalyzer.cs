@@ -278,6 +278,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             var enumEntriesList = (ts_enumLikePatternEntriesSymbolList ??= new(capacity: LIST_CAPACITY));
             enumEntriesList.Clear();
 
+            bool hasPublicEntries = false;
             foreach (var memberSymbol in fieldContainerSymbol.GetMembers())
             {
                 if (memberSymbol is not IFieldSymbol fieldSymbol)
@@ -307,8 +308,21 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     continue;
                 }
 
-                //entries??
+
                 string fieldSymbolName = fieldSymbol.Name;
+
+                // public Entries?
+                if (fieldSymbolName == TARGET_FIELD_NAME)
+                {
+                    //public?
+                    if ((fieldSymbol.DeclaredAccessibility & Accessibility.Public) == Accessibility.Public)
+                    {
+                        hasPublicEntries = true;
+                    }
+                }
+
+
+                //entries??
                 if (!fieldSymbolName.StartsWith(TARGET_FIELD_NAME, StringComparison.Ordinal/*IgnoreCase*/)
                  && !fieldSymbolName.EndsWith(TARGET_FIELD_NAME, StringComparison.OrdinalIgnoreCase)
                 )
@@ -334,16 +348,17 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             ENTRIES_FOUND:
                 enumEntriesList.Add(fieldSymbol);
 
-                // check and report public modifier existence
-                if ((fieldSymbol.DeclaredAccessibility & Accessibility.Public) != Accessibility.Public)
-                {
-                    foreach (var stxRef in fieldSymbol.DeclaringSyntaxReferences)
-                    {
-                        context.ReportDiagnostic(Diagnostic.Create(
-                            Rule_EnumLike, stxRef.GetSyntax().GetLocation(), fieldContainerSymbol.Name,
-                            "'Entries' field is not 'public'"));
-                    }
-                }
+                //// UPDATE: allow non-public 'Entries'
+                //// check and report public modifier existence
+                //if ((fieldSymbol.DeclaredAccessibility & Accessibility.Public) != Accessibility.Public)
+                //{
+                //    foreach (var stxRef in fieldSymbol.DeclaringSyntaxReferences)
+                //    {
+                //        context.ReportDiagnostic(Diagnostic.Create(
+                //            Rule_EnumLike, stxRef.GetSyntax().GetLocation(), fieldContainerSymbol.Name,
+                //            "'Entries' field is not 'public'"));
+                //    }
+                //}
             }
 
 
@@ -363,6 +378,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 )
                 {
                     fieldContainerSymbolName ??= fieldContainerSymbol.Name;
+
                     context.ReportDiagnostic(Diagnostic.Create(
                         Rule_EnumLike, clsDeclStx.Identifier.GetLocation(), fieldContainerSymbolName,
                         "constructor is not 'private' or 'protected'"));
@@ -371,9 +387,21 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 if (!fieldContainerSymbol.IsSealed)
                 {
                     fieldContainerSymbolName ??= fieldContainerSymbol.Name;
+
                     context.ReportDiagnostic(Diagnostic.Create(
                         Rule_EnumLike, clsDeclStx.Identifier.GetLocation(), fieldContainerSymbolName,
                         "type should be 'sealed'"));
+                }
+
+                // no public 'Entries'
+                if (!hasPublicEntries)
+                {
+                    fieldContainerSymbolName ??= fieldContainerSymbol.Name;
+
+                    const string DIAG_MESSAGE = "public member named '" + TARGET_FIELD_NAME + "' is not found";
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        Rule_EnumLike, clsDeclStx.Identifier.GetLocation(), fieldContainerSymbolName,
+                        DIAG_MESSAGE));
                 }
             }
 
