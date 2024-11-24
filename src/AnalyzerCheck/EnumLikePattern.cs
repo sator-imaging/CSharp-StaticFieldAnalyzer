@@ -13,27 +13,41 @@ internal interface IEnumLikePattern { readonly static IEnumLikePattern[] Entries
 internal abstract class EnumLikeAbstract { readonly static EnumLikeAbstract[] Entries; }
 // not able --> internal static class EnumLikeStatic { readonly static EnumLikeStatic[] Entries; }
 
-sealed
+
+sealed class CorrectEnumLike
+{
+    private CorrectEnumLike() { }
+
+    public static readonly CorrectEnumLike A = new();
+    public static readonly CorrectEnumLike B = new();
+
+    public static ReadOnlySpan<CorrectEnumLike> Entries => rom_entries.Span;
+
+    static readonly ReadOnlyMemory<CorrectEnumLike> rom_entries = new(new[] { A, B });
+}
+
+
+//sealed
 internal class EnumLikePattern
 {
-    // Enum-like type requirement
-    // - sealed
-    // - constructor is private
-    // - has public member named 'Entries' (any type of return value is allowed)
-
-    // 'Entries' analysis target
-    // - field name starting with 'Entries', or ending with 'entries' (case-insensitive) are checked
-    //   ex) backingField_entries, Entries__, _entries, m_entries, s_Entries
-
     //protected
     EnumLikePattern()
     {
     }
 
-    //// only private and protected ctor is allowed
-    //public EnumLikePattern(ulong _) { }
-    //internal EnumLikePattern(int _) { }
+    // only private and protected ctor is allowed
+    public EnumLikePattern(ulong _) { }
+    internal EnumLikePattern(int _) { }
 
+    // 'public static' Entries required (any type of return value is accepted)
+    public static void entries() { }
+    public /*static*/ void Entries() { }
+
+    // 'public bool Equals' get warning
+    public bool Equals(EnumLikePattern? other) => true;
+    public override bool Equals(object? obj) => base.Equals(obj);
+    bool Equals(int _) => true;
+    public void Equals() { }
 
     internal class EnumLikeGeneric<T> { readonly static EnumLikeGeneric<T>[] Entries; }  // not public 'Entries'
 
@@ -43,7 +57,7 @@ internal class EnumLikePattern
     //// uncomment the following line to report error
     //public readonly static EnumLikePattern C = new();
 
-    // ERROR: implict array creation
+    // ERROR: implicit array creation
     readonly static EnumLikePattern[] OK_Entries = new[] { A, B };  // OK
     readonly static EnumLikePattern[] NG_entries = new[] { B, A };  // invalid order
     readonly static EnumLikePattern[] _entries;
@@ -61,8 +75,6 @@ internal class EnumLikePattern
     readonly static EnumLikePattern[] ___1_Entries = new EnumLikePattern[] { A };
 
     // ERROR: ReadOnlyMemory
-    readonly static ReadOnlyMemory<EnumLikePattern> entries;  // not starting with 'Entries' but ending with 'entries' (case-insensitive)
-    readonly static ReadOnlyMemory<EnumLikePattern> Entries;
     readonly static ReadOnlyMemory<EnumLikePattern> Entries_ = new EnumLikePattern[0];
     readonly static ReadOnlyMemory<EnumLikePattern> Entries__ = new EnumLikePattern[0] { };
     readonly static ReadOnlyMemory<EnumLikePattern> Entries___ = new(new EnumLikePattern[] { A, A, B });

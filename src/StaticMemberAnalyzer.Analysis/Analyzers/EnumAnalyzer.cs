@@ -269,7 +269,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 return;
             }
 
-            const string TARGET_FIELD_NAME = "Entries";
+            const string NAME_ENTRIES = "Entries";
+            const string NAME_EQUALS = "Equals";
             const int LIST_CAPACITY = 8;
 
             var enumFieldList = (ts_enumLikePatternFieldSymbolList ??= new(capacity: LIST_CAPACITY));
@@ -281,13 +282,40 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             bool hasPublicEntries = false;
             foreach (var memberSymbol in fieldContainerSymbol.GetMembers())
             {
+                string? symbolName = null;
+                bool isPublic = (memberSymbol.DeclaredAccessibility & Accessibility.Public) == Accessibility.Public;
+
+                // public bool Equals?
+                // public static RETVAL Entries?
+                if (isPublic)
+                {
+                    symbolName ??= memberSymbol.Name;
+
+                    if (memberSymbol.IsStatic)
+                    {
+                        if (symbolName == NAME_ENTRIES)
+                        {
+                            hasPublicEntries = true;
+                        }
+                    }
+
+                    // check only name and return type. IEquatable<T> won't require 'override' keyword
+                    if (memberSymbol is IMethodSymbol methodSymbol
+                     && methodSymbol.ReturnType.SpecialType == SpecialType.System_Boolean
+                     && symbolName == NAME_EQUALS
+                    )
+                    {
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            Rule_EnumLike, memberSymbol.Locations[0], NAME_EQUALS,
+                            "equality comparer should not be overridden"));
+                    }
+                }
+
+
+                /* =====  collect field analysis targets  ===== */
+
                 if (memberSymbol is not IFieldSymbol fieldSymbol)
                     continue;
-
-                //if (model.GetDeclaredSymbol(fieldDeclStx.Declaration.Variables[0]) is not IFieldSymbol fieldSymbol)
-                //{
-                //    continue;
-                //}
 
                 // check static AND readonly modifiers only here!!
                 if (!fieldSymbol.IsStatic || !fieldSymbol.IsReadOnly)
@@ -296,11 +324,11 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 if (fieldSymbol.IsImplicitlyDeclared)
                     continue;
 
-                // is enum member?
+                // is type enum member?
                 if (SymbolEqualityComparer.Default.Equals(fieldSymbol.Type, fieldContainerSymbol))
                 {
                     //public?
-                    if ((fieldSymbol.DeclaredAccessibility & Accessibility.Public) == Accessibility.Public)
+                    if (isPublic)
                     {
                         enumFieldList.Add(fieldSymbol);
                     }
@@ -309,22 +337,11 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 }
 
 
-                string fieldSymbolName = fieldSymbol.Name;
-
-                // public Entries?
-                if (fieldSymbolName == TARGET_FIELD_NAME)
-                {
-                    //public?
-                    if ((fieldSymbol.DeclaredAccessibility & Accessibility.Public) == Accessibility.Public)
-                    {
-                        hasPublicEntries = true;
-                    }
-                }
-
-
                 //entries??
-                if (!fieldSymbolName.StartsWith(TARGET_FIELD_NAME, StringComparison.Ordinal/*IgnoreCase*/)
-                 && !fieldSymbolName.EndsWith(TARGET_FIELD_NAME, StringComparison.OrdinalIgnoreCase)
+                symbolName ??= fieldSymbol.Name;
+
+                if (!symbolName.StartsWith(NAME_ENTRIES, StringComparison.Ordinal/*IgnoreCase*/)
+                 && !symbolName.EndsWith(NAME_ENTRIES, StringComparison.OrdinalIgnoreCase)
                 )
                 {
                     continue;
@@ -347,25 +364,13 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             //entries!!
             ENTRIES_FOUND:
                 enumEntriesList.Add(fieldSymbol);
-
-                //// UPDATE: allow non-public 'Entries'
-                //// check and report public modifier existence
-                //if ((fieldSymbol.DeclaredAccessibility & Accessibility.Public) != Accessibility.Public)
-                //{
-                //    foreach (var stxRef in fieldSymbol.DeclaringSyntaxReferences)
-                //    {
-                //        context.ReportDiagnostic(Diagnostic.Create(
-                //            Rule_EnumLike, stxRef.GetSyntax().GetLocation(), fieldContainerSymbol.Name,
-                //            "'Entries' field is not 'public'"));
-                //    }
-                //}
             }
 
 
             /* =      class      = */
 
             // only when 'Entries' found
-            if (enumEntriesList.Count > 0)
+            if (hasPublicEntries || enumEntriesList.Count > 0)
             {
                 const Accessibility ACCESS_HIDDEN = Accessibility.Protected | Accessibility.Private | Accessibility.NotApplicable;
 
@@ -398,10 +403,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 {
                     fieldContainerSymbolName ??= fieldContainerSymbol.Name;
 
-                    const string DIAG_MESSAGE = "public member named '" + TARGET_FIELD_NAME + "' is not found";
                     context.ReportDiagnostic(Diagnostic.Create(
                         Rule_EnumLike, clsDeclStx.Identifier.GetLocation(), fieldContainerSymbolName,
-                        DIAG_MESSAGE));
+                        "'public static' member called '" + NAME_ENTRIES + "' is not found"));
                 }
             }
 
