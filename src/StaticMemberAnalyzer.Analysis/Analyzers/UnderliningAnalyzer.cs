@@ -285,14 +285,32 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
 
             //sp:CategoryAttribute
-            if (symbol.Kind == SymbolKind.NamedType)
+            if (symbol.Kind is SymbolKind.NamedType or SymbolKind.Method)
             {
                 foreach (var syntaxRef in symbol.DeclaringSyntaxReferences)
                 {
-                    if (syntaxRef.GetSyntax() is not BaseTypeDeclarationSyntax typeDecl)
-                        continue;
+                    var syntax = syntaxRef.GetSyntax();
 
-                    DrawCategoryAnnotation(compilation, symbol, typeDecl.Identifier.GetLocation(), reportAction, token);
+                    if (syntax is BaseTypeDeclarationSyntax typeDecl)
+                    {
+                        DrawCategoryAnnotation(compilation, symbol, typeDecl.Identifier.GetLocation(), reportAction, token);
+                    }
+
+                    //constructor?
+                    else if (syntax is ConstructorDeclarationSyntax ctorDecl)
+                    {
+                        DrawCategoryAnnotation(compilation, symbol.ContainingType /* containingType!! */,
+                            ctorDecl.Identifier.GetLocation(), reportAction, token);
+
+                        // : base()?
+                        var baseCtor = ctorDecl.Initializer.ThisOrBaseKeyword;
+                        if (baseCtor.IsKind(SyntaxKind.BaseKeyword))
+                        {
+                            var baseSymbol = symbol.ContainingType.BaseType;
+                            if (baseSymbol != null)
+                                DrawCategoryAnnotation(compilation, baseSymbol, baseCtor.GetLocation(), reportAction, token);
+                        }
+                    }
                 }
             }
 
@@ -338,7 +356,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         {
             //Core.ReportDebugMessage(context.ReportDiagnostic,
             //    nameof(DrawUnderlineOnSyntaxNodes),
-            //    $"=== {context.Node} ===",
+            //    $"=== {context.Node.Kind()} ===",
             //    context.Node.GetLocation());
 
             var syntax = context.Node;
@@ -437,11 +455,18 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (symbol.IsImplicitlyDeclared)
                 return;
 
-            DrawCategoryAnnotation(compilation, symbol, syntax.GetLocation(), context.ReportDiagnostic, token);
-
             Underlining(singleLocation, symbol, rule,
                 reportAction, symbolToDescription, /*filePathToModel,*/ descAttrToMessage, compilation, token,
                 0);
+
+
+            // draw line only when span length matches
+            // - no underline --> var, localVar, etc
+            // - underline --> TargetSymbolName (exact match)
+            if ((symbol.Locations[0].SourceSpan.Length == singleLocation[0].SourceSpan.Length) && (symbol.Name == syntax.ToString()))
+            {
+                DrawCategoryAnnotation(compilation, symbol, singleLocation[0], context.ReportDiagnostic, token);
+            }
         }
 
 
@@ -544,38 +569,38 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             foreach (var syntaxRef in symbol.DeclaringSyntaxReferences)
             {
-                if (syntaxRef.GetSyntax() is /*MemberDeclarationSyntax*/ BaseTypeDeclarationSyntax memberDecl)
+                if (syntaxRef.GetSyntax() is not BaseTypeDeclarationSyntax typeDecl)
+                    goto EXIT;
+
+                foreach (var attrList in typeDecl.AttributeLists)
                 {
-                    foreach (var attrList in memberDecl.AttributeLists)
+                    foreach (var attr in attrList.Attributes)
                     {
-                        foreach (var attr in attrList.Attributes)
+                        if (attr.Name.Span.Length == ATTR_CATEGORY.Length && attr.Name.ToString() == ATTR_CATEGORY)
                         {
-                            if (attr.Name.Span.Length == ATTR_CATEGORY.Length && attr.Name.ToString() == ATTR_CATEGORY)
+                            // NOTE: parameter-less attribute constructor has null argument list
+                            if (attr.ArgumentList != null
+                            && (attr.ArgumentList.Arguments).Count == 1)
                             {
-                                // NOTE: parameter-less attribute constructor has null argument list
-                                if (attr.ArgumentList != null
-                                && (attr.ArgumentList.Arguments).Count == 1)
+                                //Core.ReportDebugMessage(reportAction,
+                                //    "CATEGORY",
+                                //    $"=== {symbol.Name} ({symbol.Kind}) ===",
+                                //    syntax.GetLocation());
+
+                                var attrArgs0 = attr.ArgumentList.Arguments[0];
+                                var attrTree = attrArgs0.SyntaxTree;
+                                var attrModel = compilation.GetSemanticModel(attrTree);
+
+                                var attrValue = attrModel.GetConstantValue((attrArgs0.Expression as ExpressionSyntax), token);
+                                if (attrValue.HasValue)
                                 {
-                                    //Core.ReportDebugMessage(reportAction,
-                                    //    "CATEGORY",
-                                    //    $"=== {symbol.Name} ({symbol.Kind}) ===",
-                                    //    syntax.GetLocation());
+                                    description ??= attrValue.ToString();
 
-                                    var attrArgs0 = attr.ArgumentList.Arguments[0];
-                                    var attrTree = attrArgs0.SyntaxTree;
-                                    var attrModel = compilation.GetSemanticModel(attrTree);
+                                    //identifierToken = memberDecl.Identifier;//(memberDecl as BaseTypeDeclarationSyntax)?.Identifier;
+                                    //identifierToken ??= (memberDecl as MethodDeclarationSyntax)?.Identifier;
+                                    //identifierToken ??= (memberDecl as PropertyDeclarationSyntax)?.Identifier;
 
-                                    var attrValue = attrModel.GetConstantValue((attrArgs0.Expression as ExpressionSyntax), token);
-                                    if (attrValue.HasValue)
-                                    {
-                                        description ??= attrValue.ToString();
-
-                                        //identifierToken = memberDecl.Identifier;//(memberDecl as BaseTypeDeclarationSyntax)?.Identifier;
-                                        //identifierToken ??= (memberDecl as MethodDeclarationSyntax)?.Identifier;
-                                        //identifierToken ??= (memberDecl as PropertyDeclarationSyntax)?.Identifier;
-
-                                        goto EXIT;
-                                    }
+                                    goto EXIT;
                                 }
                             }
                         }
@@ -587,11 +612,13 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             if (description != null)
             {
+                //var lineSpan = loc.GetLineSpan();
+
                 __DrawUnderlinePerChar(
                     reportAction,
                     loc.SourceTree,
-                    loc.SourceSpan.Start,
-                    loc.SourceSpan.End,
+                    loc.SourceSpan.Start,// - lineSpan.StartLinePosition.Character,
+                    loc.SourceSpan.End,// + lineSpan.EndLinePosition.Character,
                     Rule_DesignatedTypeDesc,
                     GetMessageFormatArgs(symbol, description)
                     );

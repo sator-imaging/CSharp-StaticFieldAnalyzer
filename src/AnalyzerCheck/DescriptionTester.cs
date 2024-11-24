@@ -1,20 +1,4 @@
-﻿#pragma warning disable IDE0079
-#pragma warning disable IDE0062
-#pragma warning disable IDE0059
-#pragma warning disable IDE0039
-#pragma warning disable CS0168
-#pragma warning disable IDE0060
-#pragma warning disable IDE0052
-#pragma warning disable IDE0044
-#pragma warning disable IDE0051
-#pragma warning disable CS8618
-#pragma warning disable CA1822
-#pragma warning disable CA2211
-#pragma warning disable CA1825
-#pragma warning disable IDE0300
-#pragma warning disable CS0219
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -26,7 +10,8 @@ using System.Diagnostics;
 
 namespace AnalyzerCheck.Tests
 {
-    // v1.5: CategoryAttribute does NOT draw underline on inherited types
+    // v1.5: CategoryAttribute does NOT draw underline on inherited types and variables.
+    //       it draws only on exact type reference and constructors including base constructor. ex) `public MyClass() : base() { }`
     //       uncomment next line to see difference.
     //       it's nice to use when annotating abstract/base type which requires to get attention on inheriting
     //       ex) [CategoryAttribute("don't forget to add 'XXX' attribute to inheritance!!"]
@@ -35,12 +20,25 @@ namespace AnalyzerCheck.Tests
     class CategoryAttr
     {
         // no underline on this line
+        public CategoryAttr()
+            : base()
+        {
+            // no underline when var
+            var localVar = this;
+
+            // explicit type declaration get underline
+            CategoryAttr underline = this;
+            var a23456789012 = this;
+
+            var other = localVar;  // 'var' and 'localVar' must not get underline
+        }
     }
 
     class TestCategoryAttrInheritance : CategoryAttr
     {
         CategoryAttr value;
         TestCategoryAttrInheritance(CategoryAttr value)
+            : base()
         {
             this.value = value;
             var x = value;
