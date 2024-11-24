@@ -197,6 +197,19 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                             return;
                         }
 
+                        // NOTE: if enum method parameter has default value and it's omit on invocation
+                        //       implicit cast will happen internally
+                        if (castOp.IsImplicit)
+                        {
+                            if (castOp.Syntax is InvocationExpressionSyntax or AttributeSyntax or ObjectCreationExpressionSyntax)
+                            {
+                                return;
+                            }
+
+                            //Core.ReportDebugMessage(context.ReportDiagnostic,
+                            //"IMPLICIT CAST: " + castOp.Syntax.Kind(), castOp.Kind.ToString(), castOp.Syntax.GetLocation());
+                        }
+
                         var castToEnum = IsEnumDerivedType(castOp.Type);
                         if (castToEnum)
                         {
