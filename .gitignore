@@ -3,9 +3,12 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+
 # added
 .*/
 */**/.*
+!src/AnalyzerCheck/.editorconfig
+
 
 # User-specific files
 *.rsuser

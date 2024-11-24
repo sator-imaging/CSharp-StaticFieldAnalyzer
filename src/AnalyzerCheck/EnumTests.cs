@@ -1,20 +1,4 @@
-﻿#pragma warning disable IDE0079
-#pragma warning disable IDE0062
-#pragma warning disable IDE0059
-#pragma warning disable IDE0039
-#pragma warning disable CS0168
-#pragma warning disable IDE0060
-#pragma warning disable IDE0052
-#pragma warning disable IDE0044
-#pragma warning disable IDE0051
-#pragma warning disable CS8618
-#pragma warning disable CA1822
-#pragma warning disable CA2211
-#pragma warning disable CA1825
-#pragma warning disable IDE0300
-#pragma warning disable CS0219
-
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Reflection;
 using ShortAlias = System.Int16;
