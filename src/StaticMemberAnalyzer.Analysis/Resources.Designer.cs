@@ -593,7 +593,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   `using` statement should be used for instance that has public `void Dispose()` or `ValueTask DisposeAsync()` method. に類似しているローカライズされた文字列を検索します。
+        ///   `using` statement should be used for instance that has public `Dispose` or `DisposeAsync` method. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0040_Description {
             get {

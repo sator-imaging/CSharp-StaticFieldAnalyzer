@@ -1,20 +1,4 @@
-﻿#pragma warning disable IDE0079
-#pragma warning disable IDE0062
-#pragma warning disable IDE0059
-#pragma warning disable IDE0039
-#pragma warning disable CS0168
-#pragma warning disable IDE0060
-#pragma warning disable IDE0052
-#pragma warning disable IDE0044
-#pragma warning disable IDE0051
-#pragma warning disable CS8618
-#pragma warning disable CA1822
-#pragma warning disable CA2211
-#pragma warning disable CA1825
-#pragma warning disable IDE0300
-#pragma warning disable CS0219
-
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using NIE = System.NotImplementedException;
 
@@ -35,20 +19,6 @@ internal class DisposableTests
     ref struct RefLikeAsyncDisposable { public ValueTask DisposeAsync() => throw new NIE(); }
     ref struct RefLikeAsyncHidden { ValueTask DisposeAsync() => throw new NIE(); }
 
-
-    // fields never get warning
-    ClassNoInterface classNoInterface = new();
-    ClassWithInterface classWithInterface = new();
-    ClassDeriveDisposable classDeriveDisposable = new();
-    StructNoInterface structNoInterface = new();
-    StructWithInterface structWithInterface = new();
-    ClassAsyncDisposable classAsyncDisposable = new();
-    StructAsyncDisposable structAsyncDisposable = new();
-
-    static object? ObjectField;
-    static string? StringField;
-    static IDisposable? IDisposableField;
-
     class Disposable : IDisposable
     {
         public static Disposable New => new();
@@ -65,9 +35,29 @@ internal class DisposableTests
         public static implicit operator string(ImplicitConversion? self) => string.Empty;
     }
 
-#pragma warning disable CA1806
-    static void Test()
+
+    // field initializer never get warning
+    ClassNoInterface classNoInterface = new();
+    ClassWithInterface classWithInterface = new();
+    ClassDeriveDisposable classDeriveDisposable = new();
+    StructNoInterface structNoInterface = new();
+    StructWithInterface structWithInterface = new();
+    ClassAsyncDisposable classAsyncDisposable = new();
+    StructAsyncDisposable structAsyncDisposable = new();
+
+    static object? ObjectField;
+    static string? StringField;
+    static IDisposable? IDisposableField;
+
+    // no error on return statement
+    Disposable MethodReturn1() => new();
+    Disposable MethodReturn2() { return new Disposable(); }
+
+    static void Test(Disposable methodParam)
     {
+        // no error, using statement
+        using Disposable localVar = new Disposable();
+
         // no error on method chaining (remove .Return() will show warning)
         _ = new Disposable().Return();
         _ = (((new Disposable()))).Return();
@@ -75,17 +65,56 @@ internal class DisposableTests
         _ = new Disposable().Self.Return();
         _ = new Disposable().GetSelf().Return();
 
-        // OK: left hand is not IDisposable
+        // cast operation: won't show warning if both type are disposable
+        _ = localVar as IDisposable;
+        _ = (IDisposable)localVar;
+        _ = methodParam as IDisposable;
+        _ = (IDisposable)methodParam;
+
+        // show warning
+        IDisposable notUsing1 = ((new object() as IDisposable))!;
+        IDisposable notUsing2 = new object() as IDisposable;
+        _ = (new object()) as Disposable;
+        _ = (IDisposable)(new object());
+        _ = (new Disposable()) as object;
+
+        // field assignment won't show warning
+        IDisposableField = (((new object()) as IDisposable)!);
+        IDisposableField = (new object()) as Disposable;
+        IDisposableField = (IDisposable)(new object());
+        //IDisposableField = (new Disposable()) as object;
+        ObjectField = ((new object() as IDisposable)!);
+        ObjectField = (new object()) as Disposable;
+        ObjectField = (IDisposable)(new object());
+        ObjectField = new Disposable() as object;   // warn: it's casted from disposable to non-disposable
+
+        // OK: left hand is field or property
+        IDisposableField = new Disposable();
+        IDisposableField = new ImplicitConversion();
         ObjectField = new ImplicitConversion();
+        ObjectField = new Disposable();
+        // implicit string conversion
         string s = new ImplicitConversion();
         s = new ImplicitConversion();
         StringField = new ImplicitConversion();
-        StringField = new Disposable();  // NG: no implicit cast operator
 
-        IDisposableField = new ImplicitConversion();
+        // show warning
         IDisposable d = new ImplicitConversion();
         d = new ImplicitConversion();
+        d = new Disposable();
 
+        // assignment won't get warning including implicit cast
+        d = localVar;
+        d = notUsing1;
+
+        IDisposableField = new ClassWithInterface();
+        IDisposableField = new ClassDeriveDisposable();
+        IDisposableField = new StructWithInterface();
+        //IDisposableField = new RefLikeAccessible();
+        //ObjectField = new RefLikeAccessible();
+        ObjectField = new ClassWithInterface();
+        ObjectField = new ClassDeriveDisposable();
+        ObjectField = new StructWithInterface();
 
         //----------------------------------------------------------------------
         // NG: disposable not using-ed
@@ -95,25 +124,21 @@ internal class DisposableTests
         var cwi = new ClassWithInterface();
         _ = Create<ClassWithInterface>();
         MethodArg(new ClassWithInterface());
-        ObjectField = new ClassWithInterface();
 
         new ClassDeriveDisposable();
         var cdd = new ClassDeriveDisposable();
         _ = Create<ClassDeriveDisposable>();
         MethodArg(new ClassDeriveDisposable());
-        ObjectField = new ClassDeriveDisposable();
 
         new StructWithInterface();
         var swi = new StructWithInterface();
         _ = Create<StructWithInterface>();
         MethodArg(new StructWithInterface());
-        ObjectField = new StructWithInterface();
 
         new RefLikeAccessible();
         var rla = new RefLikeAccessible();
         _ = CreateRefLikeAccessible();
         MethodArg(new RefLikeAccessible());
-        ObjectField = new RefLikeAccessible();
 
 
         //----------------------------------------------------------------------
@@ -152,6 +177,13 @@ internal class DisposableTests
 
     static async void TestAsync()
     {
+        //IDisposableField = new ClassAsyncDisposable();
+        //IDisposableField = new StructAsyncDisposable();
+        //IDisposableField = new RefLikeAsyncDisposable();
+        //ObjectField = new RefLikeAsyncDisposable();
+        ObjectField = new ClassAsyncDisposable();
+        ObjectField = new StructAsyncDisposable();
+
         //----------------------------------------------------------------------
         // NG: not using
         //----------------------------------------------------------------------
@@ -160,19 +192,16 @@ internal class DisposableTests
         var cad = new ClassAsyncDisposable();
         _ = Create<ClassAsyncDisposable>();
         MethodArg(new ClassAsyncDisposable());
-        ObjectField = new ClassAsyncDisposable();
 
         new StructAsyncDisposable();
         var sad = new StructAsyncDisposable();
         _ = Create<StructAsyncDisposable>();
         MethodArg(new StructAsyncDisposable());
-        ObjectField = new StructAsyncDisposable();
 
         new RefLikeAsyncDisposable();
         var rlad = new RefLikeAsyncDisposable();
         _ = CreateRefLikeAsyncDisposable();
         MethodArg(new RefLikeAsyncDisposable());
-        ObjectField = new RefLikeAsyncDisposable();
 
 
         //----------------------------------------------------------------------
@@ -205,6 +234,15 @@ internal class DisposableTests
 
     static void TestNonDisposable()
     {
+        //IDisposableField = new ClassNoInterface();
+        //IDisposableField = new StructNoInterface();
+        //IDisposableField = new RefLikeHidden();
+        //IDisposableField = new RefLikeAsyncHidden();
+        //ObjectField = new RefLikeHidden();
+        //ObjectField = new RefLikeAsyncHidden();
+        ObjectField = new ClassNoInterface();
+        ObjectField = new StructNoInterface();
+
         //----------------------------------------------------------------------
         // OK: not disposable
         //----------------------------------------------------------------------
@@ -213,25 +251,21 @@ internal class DisposableTests
         var cni = new ClassNoInterface();
         _ = Create<ClassNoInterface>();
         MethodArg(new ClassNoInterface());
-        ObjectField = new ClassNoInterface();
 
         new StructNoInterface();
         var sni = new StructNoInterface();
         _ = Create<StructNoInterface>();
         MethodArg(new StructNoInterface());
-        ObjectField = new StructNoInterface();
 
         new RefLikeHidden();
         var rlh = new RefLikeHidden();
         _ = CreateRefLikeHidden();
         MethodArg(new RefLikeHidden());
-        ObjectField = new RefLikeHidden();
 
         new RefLikeAsyncHidden();
         var rlah = new RefLikeAsyncHidden();
         _ = CreateRefLikeAsyncHidden();
         MethodArg(new RefLikeAsyncHidden());
-        ObjectField = new RefLikeAsyncHidden();
     }
 
 
