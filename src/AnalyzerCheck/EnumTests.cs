@@ -45,6 +45,29 @@ internal class EnumTests
     }
 
 
+    [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+    class AttrTest : Attribute
+    {
+        public AttrTest(EInt value = EInt.Value) { }
+    }
+
+    EInt MethodDefaultParams(EInt value = EInt.Value, EInt other = EInt.Other) => value;
+
+    [AttrTest, AttrTest()]  // <-- no warning is expected even if default enum parameter is omitted
+    void ImplicitCastHappensIfMethodDefaultParameterOmitted()
+    {
+        // expect: these lines must not get warning
+        var value1 = MethodDefaultParams();
+        var value2 = MethodDefaultParams(EInt.Value);
+        var value3 = MethodDefaultParams(other: EInt.Value);
+        var ctorCall = new AttrTest();
+
+        // these lines get warning
+        object obj = EInt.Value;
+        Enum @enum = EInt.Other;
+    }
+
+
     // expect warnings on all lines
     void EnumCastTests()
     {
