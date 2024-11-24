@@ -80,29 +80,57 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
         private static void AnalyzeDisposableUsage(OperationAnalysisContext context)
         {
-            INamedTypeSymbol? disposableSymbol = context.Operation switch
+            INamedTypeSymbol? disposableSymbol;
+
+            // NOTE: if cast happens between disposable types, do not report diagnostic
+            //       > disposableLocalVar as IDisposable
+            //       > (IDisposable)disposableLocalVar
+            if (context.Operation is IConversionOperation castOp)
             {
-                IObjectCreationOperation createOp => createOp.Type as INamedTypeSymbol,
-                IInvocationOperation invokeOp => invokeOp.TargetMethod.ReturnType as INamedTypeSymbol,
-                IConversionOperation castOp => castOp.Type as INamedTypeSymbol,
-                IPropertyReferenceOperation propRefOp => propRefOp.Type as INamedTypeSymbol,
-                _ => null
-            };
+                disposableSymbol = castOp.Type as INamedTypeSymbol;
+
+                if (disposableSymbol == null || !IsSymbolDisposable(context, disposableSymbol))
+                    return;
+
+                // cast from disposable type?
+                if (castOp.Operand.Type is INamedTypeSymbol sourceSymbol && IsSymbolDisposable(context, sourceSymbol))
+                    return;
+            }
+            else
+            {
+                disposableSymbol = context.Operation switch
+                {
+                    IObjectCreationOperation x => x.Type as INamedTypeSymbol,
+                    IInvocationOperation x => x.TargetMethod.ReturnType as INamedTypeSymbol,
+                    IPropertyReferenceOperation x => x.Type as INamedTypeSymbol,
+                    _ => null
+                };
+
+                if (disposableSymbol == null || !IsSymbolDisposable(context, disposableSymbol))
+                    return;
+            }
 
 
-            if (disposableSymbol == null)
-                return;
-
-            if (!IsSymbolDisposable(context, disposableSymbol))
-                return;
-
+            // NOTE: if disposable type symbol is found, check the following
+            //       - is it used as method call receiver?
+            //       - does `using` statement exist?
+            //       - on return statement?
 
             var syntax = context.Operation.Syntax;
+            SemanticModel? model = null;
 
-            // > (((new Dispopsable()))) --> new Disposable()
-            while (syntax.Parent is ParenthesizedExpressionSyntax)
+            // remove parenthesizes!!
+            // > (((new Disposable()))) --> new Disposable()
+            while (syntax.Parent is ParenthesizedExpressionSyntax || syntax.Parent.IsKind(SyntaxKind.SuppressNullableWarningExpression))
             {
                 syntax = syntax.Parent;
+            }
+
+            // > Method() => new Disposable();
+            // > Method() { return new Disposable(); }
+            if (syntax.Parent is ArrowExpressionClauseSyntax or ReturnStatementSyntax)
+            {
+                return;
             }
 
             // > new Disposable().Return();
@@ -141,7 +169,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 }
                 else if (parentStx is LocalDeclarationStatementSyntax localVarStx)
                 {
-                    var model = context.Compilation.GetSemanticModel(localVarStx.SyntaxTree);
+                    model ??= context.Compilation.GetSemanticModel(syntax.SyntaxTree);
                     if (model.GetTypeInfo(localVarStx.Declaration.Type).ConvertedType is INamedTypeSymbol localVarSymbol
                     && !IsSymbolDisposable(context, localVarSymbol))
                     {
@@ -169,23 +197,27 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     */
                 }
             }
-            // > Field = new Disposable();
-            // > Property = new Disposable();
+            // NOTE: ignore field/property assignment even if field/property type is disposable
+            //       > Field = new Disposable();
+            //       > Property = new Disposable();
             else if (syntax.Parent is AssignmentExpressionSyntax assignStx)
             {
-                var model = context.Compilation.GetSemanticModel(assignStx.SyntaxTree);
+                model ??= context.Compilation.GetSemanticModel(syntax.SyntaxTree);
                 var leftSymbol = model.GetSymbolInfo(assignStx.Left).Symbol;
 
-                INamedTypeSymbol? foundSymbol = leftSymbol switch
+                //ummm.....
+                (bool ignorable, INamedTypeSymbol? foundSymbol) = leftSymbol switch
                 {
-                    IFieldSymbol fieldSymbol => fieldSymbol.Type as INamedTypeSymbol,
-                    IPropertySymbol propertySymbol => propertySymbol.Type as INamedTypeSymbol,
-                    ILocalSymbol localVarSymbol => localVarSymbol.Type as INamedTypeSymbol,
-                    ILocalReferenceOperation localRefSymbol => localRefSymbol.Type as INamedTypeSymbol,
-                    _ => null
+                    // NOTE: allow field/property assignment!!
+                    IFieldSymbol fieldSymbol => (true, fieldSymbol.Type as INamedTypeSymbol),
+                    IPropertySymbol propertySymbol => (true, propertySymbol.Type as INamedTypeSymbol),
+
+                    ILocalSymbol localVarSymbol => (false, localVarSymbol.Type as INamedTypeSymbol),
+                    ILocalReferenceOperation localRefSymbol => (false, localRefSymbol.Type as INamedTypeSymbol),
+                    _ => (false, null)
                 };
 
-                if (foundSymbol != null && !IsSymbolDisposable(context, foundSymbol))
+                if (ignorable || (foundSymbol != null && !IsSymbolDisposable(context, foundSymbol)))
                 {
                     return;
                 }
@@ -194,11 +226,13 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             // NOT FOUND...!!
             context.ReportDiagnostic(Diagnostic.Create(
-                Rule_MissingUsing, syntax.GetLocation(), disposableSymbol.Name));
+                Rule_MissingUsing, syntax.GetLocation(), (((disposableSymbol!))).Name));
         }
 
 
-        readonly static Func<INamedTypeSymbol, bool> func_HasDisposableImplemented = static x =>
+        /*  internal  ================================================================ */
+
+        readonly static Func<INamedTypeSymbol, bool> cache_HasDisposableImplemented = static x =>
         {
             if (x.SpecialType is SpecialType.System_IDisposable)
             {
@@ -216,15 +250,16 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             return false;
         };
 
+
         private static bool IsSymbolDisposable(OperationAnalysisContext context,
                                                INamedTypeSymbol disposableSymbol
             )
         {
             if (!disposableSymbol.IsRefLikeType)
             {
-                if (func_HasDisposableImplemented.Invoke(disposableSymbol)
-                 || disposableSymbol.Interfaces.Any(func_HasDisposableImplemented)
-                 || disposableSymbol.AllInterfaces.Any(func_HasDisposableImplemented)
+                if (cache_HasDisposableImplemented.Invoke(disposableSymbol)
+                 || disposableSymbol.Interfaces.Any(cache_HasDisposableImplemented)
+                 || disposableSymbol.AllInterfaces.Any(cache_HasDisposableImplemented)
                 )
                 {
                     return true;
