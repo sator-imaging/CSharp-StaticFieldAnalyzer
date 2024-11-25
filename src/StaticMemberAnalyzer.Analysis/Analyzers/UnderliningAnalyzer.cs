@@ -495,10 +495,10 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
             else if (par is AssignmentExpressionSyntax assign)
             {
-                // TODO: support delegate parameter types --> delgate ReturnType MyDelegate(ParamType param);
-                if (model.GetSymbolInfo(assign.Left, token).Symbol is ILocalSymbol localvar)
+                // TODO: support delegate parameter types --> delegate ReturnType MyDelegate(ParamType param);
+                if (model.GetSymbolInfo(assign.Left, token).Symbol is ILocalSymbol localVar)
                 {
-                    lambdaType = (localvar.Type as INamedTypeSymbol);//?.TypeArguments.FirstOrDefault();
+                    lambdaType = (localVar.Type as INamedTypeSymbol);//?.TypeArguments.FirstOrDefault();
                 }
             }
 
