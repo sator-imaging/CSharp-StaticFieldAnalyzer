@@ -77,14 +77,14 @@ namespace AnalyzerCheck.Tests
     }
 
     [DescriptionAttribute]
-    interface ITSelfTester<TSelf> { }
+    interface ITSelfTest<TSelf> { }
 
     [Category("Category Attribute"), DisplayName("Display Name Attribute")]
-    [DescriptionAttribute("Description for " + nameof(DescriptionTester) + "?" + "!")]
+    [DescriptionAttribute("Description for " + nameof(UnderliningTests) + "?" + "!")]
     [DebuggerDisplay("")]
-    public class DescriptionTester : List<Base>, IBase, INoUnderline<Base, long>, ITSelfTester<AnalyzerCheck.Tests.DescriptionTester>
+    public class UnderliningTests : List<Base>, IBase, INoUnderline<Base, long>, ITSelfTest<AnalyzerCheck.Tests.UnderliningTests>
     {
-        [DescriptionAttribute("??")] public DescriptionTester() { }
+        [DescriptionAttribute("??")] public UnderliningTests() { }
 
         [DescriptionAttribute] public struct NestedStruct : IBase { }
 
@@ -97,7 +97,7 @@ namespace AnalyzerCheck.Tests
         [DescriptionAttribute] public Base PROP { [DescriptionAttribute] get; [DescriptionAttribute] set; }
         [DescriptionAttribute] event Action<Base> E, Z;
         [DescriptionAttribute] Action<Base> F, Y;
-        [DescriptionAttribute] DescriptionTester[] A, X;
+        [DescriptionAttribute] UnderliningTests[] A, X;
         [DescriptionAttribute] List<Base> G, W;
         [DescriptionAttribute] new public Base this[[DescriptionAttribute] int i] { get => base[i]; }
         [DescriptionAttribute] delegate void BaseAction(Base b, [DescriptionAttribute] int value);
@@ -120,9 +120,9 @@ namespace AnalyzerCheck.Tests
         Action<Base> Act = StaticMethod;
         static string Str = CONST_STR + STATIC_READONLY_STR + OTHER_STATIC_READONLY;
 
-        string WithClass = DescriptionTester.Str;
+        string WithClass = UnderliningTests.Str;
         string OnlyField = Str;
-        Type D = typeof(DescriptionTester);
+        Type D = typeof(UnderliningTests);
 
         Action<Base> test = b => { b = new(); };
 

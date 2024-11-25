@@ -2,7 +2,7 @@
 
 namespace AnalyzerCheck;
 
-internal class StructCtorTests
+internal class StructTests
 {
     struct Struct
     {
