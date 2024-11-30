@@ -10,7 +10,7 @@ Roslyn-based analyzer to provide diagnostics of static fields and properties ini
 - [Cross-Referencing Problem](#cross-referencing-problem) of static field across type
 - [`Enum` type analysis](#enum-analyzer-and-code-fix-provider) to prevent user-level value conversion & [more](#kotlin-like-enum-pattern)
 - `struct` parameter-less constructor misuse analysis
-- `Disposable` missing using statement analysis
+- [`Disposable` analyzer](#disposable-analyzer) to detect missing using statement
 - `TSelf` generic type argument & type constraint analysis
 - Annotating and underlining field, property or etc with custom message
 - Find out all diagnostic rules: [RULES.md](RULES.md)
@@ -159,24 +159,60 @@ Helpful annotation and code fix for enum types to prevent modification of string
 
 Analysis to help implementing Kotlin-style enum class.
 
+Enum-like type requirements:
+- `MyEnumLike[]` or `ReadOnlyMemory<MyEnumLike>` field(s) exist
+    - analyzer will check field initializer correctness if name is starting with `Entries` (case-sensitive) or ending with `entries` (case-insensitive)
+- `sealed` modifier on type
+- `private` constructor only
+- `public static` member called `Entries` exists
+- `public bool Equals` method should not be declared/overridden
+
+
 ```cs
 public class EnumLike
-//           ^^^^^^^^ should have `sealed` modifier and constructor should
-//                    be `private` or `protected`
-//                    * annotation appears only if type has 'Entries' field
+//           ~~~~~~~~ WARN: no `sealed` modifier on type and public constructor exists
+//                          * this warning appears only if type has member called 'Entries'
 {
-    public static readonly EnumLike A = new();
-    public static readonly EnumLike B = new();
+    public static readonly EnumLike A = new("A");
+    public static readonly EnumLike B = new("B");
 
-    // 'Entries' should have all of 'public static readonly' field of declaring type
-    public static readonly EnumLike[] Entries; //= new[] { A, B };
-    //                                ~~~~~~~
+    public static ReadOnlySpan<EnumLike> Entries => EntriesAsMemory.Span;
+
+    // 'Entries' must have all of 'public static readonly' fields in declared order
+    static readonly EnumLike[] _entries = new[] { B, A };
+    //                                    ~~~~~~~~~~~~~~ wrong order!!
 
     // 'ReadOnlyMemory<T>' can be used instead of array
-    public static readonly ReadOnlyMemory<EnumLike> Entries = new(new[] { A, B });
+    public static readonly ReadOnlyMemory<EnumLike> EntriesAsMemory = new(new[] { A, B });
+
+
+    /* ===  Kotlin style enum template  === */
+
+    static int AUTO_INCREMENT = 0;  // iota
+
+    public readonly int Ordinal;
+    public readonly string Name;
+
+    private EnumLike(string name) { Ordinal = AUTO_INCREMENT++; Name = name; }
+
+    public override string ToString()
+    {
+        const string SEP = ": ";
+        Span<char> span = stackalloc char[Name.Length + 32];
+
+        Ordinal.TryFormat(span, out var written);
+        SEP.AsSpan().CopyTo(span.Slice(written));
+        written += SEP.Length;
+        Name.AsSpan().CopyTo(span.Slice(written));
+        written += Name.Length;
+
+        return span.Slice(0, written).ToString();
+    }
 }
 ```
 
+
+### Benefits
 
 <p><details lang="en" --open><summary>Benefits</summary>
 
@@ -230,6 +266,45 @@ switch (val)
 
 
 
+# Disposable Analyzer
+
+```cs
+var d = new Disposable();
+//      ~~~~~~~~~~~~~~~~ no `using` statement found
+
+d = (new object()) as IDisposable;
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ cast from/to disposable
+```
+
+
+Analyzer won't show warning in the following condition:
+- instance is created on `return` statement
+    - `return new Disposable();`
+- assign instance to field or property
+    - `m_field = new Disposable();`
+- cast between disposable types
+    - `var x = myDisposable as IDisposable;`
+
+
+
+## Suppress `Disposable` Analysis
+
+To suppress analysis for specified types, declare attribute named `DisposableAnalyzer` and add it to assembly.
+
+```cs
+[assembly: DisposableAnalyzer(typeof(Task), typeof(Task<>))]
+
+[Conditional("DEBUG"), AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+class DisposableAnalyzer : Attribute
+{
+    public DisposableAnalyzer(params Type[] _) { }
+}
+```
+
+
+
+
+
 # Annotating / Underlining
 
 There is optional feature to draw underline on selected types, fields, properties, generic type/method arguments and parameters of method, delegate and lambda function.
@@ -248,6 +323,13 @@ As of Visual Studio's UX design, `Info` severity diagnostic underlines are drawn
 To avoid dependency to this analyzer, required attribute for underlining is chosen from builtin `System.ComponentModel` assembly so that syntax is little bit weird.
 
 Analyzer is checking identifier keyword in C# source code, not checking actual C# type. `DescriptionAttribute` in C# attribute syntax is the only keyword to draw underline. Omitting `Attribute` or adding namespace are not recognized.
+
+
+> [!TIP]
+> `CategoryAttribute` can be used instead of `DescriptionAttribute`.
+>
+> By contrast from Description, CategoryAttribute draws underline only on exact type reference and constructors including `base()`. Any inherited types, variables, fields and properties don't get underline.
+
 
 ```cs
 using System.ComponentModel;
@@ -274,8 +356,6 @@ public static int Underline_Not_Drawn = 0;
 public static int Underline_Drawn = 310;
 ```
 
-> [!TIP]
-> `CategoryAttribute` can be used instead of `DescriptionAttribute`. It will draw underline only on type which has Category attribute. ie. inherited type won't get underline.
 
 
 ## Verbosity Control
