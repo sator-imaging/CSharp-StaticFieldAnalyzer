@@ -1,17 +1,7 @@
-﻿/*  Core  ================================================================ */
-#define STMG_DEBUG_MESSAGE    // some try-catch will be enabled
+﻿#define STMG_DEBUG_MESSAGE
 #if DEBUG == false
 #undef STMG_DEBUG_MESSAGE
 #endif
-
-#if STMG_DEBUG_MESSAGE
-//#define STMG_DEBUG_MESSAGE_VERBOSE    // for debugging. many of additional debug diagnostics will be emitted
-#endif
-/*  /Core  ================================================================ */
-
-#define STMG_USE_ATTRIBUTE_CACHE
-#define STMG_USE_DESCRIPTION_CACHE
-//#define STMG_ENABLE_LINE_FILL
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -133,7 +123,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
 #if STMG_DEBUG_MESSAGE
-            Core.Rule_DEBUG,
+            Core.Rule_DebugError,
+            Core.Rule_DebugWarn,
 #endif
             Rule_CastToEnum,
             Rule_CastFromEnum,
@@ -155,115 +146,191 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             //https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Analyzer%20Actions%20Semantics.md
 
-            context.RegisterOperationAction(AnalyzeEnumOperations, ImmutableArray.Create(
-                OperationKind.Conversion,
-                OperationKind.Invocation
+            context.RegisterOperationAction(AnalyzeInvocation, OperationKind.Invocation);
+            context.RegisterOperationAction(AnalyzeCast, OperationKind.Conversion);
+            context.RegisterOperationAction(AnalyzeInterpolatedString, OperationKind.Interpolation);
+
+            context.RegisterOperationAction(AnalyzeObjectCreation, ImmutableArray.Create(
+                OperationKind.ObjectCreation,
+                OperationKind.AnonymousObjectCreation,
+                OperationKind.DefaultValue,
+                OperationKind.TypeParameterObjectCreation
                 ));
 
-            context.RegisterSyntaxNodeAction(AnalyzeEnumLikePattern, ImmutableArray.Create(
-                SyntaxKind.ClassDeclaration
-                ));
+            context.RegisterSyntaxNodeAction(AnalyzeEnumLikePattern, SyntaxKind.ClassDeclaration);
 
-            context.RegisterSymbolAction(AnalyzeEnumDeclaration, ImmutableArray.Create(
-                SymbolKind.NamedType
-                ));
-
-
-            //context.RegisterCompilationStartAction(InitializeAndRegisterCallbacks);
+            context.RegisterSymbolAction(AnalyzeEnumDeclaration, SymbolKind.NamedType);
         }
 
 
-        //private static void InitializeAndRegisterCallbacks(CompilationStartAnalysisContext context)
-        //{
-        //}
+        /*  enum methods  ================================================================ */
 
-
-        /*  entry  ================================================================ */
-
-        private static void AnalyzeEnumOperations(OperationAnalysisContext context)
+        private static void AnalyzeInvocation(OperationAnalysisContext context)
         {
-            switch (context.Operation)
+            if (context.Operation is not IInvocationOperation op)
+                return;
+
+            var receiverType = op.TargetMethod.ReceiverType;
+            if (receiverType.SpecialType == SpecialType.System_Enum)
             {
-                case IConversionOperation castOp:// when castOp.IsImplicit:
-                    {
-                        // generic type parameter??
-                        if (castOp.Type is ITypeParameterSymbol typeParamSymbol)
-                        {
-                            if (HasEnumConstraint(typeParamSymbol))
-                            {
-                                context.ReportDiagnostic(Diagnostic.Create(
-                                    Rule_CastToGenericEnum, castOp.Syntax.GetLocation(), typeParamSymbol.Name));
-                            }
-                            return;
-                        }
-
-                        // NOTE: if enum method parameter has default value and it's omit on invocation
-                        //       implicit cast will happen internally
-                        if (castOp.IsImplicit)
-                        {
-                            if (castOp.Syntax is InvocationExpressionSyntax or AttributeSyntax or ObjectCreationExpressionSyntax)
-                            {
-                                return;
-                            }
-
-                            //Core.ReportDebugMessage(context.ReportDiagnostic,
-                            //"IMPLICIT CAST: " + castOp.Syntax.Kind(), castOp.Kind.ToString(), castOp.Syntax.GetLocation());
-                        }
-
-                        var castToEnum = IsEnumDerivedType(castOp.Type);
-                        if (castToEnum)
-                        {
-                            context.ReportDiagnostic(Diagnostic.Create(
-                                Rule_CastToEnum, castOp.Syntax.GetLocation(), castOp.Type.Name));
-                        }
-                        else
-                        {
-                            AnalyzeCastFromEnum(castOp.Syntax, castOp.Type, context.Compilation.GetSemanticModel(castOp.Syntax.SyntaxTree), context.ReportDiagnostic);
-                        }
-                    }
-                    break;
-
-                case IInvocationOperation methodOp:
-                    {
-                        // derived type methods!
-                        if (methodOp.Instance != null)
-                        {
-                            if (methodOp.Instance.Type is ITypeParameterSymbol typeParamSymbol)
-                            {
-                                if (!HasEnumConstraint(typeParamSymbol))
-                                    return;
-                            }
-                            else if (!IsEnumDerivedType(methodOp.Instance.Type))
-                            {
-                                return;
-                            }
-
-                            //string??
-                            if (methodOp.Type.SpecialType == SpecialType.System_String)
-                            {
-                                context.ReportDiagnostic(Diagnostic.Create(
-                                    Rule_EnumToString, methodOp.Syntax.GetLocation(), methodOp.Instance.Type.Name));
-                            }
-
-                            return;
-                        }
-
-                        // Enum methods!!
-                        else if (methodOp.TargetMethod.ReceiverType.SpecialType == SpecialType.System_Enum)
-                        {
-                            context.ReportDiagnostic(Diagnostic.Create(
-                                Rule_EnumMethod, methodOp.Syntax.GetLocation()));
-
-                            return;
-                        }
-                    }
-                    break;
+                //string??
+                if (op.TargetMethod.ReturnType.SpecialType == SpecialType.System_String)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        Rule_EnumToString, op.Syntax.GetLocation(), (op.Instance?.Type ?? receiverType).Name));
+                }
+                else
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        Rule_EnumMethod, op.Syntax.GetLocation()));
+                }
             }
         }
 
 
+        /*  creation  ================================================================ */
+
+        private static void AnalyzeObjectCreation(OperationAnalysisContext context)
+        {
+            var op = context.Operation;
+
+            if (!IsEnumDerivedType(op.Type)
+             && !(op.Type is ITypeParameterSymbol typeParam && HasEnumConstraint(typeParam)))
+            {
+                return;
+            }
+
+            if (op is IDefaultValueOperation)
+            {
+                // method has default value of generic type arg T which has T : Enum constraint
+                // --> Method<TEnum>(TEnum value = default)
+                if (op.IsImplicit && op.Parent is IArgumentOperation && op.Parent?.Parent is IInvocationOperation)
+                {
+                    return;
+                }
+            }
+
+            context.ReportDiagnostic(Diagnostic.Create(
+                Rule_CastToEnum, op.Syntax.GetLocation(), op.Type.Name));
+        }
+
+
+        /*  interpolated string ($"")  ================================================================ */
+
+        private static void AnalyzeInterpolatedString(OperationAnalysisContext context)
+        {
+            // NOTE: no conversion operation is reported by roslyn but cast happens internally
+            //       --> $"value: {enumValue}"
+
+            // NOTE: okay process only first child, expression inside interpolation will be processed by other analyzer
+            //       --> $"value: {"" + enumVal + 0}"  // <-- checked by other analyzer code path
+            if (context.Operation.Children.FirstOrDefault() is not IOperation op)
+                return;
+
+            var resultType = op.Type;
+
+            if (IsEnumDerivedType(resultType)
+            || (resultType is ITypeParameterSymbol typeParamSymbol && HasEnumConstraint(typeParamSymbol))
+            )
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    Rule_EnumToString, context.Operation.Syntax.GetLocation(), resultType.Name));
+            }
+        }
+
+
+        /*  cast  ================================================================ */
+
+        private static void AnalyzeCast(OperationAnalysisContext context)
+        {
+            if (context.Operation is not IConversionOperation op)
+                return;
+
+            if (op.IsImplicit)
+            {
+                // NOTE: throw exception inside switch expression will perform implicit cast operation from
+                //       exception instance to switch expression result type
+                //       --> var val = enumValue switch { ..., _ => throw new Exception(); }
+                if (op.Operand is IThrowOperation)
+                    return;
+
+                // NOTE: if enum method parameter has default value and it's omit on invocation
+                //       implicit cast will happen internally (cannot use: IOmittedArgumentOperation)
+                if (op.Parent is IArgumentOperation //castOp.Syntax
+                                                    //is InvocationExpressionSyntax
+                                                    //or AttributeSyntax
+                                                    //or ObjectCreationExpressionSyntax
+                                                    //or AnonymousObjectCreationExpressionSyntax
+                )
+                {
+                    return;
+                }
+            }
+
+            AnalyzeCast_Impl(context, op);
+        }
+
+
+        private static void AnalyzeCast_Impl(OperationAnalysisContext context, IConversionOperation castOp)
+        {
+            // implicit cast to string??
+            // --> "value: " + enumValue;
+            if (castOp.Parent is IBinaryOperation binaryOp
+             && binaryOp.LeftOperand.Type.SpecialType == SpecialType.System_String
+             && binaryOp.RightOperand.Type.SpecialType == SpecialType.System_Object
+            )
+            {
+                var sourceType = castOp.Operand.Type;
+                if (IsEnumDerivedType(sourceType)
+                || (sourceType is ITypeParameterSymbol typeParamSymbol && HasEnumConstraint(typeParamSymbol))
+                )
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        Rule_EnumToString, binaryOp.Syntax.GetLocation(), sourceType.Name));
+
+                    return;
+                }
+            }
+
+            // MUST check castOp.Type first!!
+            AnalyzeCast_FromToEnum(context, castOp, castOp.Type, Rule_CastToEnum, Rule_CastToGenericEnum);
+            AnalyzeCast_FromToEnum(context, castOp, castOp.Operand.Type, Rule_CastFromEnum, Rule_CastFromGenericEnum);
+        }
+
+
+        private static void AnalyzeCast_FromToEnum(OperationAnalysisContext context,
+                                                   IConversionOperation castOp,
+                                                   ITypeSymbol? symbol,
+                                                   DiagnosticDescriptor concreteDescriptor,
+                                                   DiagnosticDescriptor genericDescriptor
+            )
+        {
+            if (symbol == null)
+                return;
+
+            if (IsEnumDerivedType(symbol))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    concreteDescriptor, castOp.Syntax.GetLocation(), symbol.Name));
+            }
+            // generic type parameter??
+            else if (symbol is ITypeParameterSymbol typeParamSymbol)
+            {
+                if (HasEnumConstraint(typeParamSymbol))
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        genericDescriptor, castOp.Syntax.GetLocation(), typeParamSymbol.Name));
+                }
+            }
+        }
+
+
+        /*  enum-like pattern  ================================================================ */
+
+#pragma warning disable RS1008
         [ThreadStatic] static List<IFieldSymbol>? ts_enumLikePatternFieldSymbolList;
         [ThreadStatic] static List<IFieldSymbol>? ts_enumLikePatternEntriesSymbolList;
+#pragma warning restore RS1008
 
         private static void AnalyzeEnumLikePattern(SyntaxNodeAnalysisContext context)
         {
@@ -431,6 +498,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
         }
 
+
         private static void AnalyzeEnumLikeEntriesField(SyntaxNodeAnalysisContext context,
                                                         IFieldSymbol entriesSymbol,
                                                         List<IFieldSymbol> enumFieldList
@@ -525,8 +593,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (!SymbolEqualityComparer.Default.Equals(targetType.TypeArguments[0], elementType))
                 return false;
 
-            //Core.ReportDebugMessage(reportAction,
-            //    "TARGET TYPE NAME: ", targetType.ContainingNamespace.ContainingNamespace.IsGlobalNamespace.ToString(), syntax.GetLocation());
 
             if (targetType.Name != nameof(System.ReadOnlyMemory<int>))
                 return false;
@@ -541,11 +607,21 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         }
 
 
+        /*  enum declaration  ================================================================ */
+
         private static void AnalyzeEnumDeclaration(SymbolAnalysisContext context)
         {
             if (context.Symbol is not INamedTypeSymbol { TypeKind: TypeKind.Enum } namedSymbol)
                 return;
 
+            AnalyzeEnumDeclaration_Impl(context, namedSymbol);
+        }
+
+
+        private static void AnalyzeEnumDeclaration_Impl(SymbolAnalysisContext context,
+                                                        INamedTypeSymbol namedSymbol
+            )
+        {
             var attrs = namedSymbol.GetAttributes();
 
             const string ATTR_OBFUSCATION_NAME_FULL = nameof(System) + "." + nameof(System.Reflection) + "." + nameof(System.Reflection.ObfuscationAttribute);
@@ -598,11 +674,12 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
         }
 
+
         private static void AnalyzeUnusualEnum(SymbolAnalysisContext context,
                                                INamedTypeSymbol namedSymbol
             )
         {
-            // partial enum is not allowed, take first one
+            // partial enum cannot be declared. ok to take first one
             var declareStx = namedSymbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
             if (declareStx == null)
                 return;
@@ -654,64 +731,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         private static bool HasEnumConstraint(ITypeParameterSymbol symbol)
         {
             return symbol.ConstraintTypes.Any(static x => x.SpecialType == SpecialType.System_Enum);
-        }
-
-
-        private static void AnalyzeCastFromEnum(SyntaxNode syntax,
-                                                ITypeSymbol castToSymbol,
-                                                SemanticModel model,
-                                                Action<Diagnostic> reportAction
-            )
-        {
-            ITypeSymbol? castFromSymbol = null;
-
-            castFromSymbol = syntax.DescendantNodes().OfType<MemberAccessExpressionSyntax>()
-                .Select(x => model.GetTypeInfo(x.Name).ConvertedType)
-                .FirstOrDefault(static x => x != null);
-
-            castFromSymbol ??= syntax.DescendantNodes().OfType<IdentifierNameSyntax>()
-                .Select(x => model.GetTypeInfo(x).ConvertedType)
-                .FirstOrDefault(static x => x != null);
-
-            if (castFromSymbol == null)
-            {
-                //Core.ReportDebugMessage(reportAction, "Type Not Found", null, syntax.GetLocation());
-                return;
-            }
-
-            // generic type parameter??
-            if (castFromSymbol is ITypeParameterSymbol typeParamSymbol)
-            {
-                if (HasEnumConstraint(typeParamSymbol))
-                {
-                    reportAction.Invoke(Diagnostic.Create(
-                        Rule_CastFromGenericEnum, syntax.GetLocation(), typeParamSymbol.Name));
-                }
-                return;
-            }
-
-            //if (!IsEnumDerivedType(castFromSymbol))
-            //{
-            //    Core.ReportDebugMessage(reportAction, "[CastFromEnum] Non Enum", castFromSymbol?.ToString(), syntax.GetLocation());
-            //    return;
-            //}
-
-            //// correct underlying type?
-            //if (castToSymbol.IsValueType
-            // && castFromSymbol is INamedTypeSymbol named && castToSymbol.SpecialType != named.EnumUnderlyingType.SpecialType)
-            //{
-            //    Core.ReportDebugMessage(reportAction, "Underlying Type Mismatch", null, syntax.GetLocation());
-            //}
-            //else
-
-            if (IsEnumDerivedType(castFromSymbol))
-            {
-                reportAction.Invoke(Diagnostic.Create(
-                    Rule_CastFromEnum, syntax.GetLocation(), castFromSymbol.Name));
-            }
-
-            //Core.ReportDebugMessage(reportAction,
-            //    nameof(Rule_CastFromEnum) + ": " + syntax.Kind(), syntax.ToString(), syntax.GetLocation());
         }
 
     }
