@@ -41,7 +41,7 @@ Resource suffix: `_Title` `_Description` `__MD_TITLE__`
 ## Disposable Analysis
 | ID      | Diagnostic                                 | Description
 |---------|--------------------------------------------|-------------
-| SMA0040 | Missing Using Statement                    | `using` statement should be used for instance that has public `void Dispose()` or `ValueTask DisposeAsync()` method.
+| SMA0040 | Missing Using Statement                    | `using` statement should be used for instance that has public `Dispose` or `DisposeAsync` method.
 
 ## Annotating and Underling
 | ID      | Diagnostic                                 | Description
@@ -52,7 +52,7 @@ Resource suffix: `_Title` `_Description` `__MD_TITLE__`
 ||
 | SMA9010 | Underlining on Declarations                | Draw underline in IDE.
 ||
-| SMA9015 | Underlining on Designated Type only        | Draw underline in IDE.
+| SMA9015 | Underlining only on Designated Type        | Draw underline in IDE.
 ||
 | SMA9020 | Underlining at Line Head                   | Draw underline in IDE.
 | SMA9021 | Underlining at Line Leading                | Draw underline in IDE.
