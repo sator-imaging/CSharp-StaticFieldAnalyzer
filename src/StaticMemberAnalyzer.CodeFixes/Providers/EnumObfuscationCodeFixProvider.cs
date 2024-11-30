@@ -70,8 +70,9 @@ namespace SatorImaging.StaticMemberAnalyzer.CodeFixes.Providers
             // Get the symbol representing the type to be renamed.
             var typeSymbol = model.GetDeclaredSymbol(typeDecl, token);
 
-            // add using
+            // add using statement
             const string NS_OBFUSCATION = nameof(System) + "." + nameof(System.Reflection);
+
             var updatedUsings = root.Usings;
             if (!updatedUsings.Any(static x => x.Name.Span.Length == NS_OBFUSCATION.Length && x.Name.ToString() == NS_OBFUSCATION))
             {
@@ -84,10 +85,6 @@ namespace SatorImaging.StaticMemberAnalyzer.CodeFixes.Providers
                         )
                     )
                 );
-
-                // NOTE: replacing root instance WON'T work as expected...??????
-                //       it seems that only once is allowed to update content. do it at last for all code paths. don't do here.
-                //root = root.WithUsings(updatedUsings);
             }
 
             var attr = typeSymbol.GetAttributes()
@@ -194,7 +191,6 @@ namespace SatorImaging.StaticMemberAnalyzer.CodeFixes.Providers
             }
 
             return document.WithSyntaxRoot(root.WithUsings(updatedUsings));
-
         }
     }
 }

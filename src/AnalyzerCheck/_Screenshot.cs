@@ -1,10 +1,15 @@
-﻿#pragma warning disable format
+﻿#pragma warning disable IDE0130
 
 using System.ComponentModel;
 
-namespace AnalyzerCheck;
+namespace AnalyzerCheck.Screenshot;
 
 
+// NOTE: code fix provider seems that is depending on formatter
+//       when placing this pragma line BEFORE using statements, code fix won't work as expected
+//       --> usingSystem.Reflection
+//               ^^ no space between words
+#pragma warning disable format
 
 
 
@@ -73,6 +78,11 @@ public class OtherClass : INumber<GenericMath> { }  // type arg 'TSelf' should b
 
 
 
+public enum EnumTypeShouldBeExcludedFromObfuscation
+{
+    Value = -1,
+    Other = 1,
+}
 
 
 

@@ -76,7 +76,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
 #if STMG_DEBUG_MESSAGE
-            Core.Rule_DEBUG,
+            Core.Rule_DebugError,
+            Core.Rule_DebugWarn,
 #endif
             Rule_WrongInit,
             Rule_CrossRef,

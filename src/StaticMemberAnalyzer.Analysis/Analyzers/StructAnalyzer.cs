@@ -1,20 +1,9 @@
-﻿/*  Core  ================================================================ */
-#define STMG_DEBUG_MESSAGE    // some try-catch will be enabled
+﻿#define STMG_DEBUG_MESSAGE
 #if DEBUG == false
 #undef STMG_DEBUG_MESSAGE
 #endif
 
-#if STMG_DEBUG_MESSAGE
-//#define STMG_DEBUG_MESSAGE_VERBOSE    // for debugging. many of additional debug diagnostics will be emitted
-#endif
-/*  /Core  ================================================================ */
-
-#define STMG_USE_ATTRIBUTE_CACHE
-#define STMG_USE_DESCRIPTION_CACHE
-//#define STMG_ENABLE_LINE_FILL
-
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 using System.Collections.Immutable;
@@ -42,7 +31,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
 #if STMG_DEBUG_MESSAGE
-            Core.Rule_DEBUG,
+            Core.Rule_DebugError,
+            Core.Rule_DebugWarn,
 #endif
             Rule_InvalidStructCtor
             );
@@ -56,47 +46,40 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             //https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Analyzer%20Actions%20Semantics.md
 
-            context.RegisterOperationAction(AnalyzeStructConstructor, ImmutableArray.Create(
-                OperationKind.ObjectCreation
-                ));
-
-
-            //context.RegisterCompilationStartAction(InitializeAndRegisterCallbacks);
+            context.RegisterOperationAction(AnalyzeUsualConstructor, OperationKind.ObjectCreation);
+            context.RegisterOperationAction(AnalyzeAnonymousConstructor, OperationKind.AnonymousObjectCreation);
         }
-
-
-        //private static void InitializeAndRegisterCallbacks(CompilationStartAnalysisContext context)
-        //{
-        //}
 
 
         /*  entry  ================================================================ */
 
-        private static void AnalyzeStructConstructor(OperationAnalysisContext context)
+        private static void AnalyzeUsualConstructor(OperationAnalysisContext context)
         {
-            INamedTypeSymbol? structSymbol = null;
-
-            switch (context.Operation)
-            {
-                case IObjectCreationOperation createOp when createOp.Type.IsValueType:
-                    {
-                        if (createOp.Arguments.Length == 0)
-                            structSymbol = createOp.Type as INamedTypeSymbol;
-                    }
-                    break;
-
-                case IAnonymousObjectCreationOperation anonyCreateOp when anonyCreateOp.Type.IsValueType:
-                    {
-                        if (!anonyCreateOp.Syntax.DescendantNodes().OfType<ArgumentSyntax>().Any())
-                            structSymbol = anonyCreateOp.Type as INamedTypeSymbol;
-                    }
-                    break;
-            }
-
-
-            if (structSymbol == null)
+            if (context.Operation is not IObjectCreationOperation op || !op.Type.IsValueType)
                 return;
 
+            if (op.Arguments.Length == 0 && op.Type is INamedTypeSymbol namedSymbol)
+            {
+                AnalyzeConstructor_Impl(context, namedSymbol);
+            }
+        }
+
+        private static void AnalyzeAnonymousConstructor(OperationAnalysisContext context)
+        {
+            if (context.Operation is not IAnonymousObjectCreationOperation op || !op.Type.IsValueType)
+                return;
+
+            if (!op.Children.OfType<IArgumentOperation>().Any() && op.Type is INamedTypeSymbol namedSymbol)
+            {
+                AnalyzeConstructor_Impl(context, namedSymbol);
+            }
+        }
+
+
+        private static void AnalyzeConstructor_Impl(OperationAnalysisContext context,
+                                                    INamedTypeSymbol structSymbol
+            )
+        {
             var ctors = structSymbol.InstanceConstructors
                 .Where(static x => x.Parameters.Length > 0)
                 //.Where(static x => (x.DeclaredAccessibility & ~(Accessibility.Private | Accessibility.NotApplicable)) != 0)

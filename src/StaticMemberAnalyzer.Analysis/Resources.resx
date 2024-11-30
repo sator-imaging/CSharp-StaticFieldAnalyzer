@@ -315,7 +315,7 @@
     <value>Trying to convert enum value to string.</value>
   </data>
   <data name="SMA0024_MessageFormat" xml:space="preserve">
-    <value>String representation of '{0}' could be modified by obfuscation tool (EnumToString)</value>
+    <value>String representation of '{0}' may be changed by obfuscation tool (EnumToString)</value>
   </data>
   <data name="SMA0025_Title" xml:space="preserve">
     <value>Enum System Method</value>
@@ -342,7 +342,7 @@
     <value>Enum w/o `Flags` attribute should be defined as usual.</value>
   </data>
   <data name="SMA0027_MessageFormat" xml:space="preserve">
-    <value>Non-Flags enum type should have int-typed and no index modifier (UnusualEnum)</value>
+    <value>Non-Flags enum type should have int-typed and no index initializer (UnusualEnum)</value>
   </data>
   <data name="SMA0001__MD_TITLE__" xml:space="preserve">
     <value>Static Field Analysis</value>
@@ -391,7 +391,7 @@
 &gt; {1}</value>
   </data>
   <data name="SMA9015_Title" xml:space="preserve">
-    <value>Underlining on Designated Type only</value>
+    <value>Underlining only on Designated Type</value>
   </data>
   <data name="SMA9015_MessageFormat" xml:space="preserve">
     <value>[designated] {0}

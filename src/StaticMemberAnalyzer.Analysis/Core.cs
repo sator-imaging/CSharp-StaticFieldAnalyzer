@@ -1,31 +1,25 @@
-﻿/*  Core  ================================================================ */
-#define STMG_DEBUG_MESSAGE    // some try-catch will be enabled
+﻿#define STMG_DEBUG_MESSAGE
 #if DEBUG == false
 #undef STMG_DEBUG_MESSAGE
 #endif
 
-#if STMG_DEBUG_MESSAGE
-//#define STMG_DEBUG_MESSAGE_VERBOSE    // for debugging. many of additional debug diagnostics will be emitted
-#endif
-/*  /Core  ================================================================ */
-
-#define STMG_USE_ATTRIBUTE_CACHE
-#define STMG_USE_DESCRIPTION_CACHE
-//#define STMG_ENABLE_LINE_FILL
-
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Operations;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace SatorImaging.StaticMemberAnalyzer.Analysis
 {
     //https://github.com/dotnet/roslyn/blob/main/docs/wiki/Roslyn-Overview.md#solutions-projects-documents
-    public sealed class Core
+    public static class Core
     {
         //https://github.com/dotnet/roslyn-analyzers/blob/main/src/Utilities/Compiler/DiagnosticCategoryAndIdRanges.txt
         internal const string Category = "Usage";
@@ -36,26 +30,170 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 
         // NOTE: define in any case to avoid error.
         //       but this is not registered to analyzer when debug message flag is not set.
-        public const string RuleId_DEBUG = "SMAxDEBUG";  // no hyphens!
-        [DescriptionAttribute("use instead --> " + nameof(ReportDebugMessage))]
-        internal static readonly DiagnosticDescriptor Rule_DEBUG = new(
-            RuleId_DEBUG,
-            "SMAxDEBUG",
+        const string RuleId_DebugError = "DEBUGxERROR";  // no hyphens!
+        internal static readonly DiagnosticDescriptor Rule_DebugError = new(
+            RuleId_DebugError,
+            RuleId_DebugError,
             "{0}",
             Category,
             DiagnosticSeverity.Error,
             isEnabledByDefault: true,
-            description: "SMAxDEBUG");
+            description: RuleId_DebugError);
+
+        const string RuleId_DebugWarn = "DEBUGxWARN";  // no hyphens!
+        internal static readonly DiagnosticDescriptor Rule_DebugWarn = new(
+            RuleId_DebugWarn,
+            RuleId_DebugWarn,
+            "{0}",
+            Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: RuleId_DebugWarn);
+
+
+        /*  report  ================================================================ */
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void Report(Action<Diagnostic> reportMethod,
+                                    DiagnosticDescriptor descriptor,
+                                    Location location,
+                                    object[]? messageFormatArgs
+#if STMG_DEBUG_MESSAGE
+                                    ,
+                                    [CallerMemberName] string? memberName = null,
+                                    [CallerLineNumber] int lineNumber = -1
+#endif
+            )
+        {
+#pragma warning disable CS0162
+
+            if (
+#if STMG_DEBUG_MESSAGE
+                true
+#else
+                false
+#endif
+            )
+            {
+                reportMethod.Invoke(Diagnostic.Create(
+                    Rule_DebugWarn,
+                    location,
+                    $"\n{memberName} (#{lineNumber})\n{string.Format(descriptor.MessageFormat.ToString(), messageFormatArgs.ToArray())}"
+                    ));
+            }
+            else
+            {
+                reportMethod.Invoke(Diagnostic.Create(
+                    descriptor,
+                    location,
+                    messageFormatArgs.ToArray()
+                    ));
+            }
+#pragma warning restore
+        }
 
 
         /*  DEBUG  ================================================================ */
 
         [Conditional("STMG_DEBUG_MESSAGE")]
-        internal static void ReportDebugMessage(Action<Diagnostic> reportMethod, string title, string? message, Location location)
+        internal static void ReportDebugMessage(Action<Diagnostic> reportMethod, ISymbol symbol, Location location,
+            [CallerMemberName] string? callerMember = null,
+            [CallerLineNumber] int lineNumber = -1
+            )
         {
-            ReportDebugMessage(reportMethod, title, message, new Location[] { location });
+            ReportDebugMessage(reportMethod, $"{callerMember}\n#{lineNumber}", ImmutableArray.Create(location),
+                $"Symbol: {symbol.Name} ({symbol})",
+                "> " + new string(symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax().ToString().Take(72).ToArray())
+                );
         }
 
+
+        [Conditional("STMG_DEBUG_MESSAGE")]
+        internal static void ReportDebugMessage(Action<Diagnostic> reportMethod, IOperation op,
+            [CallerMemberName] string? callerMember = null,
+            [CallerLineNumber] int lineNumber = -1
+            )
+        {
+            ReportDebugMessage(reportMethod, op, op.Syntax.GetLocation(), callerMember, lineNumber);
+        }
+
+        [Conditional("STMG_DEBUG_MESSAGE")]
+        internal static void ReportDebugMessage(Action<Diagnostic> reportMethod, IOperation op, Location location,
+            [CallerMemberName] string? callerMember = null,
+            [CallerLineNumber] int lineNumber = -1
+            )
+        {
+            op = UnpackNullCoalesceOperation(op);
+
+            ReportDebugMessage(reportMethod, $"{callerMember}\n#{lineNumber}", ImmutableArray.Create(location),
+                $"Op: {op.Kind} ({op.Type?.Name})",
+                $"Parent: {op.Parent?.UnpackNullCoalesceOperation().Kind} ({op.Parent?.Type?.Name})",
+                $"Grand Parent: {op.Parent?.Parent?.UnpackNullCoalesceOperation().Kind} ({op.Parent?.Parent?.Type?.Name})",
+                "> " + new string(op.Syntax?.ToString().Take(72).ToArray()),
+                $"Child: {op.Children?.FirstOrDefault()?.UnpackNullCoalesceOperation().Kind} ({op.Children?.FirstOrDefault().Type?.Name})"
+                );
+        }
+
+
+        [Conditional("STMG_DEBUG_MESSAGE")]
+        internal static void ReportDebugMessage(Action<Diagnostic> reportMethod, SyntaxNode syntax,
+            [CallerMemberName] string? callerMember = null,
+            [CallerLineNumber] int lineNumber = -1
+            )
+        {
+            ReportDebugMessage(reportMethod, syntax, syntax.GetLocation(), callerMember, lineNumber);
+        }
+
+        [Conditional("STMG_DEBUG_MESSAGE")]
+        internal static void ReportDebugMessage(Action<Diagnostic> reportMethod, SyntaxNode syntax, Location location,
+            [CallerMemberName] string? callerMember = null,
+            [CallerLineNumber] int lineNumber = -1
+            )
+        {
+            ReportDebugMessage(reportMethod, $"{callerMember}\n#{lineNumber}", ImmutableArray.Create(syntax.GetLocation()),
+                $"Syntax: {syntax.Kind()}",
+                $"Parent: {syntax.Parent?.Kind()}",
+                $"Grand Parent: {syntax.Parent?.Parent?.Kind()}",
+                "> " + new string(syntax.ToString().Take(72).ToArray()),
+                $"Children: {string.Join(", ", syntax.ChildNodes().Select(x => x.Kind().ToString()))}"
+                );
+        }
+
+
+        /* =====  internal  ===== */
+
+        [Obsolete]
+        [Conditional("STMG_DEBUG_MESSAGE")]
+        internal static void ReportDebugMessage(Action<Diagnostic> reportMethod, string title, Location location, params string[]? messages)
+        {
+            ReportDebugMessage(reportMethod, title, ImmutableArray.Create(location), messages);
+        }
+
+        [Conditional("STMG_DEBUG_MESSAGE")]
+        internal static void ReportDebugMessage<T>(Action<Diagnostic> reportMethod, string title, T locations, params string[]? messages)
+            where T : IEnumerable<Location>
+        {
+            if (locations == null)
+                return;
+
+            messages ??= Array.Empty<string>();
+            var message = messages.Length > 0 ? title + "\n" + string.Join("\n", messages) : title;
+
+            foreach (var loc in locations)
+            {
+                reportMethod(Diagnostic.Create(Rule_DebugError, loc, message));
+            }
+        }
+
+
+        [Obsolete]
+        [Conditional("STMG_DEBUG_MESSAGE")]
+        internal static void ReportDebugMessage(Action<Diagnostic> reportMethod, string title, string? message, Location location)
+        {
+            ReportDebugMessage(reportMethod, title, message, ImmutableArray.Create(location));
+        }
+
+        [Obsolete]
         [Conditional("STMG_DEBUG_MESSAGE")]
         internal static void ReportDebugMessage<T>(Action<Diagnostic> reportMethod, string title, string? message, T locations)
             where T : IEnumerable<Location>
@@ -66,8 +204,26 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
             message = message != null ? title + "\n" + message : title;
             foreach (var loc in locations)
             {
-                reportMethod(Diagnostic.Create(Rule_DEBUG, loc, message));
+                reportMethod(Diagnostic.Create(Rule_DebugError, loc, message));
             }
+        }
+
+
+        /*  node & operation  ================================================================ */
+
+        internal static SyntaxNode UnpackParenthesizeAndNullCoalesceNodes(this SyntaxNode syntax)
+        {
+            while (syntax.Parent is ParenthesizedExpressionSyntax || syntax.Parent.IsKind(SyntaxKind.SuppressNullableWarningExpression))
+            {
+                syntax = syntax.Parent;
+            }
+            return syntax;
+        }
+
+
+        internal static IOperation UnpackNullCoalesceOperation(this IOperation op)
+        {
+            return (op as IConditionalAccessOperation)?.Operation ?? op;
         }
 
 

@@ -141,7 +141,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
 #if STMG_DEBUG_MESSAGE
-            Core.Rule_DEBUG,
+            Core.Rule_DebugError,
+            Core.Rule_DebugWarn,
 #endif
             Rule_SymbolDesc,
             Rule_LocalVarDesc,
@@ -192,7 +193,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
         readonly static ImmutableArray<OperationKind> cache_descriptionTargetOperations = ImmutableArray.Create(
                 //constructor
-                OperationKind.ObjectCreation
+                OperationKind.ObjectCreation,
+                OperationKind.AnonymousObjectCreation
             );
 
 
@@ -299,16 +301,19 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     //constructor?
                     else if (syntax is ConstructorDeclarationSyntax ctorDecl)
                     {
-                        DrawCategoryAnnotation(compilation, symbol.ContainingType /* containingType!! */,
-                            ctorDecl.Identifier.GetLocation(), reportAction, token);
-
-                        // : base()?
-                        var baseCtor = ctorDecl.Initializer.ThisOrBaseKeyword;
-                        if (baseCtor.IsKind(SyntaxKind.BaseKeyword))
+                        var ctorType = symbol.ContainingType;  /* containingType!! */
+                        if (ctorType != null)
                         {
-                            var baseSymbol = symbol.ContainingType.BaseType;
-                            if (baseSymbol != null)
-                                DrawCategoryAnnotation(compilation, baseSymbol, baseCtor.GetLocation(), reportAction, token);
+                            DrawCategoryAnnotation(compilation, ctorType, ctorDecl.Identifier.GetLocation(), reportAction, token);
+
+                            // : base()?
+                            var baseCtor = ctorDecl.Initializer.ThisOrBaseKeyword;
+                            if (baseCtor.IsKind(SyntaxKind.BaseKeyword))
+                            {
+                                var baseSymbol = ctorType.BaseType;
+                                if (baseSymbol != null)
+                                    DrawCategoryAnnotation(compilation, baseSymbol, baseCtor.GetLocation(), reportAction, token);
+                            }
                         }
                     }
                 }
@@ -354,11 +359,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         //syntax
         private static void DrawUnderlineOnSyntaxNodes(SyntaxNodeAnalysisContext context)
         {
-            //Core.ReportDebugMessage(context.ReportDiagnostic,
-            //    nameof(DrawUnderlineOnSyntaxNodes),
-            //    $"=== {context.Node.Kind()} ===",
-            //    context.Node.GetLocation());
-
             var syntax = context.Node;
             var tree = syntax.SyntaxTree;
             var compilation = context.Compilation;
@@ -582,11 +582,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                             if (attr.ArgumentList != null
                             && (attr.ArgumentList.Arguments).Count == 1)
                             {
-                                //Core.ReportDebugMessage(reportAction,
-                                //    "CATEGORY",
-                                //    $"=== {symbol.Name} ({symbol.Kind}) ===",
-                                //    syntax.GetLocation());
-
                                 var attrArgs0 = attr.ArgumentList.Arguments[0];
                                 var attrTree = attrArgs0.SyntaxTree;
                                 var attrModel = compilation.GetSemanticModel(attrTree);
@@ -642,41 +637,26 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             var singleLocation = (ts_singleLocationArray ??= new Location[1]);
 
+
+            INamedTypeSymbol? foundSymbol = null;
+            SyntaxNode? foundSyntax = null;
+            ImmutableArray<IArgumentOperation> foundArgs;
             if (op is IObjectCreationOperation ctorOp)
             {
-                if (ctorOp.Type is INamedTypeSymbol type && !type.IsImplicitlyDeclared)
+                if (ctorOp.Type is INamedTypeSymbol namedSymbol)
                 {
-                    var ctorOpSyntax = ctorOp.Syntax;
-                    singleLocation[0] = ctorOpSyntax.GetLocation();
-
-                    // NOTE: when optional parameter is omitted, Operation will return count INCLUDING omitted ones.
-                    //       ex) ctor(int value, int other = 0)
-                    //           _ = new(310);  // <-- this operation will return Length == 2, not 1.
-                    var args = ctorOp.Arguments;
-                    var argsCount = args.Length;
-                    foreach (var ctor in type.Constructors)
-                    {
-                        if (!ctor.IsStatic)
-                        {
-                            var ctorParams = ctor.Parameters;
-
-                            // count will match even if optional parameters are omitted
-                            if (ctorParams.Length != argsCount)
-                                continue;
-
-                            for (var i = 0; i < argsCount; i++)
-                            {
-                                if (!SymbolEqualityComparer.Default.Equals(args[i].Parameter.Type, ctorParams[i].Type))
-                                    goto NEXT;
-                            }
-                        }
-
-                        Underlining(singleLocation, ctor, Rule_SymbolDesc,
-                            reportAction, symbolToDescription, descAttrToMessage, compilation, token, 0);
-
-                    NEXT:
-                        ;
-                    }
+                    foundSymbol = namedSymbol;
+                    foundSyntax = ctorOp.Syntax;
+                    foundArgs = ctorOp.Arguments;
+                }
+            }
+            else if (op is IAnonymousObjectCreationOperation anonyOp)
+            {
+                if (anonyOp.Type is INamedTypeSymbol namedSymbol)
+                {
+                    foundSymbol = namedSymbol;
+                    foundSyntax = anonyOp.Syntax;
+                    foundArgs = anonyOp.Children.OfType<IArgumentOperation>().ToImmutableArray();
                 }
             }
             //else if (op is IMemberReferenceOperation memberOp)
@@ -696,6 +676,43 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             //{
             //    member = typeofOp.TypeOperand;
             //}
+
+
+            if (foundSymbol != null && !foundSymbol.IsImplicitlyDeclared
+             && foundSyntax != null
+            )
+            {
+                //var ctorOpSyntax = ctorOp.Syntax;
+                singleLocation[0] = foundSyntax.GetLocation();
+
+                // NOTE: when optional parameter is omitted, Operation will return count INCLUDING omitted ones.
+                //       ex) ctor(int value, int other = 0)
+                //           _ = new(310);  // <-- this operation will return Length == 2, not 1.
+                var argsCount = foundArgs.Length;
+                foreach (var ctor in foundSymbol.Constructors)
+                {
+                    if (!ctor.IsStatic)
+                    {
+                        var ctorParams = ctor.Parameters;
+
+                        // count will match even if optional parameters are omitted
+                        if (ctorParams.Length != argsCount)
+                            continue;
+
+                        for (var i = 0; i < argsCount; i++)
+                        {
+                            if (!SymbolEqualityComparer.Default.Equals(foundArgs[i].Parameter.Type, ctorParams[i].Type))
+                                goto NEXT;
+                        }
+                    }
+
+                    Underlining(singleLocation, ctor, Rule_SymbolDesc,
+                        reportAction, symbolToDescription, descAttrToMessage, compilation, token, 0);
+
+                NEXT:
+                    ;
+                }
+            }
         }
 
 

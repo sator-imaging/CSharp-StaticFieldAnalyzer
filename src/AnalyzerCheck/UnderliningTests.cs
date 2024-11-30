@@ -8,7 +8,7 @@ using System.Diagnostics;
 //#pragma warning disable SMA9002
 //#pragma warning disable SMA9100
 
-namespace AnalyzerCheck.Tests
+namespace AnalyzerCheck
 {
     // v1.5: CategoryAttribute does NOT draw underline on inherited types and variables.
     //       it draws only on exact type reference and constructors including base constructor. ex) `public MyClass() : base() { }`
@@ -82,7 +82,7 @@ namespace AnalyzerCheck.Tests
     [Category("Category Attribute"), DisplayName("Display Name Attribute")]
     [DescriptionAttribute("Description for " + nameof(UnderliningTests) + "?" + "!")]
     [DebuggerDisplay("")]
-    public class UnderliningTests : List<Base>, IBase, INoUnderline<Base, long>, ITSelfTest<AnalyzerCheck.Tests.UnderliningTests>
+    public class UnderliningTests : List<Base>, IBase, INoUnderline<Base, long>, ITSelfTest<AnalyzerCheck.UnderliningTests>
     {
         [DescriptionAttribute("??")] public UnderliningTests() { }
 
@@ -171,7 +171,14 @@ namespace AnalyzerCheck.Tests
             [DescriptionAttribute("static ctor is always included")] static CtorDescription() { }
             [DescriptionAttribute(".ctor()")] public CtorDescription() : base() { }
             [DescriptionAttribute(".ctor(string)")] public CtorDescription(string value) : this() { }
-            [DescriptionAttribute(".ctor(int, int=0)")] public CtorDescription(int value, int defValue = 0) : this("value") { }
+            [DescriptionAttribute(".ctor(int, int=0)")]
+            public CtorDescription(
+                [DescriptionAttribute(".ctor->value")]
+                int value,
+                [DescriptionAttribute(".ctor->defValue")]
+                int defValue = 0
+            )
+                : this("value") { }
         }
         [DescriptionAttribute]
         struct TestStruct { }
@@ -183,7 +190,11 @@ namespace AnalyzerCheck.Tests
         {
             // creation expressions
             _ = new CtorDescription();   //objectCreation
-            CtorDescription cd = new(310);  //implicitObjectCreation
+            _ = new CtorDescription(310);
+            _ = new CtorDescription(value: 310);
+            CtorDescription cd = new();  //implicitObjectCreation
+            CtorDescription cd2 = new(310);
+            CtorDescription cd3 = new(value: 310);
             var anonymousObj = new { test = new CtorDescription("test") };
             var arrayCreation = new TestStruct[1];
             Span<TestStruct> stackAllocArray = stackalloc TestStruct[1];

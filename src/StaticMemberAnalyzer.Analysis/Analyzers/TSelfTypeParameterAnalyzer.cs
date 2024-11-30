@@ -1,17 +1,7 @@
-﻿/*  Core  ================================================================ */
-#define STMG_DEBUG_MESSAGE    // some try-catch will be enabled
+﻿#define STMG_DEBUG_MESSAGE
 #if DEBUG == false
 #undef STMG_DEBUG_MESSAGE
 #endif
-
-#if STMG_DEBUG_MESSAGE
-//#define STMG_DEBUG_MESSAGE_VERBOSE    // for debugging. many of additional debug diagnostics will be emitted
-#endif
-/*  /Core  ================================================================ */
-
-#define STMG_USE_ATTRIBUTE_CACHE
-#define STMG_USE_DESCRIPTION_CACHE
-//#define STMG_ENABLE_LINE_FILL
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -73,7 +63,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
 #if STMG_DEBUG_MESSAGE
-            Core.Rule_DEBUG,
+            Core.Rule_DebugError,
+            Core.Rule_DebugWarn,
 #endif
             Rule_TSelfInvariant,
             Rule_TSelfCovariant,
@@ -99,25 +90,31 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 ));
 
             context.RegisterSyntaxNodeAction(AnalyzeTypeConstraint, SyntaxKind.TypeParameterConstraintClause);
-
-
-            //context.RegisterCompilationStartAction(InitializeAndRegisterCallbacks);
         }
 
 
-        /*  impl  ================================================================ */
+        /*  TSelf  ================================================================ */
 
         const string TSELF_NAME = "TSelf";
 
         private void AnalyzeTSelf(SyntaxNodeAnalysisContext context)
         {
-            if (context.Node is not TypeDeclarationSyntax targetTypeDeclare)
+            if (context.Node is not TypeDeclarationSyntax targetTypeDeclStx)
                 return;
 
-            var baseTypeList = context.Node.DescendantNodes().OfType<BaseListSyntax>().FirstOrDefault();
+            var baseTypeList = targetTypeDeclStx.DescendantNodes().OfType<BaseListSyntax>().FirstOrDefault();
             if (baseTypeList == null)
                 return;
 
+            AnalyzeTSelf_Impl(context, targetTypeDeclStx, baseTypeList);
+        }
+
+
+        private void AnalyzeTSelf_Impl(SyntaxNodeAnalysisContext context,
+                                       TypeDeclarationSyntax targetTypeDeclStx,
+                                       BaseListSyntax baseTypeList
+            )
+        {
             ITypeSymbol? targetTypeSymbol = null;
             ITypeSymbol? targetBaseSymbol = null;
             var compilation = context.Compilation;
@@ -140,7 +137,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 if (baseSymbol == null)
                 {
                     Core.ReportDebugMessage(context.ReportDiagnostic,
-                        "cannot get baseType symbol", null, targetTypeDeclare.GetLocation());
+                        "cannot get baseType symbol", null, targetTypeDeclStx.GetLocation());
 
                     continue;
                 }
@@ -190,12 +187,12 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
                 if (targetTypeSymbol == null)
                 {
-                    var model = compilation.GetSemanticModel(targetTypeDeclare.SyntaxTree);
-                    targetTypeSymbol = model.GetDeclaredSymbol(targetTypeDeclare);
+                    var model = compilation.GetSemanticModel(targetTypeDeclStx.SyntaxTree);
+                    targetTypeSymbol = model.GetDeclaredSymbol(targetTypeDeclStx);
 
                     if (targetTypeSymbol == null)
                     {
-                        Core.ReportDebugMessage(context.ReportDiagnostic, "[NOT FOUND] Target Symbol", null, targetTypeDeclare.Identifier.GetLocation());
+                        Core.ReportDebugMessage(context.ReportDiagnostic, "[NOT FOUND] Target Symbol", null, targetTypeDeclStx.Identifier.GetLocation());
                         continue;
                     }
                 }
@@ -279,22 +276,34 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         }
 
 
+        /*  type constraint  ================================================================ */
+
         private void AnalyzeTypeConstraint(SyntaxNodeAnalysisContext context)
         {
-            if (context.Node is not TypeParameterConstraintClauseSyntax syntax)
+            if (context.Node is not TypeParameterConstraintClauseSyntax typeConstStx)
                 return;
 
-            if (syntax.Name.Span.Length != TSELF_NAME.Length && syntax.Name.ToString() != TSELF_NAME)
+            if (typeConstStx.Name.Span.Length != TSELF_NAME.Length && typeConstStx.Name.ToString() != TSELF_NAME)
                 return;
 
-            if (syntax.Parent is not ClassDeclarationSyntax classDecl)
+            if (typeConstStx.Parent is not ClassDeclarationSyntax classDeclStx)
                 return;
 
-            var model = context.Compilation.GetSemanticModel(syntax.SyntaxTree);
-            var expectedSymbol = model.GetDeclaredSymbol(classDecl);
+
+            AnalyzeTypeConstraint_Impl(context, typeConstStx, classDeclStx);
+        }
+
+
+        private void AnalyzeTypeConstraint_Impl(SyntaxNodeAnalysisContext context,
+                                                TypeParameterConstraintClauseSyntax typeConstStx,
+                                                ClassDeclarationSyntax classDeclStx
+            )
+        {
+            var model = context.Compilation.GetSemanticModel(typeConstStx.SyntaxTree);
+            var expectedSymbol = model.GetDeclaredSymbol(classDeclStx);
 
             bool found = false;
-            foreach (var typeConst in syntax.DescendantNodes().OfType<TypeConstraintSyntax>())
+            foreach (var typeConst in typeConstStx.DescendantNodes().OfType<TypeConstraintSyntax>())
             {
                 var symbol = model.GetSymbolInfo(typeConst.Type).Symbol;
                 if (symbol == null)
@@ -307,7 +316,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (!found)
             {
                 context.ReportDiagnostic(Diagnostic.Create(Rule_TSelfPointingOther,
-                    syntax.GetLocation(), expectedSymbol));
+                    typeConstStx.GetLocation(), expectedSymbol));
             }
         }
 
