@@ -9,7 +9,7 @@
 
 	<PropertyGroup>
 		<PackageId>$(GlobalPackageID)</PackageId>
-		<PackageVersion>$(GlobalPackageVersion)</PackageVersion>
+		<PackageVersion>$(GlobalPackageVersion)$(GlobalPackageVersionSuffix)</PackageVersion>
 		<Authors>$(GlobalPackageOwner)</Authors>
 		<!--<PackageLicenseUrl>$(GlobalPackageLicenseUrl)</PackageLicenseUrl>-->
 		<PackageProjectUrl>$(GlobalPackageWebsite)</PackageProjectUrl>
@@ -33,7 +33,7 @@
 
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 
-		<Version>$(GlobalPackageVersion)</Version>
+		<Version>$(GlobalPackageVersion)$(GlobalPackageVersionSuffix)</Version>
 
 		<Company>$(GlobalPackageCompany)</Company>
 
