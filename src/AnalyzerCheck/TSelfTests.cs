@@ -17,8 +17,8 @@ namespace AnalyzerCheck
     class TSelfBase<TSelf> where TSelf : TSelfBase<TSelf> { }
     class TSelfDerived<TSelf, TOther> : TSelfBase<TSelf>  // TSelfBase<> can accept TOther but shows warning.
                                                           // only type parameter 'TSelf' is ignored to being warning
-        where TSelf : TSelfDerived<TSelf, TOther>         // change this line will show warning (trivia is ignored)
-        where TOther : TSelfDerived<TSelf, TOther>
+        where TSelf : TSelfDerived<TSelf, TOther>    // change this line will show warning (trivia is ignored)
+        where TOther : TSelfDerived<TOther, TOther>
     { }
 
     public class ClassOK : TSelfBase<byte, ClassOK> { }

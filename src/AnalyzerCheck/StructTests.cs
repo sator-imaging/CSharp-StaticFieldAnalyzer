@@ -4,28 +4,28 @@ namespace AnalyzerCheck;
 
 internal class StructTests
 {
-    struct Struct
+    struct HasCtor
     {
         //// uncomment following line will show error
-        private Struct(Int32 _) { }
-        public Struct(UInt32 _) { }
-        internal Struct(Char _) { }
+        private HasCtor(Int32 _) { }
+        public HasCtor(UInt32 _) { }
+        internal HasCtor(Char _) { }
     }
 
-    struct Allowed { }
+    struct NoCtor { }
 
     static void Tests()
     {
         // WARNING
-        var @struct = new Struct();
-        Struct anony = new();
+        var @struct = new HasCtor();
+        HasCtor anony = new();
 
         // OK
-        var okay = new Struct(0);
-        Struct okay2 = new('A');
+        var okay = new HasCtor(0);
+        HasCtor okay2 = new('A');
 
         // allowed due to no constructor is declared
-        var allowed = new Allowed();
-        Allowed allowed2 = new();
+        var allowed = new NoCtor();
+        NoCtor allowed2 = new();
     }
 }

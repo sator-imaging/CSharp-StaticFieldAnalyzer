@@ -421,7 +421,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   String representation of &apos;{0}&apos; could be modified by obfuscation tool (EnumToString) に類似しているローカライズされた文字列を検索します。
+        ///   String representation of &apos;{0}&apos; may be changed by obfuscation tool (EnumToString) に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0024_MessageFormat {
             get {
@@ -502,7 +502,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Non-Flags enum type should have int-typed and no index modifier (UnusualEnum) に類似しているローカライズされた文字列を検索します。
+        ///   Non-Flags enum type should have int-typed and no index initializer (UnusualEnum) に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0027_MessageFormat {
             get {
@@ -760,7 +760,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Underlining on Designated Type only に類似しているローカライズされた文字列を検索します。
+        ///   Underlining only on Designated Type に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA9015_Title {
             get {
