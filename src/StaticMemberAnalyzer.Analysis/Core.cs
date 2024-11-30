@@ -67,6 +67,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
         {
 #pragma warning disable CS0162
 
+            // to allow Visual Studio refactoring features work in release code path
             if (
 #if STMG_DEBUG_MESSAGE
                 true
@@ -75,11 +76,13 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 #endif
             )
             {
+#if STMG_DEBUG_MESSAGE
                 reportMethod.Invoke(Diagnostic.Create(
                     Rule_DebugWarn,
                     location,
                     $"\n{memberName} (#{lineNumber})\n{string.Format(descriptor.MessageFormat.ToString(), messageFormatArgs.ToArray())}"
                     ));
+#endif
             }
             else
             {
