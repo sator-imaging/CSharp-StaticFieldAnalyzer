@@ -402,22 +402,9 @@ Steps to publish new version of nuget package
 
 ## TODO
 
-This case will lead invalid initialization but cannot be detected.
-
-```cs
-// NG: auto getter/setter
-static int BEFORE { get; set; } = AFTER;
-static int AFTER { get; set; } = 310;
-
-// OK: can detect
-static int BEFORE { get; set; } = AFTER;
-static int AFTER = 310;
-```
-
 ### Optimization
 
 - Implement `IViewTaggerProvider` for underlining analyzer.
-- Separate analyzer method as possible. registering small actions instead of one god method could improve performance.
 
 
 
