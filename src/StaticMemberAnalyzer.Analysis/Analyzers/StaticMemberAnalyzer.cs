@@ -1,17 +1,7 @@
-﻿/*  Core  ================================================================ */
-#define STMG_DEBUG_MESSAGE    // some try-catch will be enabled
+﻿#define STMG_DEBUG_MESSAGE
 #if DEBUG == false
 #undef STMG_DEBUG_MESSAGE
 #endif
-
-#if STMG_DEBUG_MESSAGE
-//#define STMG_DEBUG_MESSAGE_VERBOSE    // for debugging. many of additional debug diagnostics will be emitted
-#endif
-/*  /Core  ================================================================ */
-
-#define STMG_USE_ATTRIBUTE_CACHE
-#define STMG_USE_DESCRIPTION_CACHE
-//#define STMG_ENABLE_LINE_FILL
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -94,19 +84,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             //https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Analyzer%20Actions%20Semantics.md
 
-            /* =      semantic model      = */
-
             // called per source document
             context.RegisterSemanticModelAction(AnalyzeStaticFields);
-
-
-            //context.RegisterCompilationStartAction(InitializeAndRegisterCallbacks);
         }
-
-
-        //private static void InitializeAndRegisterCallbacks(CompilationStartAnalysisContext context)
-        //{
-        //}
 
 
         /*  impl  ================================================================ */
@@ -114,33 +94,35 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         const int DEFAULT_LIST_CAPACITY = 4;
 
 #pragma warning disable RS1008  // OK: always clear on method startup
-        [ThreadStatic, DescriptionAttribute] static Dictionary<string, SemanticModel>? ts_filePathToModel;
-        [ThreadStatic, DescriptionAttribute] static HashSet<string>? ts_declaredMemberSet;
+        [ThreadStatic, DescriptionAttribute] static HashSet<ISymbol>? ts_declaringOrderCheckSymbolSet;
+        [ThreadStatic, DescriptionAttribute] static HashSet<ISymbol>? ts_declaredSymbolSet;
+        [ThreadStatic, DescriptionAttribute] static List<ISymbol>? ts_declaredWithInitializerSymbolList;
+        [ThreadStatic, DescriptionAttribute] static List<IMemberReferenceOperation>? ts_initializerRefOperatorList;
+        [ThreadStatic, DescriptionAttribute] static List<IMemberReferenceOperation>? ts_crossRefOperatorList;
         [ThreadStatic, DescriptionAttribute] static HashSet<IMemberReferenceOperation>? ts_crossRefReportedSet;
         [ThreadStatic, DescriptionAttribute] static List<FieldDeclarationSyntax>? ts_crossFDSyntaxList;
-        [ThreadStatic, DescriptionAttribute] static List<ISymbol>? ts_foundSymbolList;
-        [ThreadStatic, DescriptionAttribute] static List<IMemberReferenceOperation>? ts_refOperatorList;
-        [ThreadStatic, DescriptionAttribute] static List<IMemberReferenceOperation>? ts_crossRefOperatorList;
+        [ThreadStatic, DescriptionAttribute] static Dictionary<string, SemanticModel>? ts_filePathToModel;
 #pragma warning restore RS1008
 
 
-        // NOTE: async method causes error on complex source code
-        private static /*async*/ void AnalyzeStaticFields(SemanticModelAnalysisContext context)
+        private static void AnalyzeStaticFields(SemanticModelAnalysisContext context)
         {
-            // make local var to avoid static field access
-            var declaredMemberSet = (ts_declaredMemberSet ??= new());
+            // *MUST* set equality comparer for HashSet<ISymbol>
+            var declaringOrderCheckSymbolSet = (ts_declaringOrderCheckSymbolSet ??= new(SymbolEqualityComparer.Default));
+            var declaredSymbolSet = (ts_declaredSymbolSet ??= new(SymbolEqualityComparer.Default));
+            var declaredWithInitializerSymbolList = (ts_declaredWithInitializerSymbolList ??= new(capacity: DEFAULT_LIST_CAPACITY));
+            var initializerRefOperatorList = (ts_initializerRefOperatorList ??= new(capacity: DEFAULT_LIST_CAPACITY));
+            var crossRefOperatorList = (ts_crossRefOperatorList ??= new(capacity: DEFAULT_LIST_CAPACITY));
             var crossRefReportedSet = (ts_crossRefReportedSet ??= new());
             var crossFDSyntaxList = (ts_crossFDSyntaxList ??= new(capacity: DEFAULT_LIST_CAPACITY));
-            var declaredMemberSymbolList = (ts_foundSymbolList ??= new(capacity: DEFAULT_LIST_CAPACITY));
-            var refOperatorList = (ts_refOperatorList ??= new(capacity: DEFAULT_LIST_CAPACITY));
-            var crossRefOperatorList = (ts_crossRefOperatorList ??= new(capacity: DEFAULT_LIST_CAPACITY));
 
-            declaredMemberSet.Clear();
+            declaringOrderCheckSymbolSet.Clear();
+            declaredSymbolSet.Clear();
+            declaredWithInitializerSymbolList.Clear();
+            initializerRefOperatorList.Clear();
+            crossRefOperatorList.Clear();
             crossRefReportedSet.Clear();
             crossFDSyntaxList.Clear();
-            declaredMemberSymbolList.Clear();
-            refOperatorList.Clear();
-            crossRefOperatorList.Clear();
 
             // it seems that model cannot be reusable. all reports are gone after opening other file in VisualStudio
             var filePathToModel = (ts_filePathToModel ??= new());
@@ -149,32 +131,31 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             var token = context.CancellationToken;
 
-            //var root = await context.SemanticModel.SyntaxTree.GetRootAsync(context.CancellationToken).ConfigureAwait(false);
             var root = context.SemanticModel.SyntaxTree.GetRoot(token);
-            foreach (var memberSyntax in root.DescendantNodes().OfType<MemberDeclarationSyntax>()) //FieldDeclarationSyntax
+            foreach (var memberDeclStx in root.DescendantNodes().OfType<MemberDeclarationSyntax>())
             {
-                var fieldSyntax = memberSyntax as FieldDeclarationSyntax;
-                if (fieldSyntax == null && memberSyntax is not PropertyDeclarationSyntax /*propSyntax*/)
+                if (memberDeclStx is not FieldDeclarationSyntax and not PropertyDeclarationSyntax)
                     continue;
 
-                ClearAndCollectFieldInfo(memberSyntax, context.SemanticModel, declaredMemberSymbolList, refOperatorList, token);
+                ClearAndCollectFieldInfo(
+                    memberDeclStx, context.SemanticModel, declaredSymbolSet, declaredWithInitializerSymbolList, initializerRefOperatorList, token);
 
-                for (int i = 0; i < refOperatorList.Count; i++)
+                for (int i = 0; i < initializerRefOperatorList.Count; i++)
                 {
-                    var refOp = refOperatorList[i];
+                    var refOp = initializerRefOperatorList[i];
 
                     /*  declaration order  ================================================================ */
 
                     var refOpMemberContainingTypeDeclares = refOp.Member.ContainingType.DeclaringSyntaxReferences;
 
                     // reading field in same type
-                    if (SymbolEqualityComparer.Default.Equals(refOp.Member.ContainingType, declaredMemberSymbolList[i].ContainingType))
+                    if (SymbolEqualityComparer.Default.Equals(refOp.Member.ContainingType, declaredWithInitializerSymbolList[i].ContainingType))
                     {
                         bool isPartial = false;
                         if (refOpMemberContainingTypeDeclares.Length > 1)
                         {
                             var a = refOp.Member.DeclaringSyntaxReferences.FirstOrDefault()?.SyntaxTree.FilePath;
-                            var b = declaredMemberSymbolList[i].DeclaringSyntaxReferences.FirstOrDefault()?.SyntaxTree.FilePath;
+                            var b = declaredWithInitializerSymbolList[i].DeclaringSyntaxReferences.FirstOrDefault()?.SyntaxTree.FilePath;
 
                             if (a != null && b != null && a != b)
                             {
@@ -188,8 +169,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
                         if (!isPartial)
                         {
-                            var prefix = Core.GetMemberNamePrefix(refOp.Member.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax(token));
-                            if (!declaredMemberSet.Contains(Core.SpanConcat(prefix.AsSpan(), refOp.Member.Name.AsSpan())))
+                            if (!declaringOrderCheckSymbolSet.Contains(refOp.Member))
                             {
                                 context.ReportDiagnostic(
                                     Diagnostic.Create(Rule_WrongInit, refOp.Syntax.GetLocation(),
@@ -198,7 +178,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                                 foreach (var loc in refOp.Member.Locations)
                                 {
                                     context.ReportDiagnostic(
-                                        Diagnostic.Create(Rule_LateDeclare, loc, declaredMemberSymbolList[i].Name));
+                                        Diagnostic.Create(Rule_LateDeclare, loc, declaredWithInitializerSymbolList[i].Name));
                                 }
                             }
                         }
@@ -214,7 +194,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                         crossFDSyntaxList.Clear();
                         foreach (var dsr in refOpMemberContainingTypeDeclares)
                         {
-                            //var s = await dsr.GetSyntaxAsync(context.CancellationToken).ConfigureAwait(false);
                             var s = dsr.GetSyntax(token);
                             crossFDSyntaxList.AddRange(s.DescendantNodes().OfType<FieldDeclarationSyntax>());
                         }
@@ -227,16 +206,16 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                                 filePathToModel[crossField.SyntaxTree.FilePath] = crossModel;
                             }
 
-                            ClearAndCollectFieldInfo(crossField, crossModel, /*crossFoundSymbolList*/null, crossRefOperatorList, token);
+                            ClearAndCollectFieldInfo(crossField, crossModel, null, null, crossRefOperatorList, token);
 
                             for (int c = 0; c < crossRefOperatorList.Count; c++)
                             {
-                                if (!SymbolEqualityComparer.Default.Equals(crossRefOperatorList[c].Member.ContainingType, declaredMemberSymbolList[i].ContainingType))
+                                if (!SymbolEqualityComparer.Default.Equals(crossRefOperatorList[c].Member.ContainingType, declaredWithInitializerSymbolList[i].ContainingType))
                                     continue;
 
                                 context.ReportDiagnostic(
                                     Diagnostic.Create(Rule_CrossRef, refOp.Syntax.GetLocation(),
-                                    refOp.Member.ContainingType.Name, declaredMemberSymbolList[i].ContainingType.Name));
+                                    refOp.Member.ContainingType.Name, declaredWithInitializerSymbolList[i].ContainingType.Name));
 
                                 crossRefReportedSet.Add(refOp);
 
@@ -246,68 +225,67 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     }
                 }
 
-                if (fieldSyntax != null)
-                {
-                    var prefix = Core.GetMemberNamePrefix(fieldSyntax);
-
-                    declaredMemberSet.UnionWith(fieldSyntax.Declaration.Variables.Select(x =>
-                    {
-                        return Core.SpanConcat(prefix.AsSpan(), x.Identifier.Text.AsSpan());
-                    }));
-                }
+                declaringOrderCheckSymbolSet.UnionWith(declaredSymbolSet);
             }
         }
 
 
-        private static void ClearAndCollectFieldInfo(MemberDeclarationSyntax memberSyntax,
-                                                     SemanticModel semanticModel,
-                                                     List<ISymbol>? foundSymbolList,
-                                                     List<IMemberReferenceOperation> refOperatorList,
+        private static void ClearAndCollectFieldInfo(MemberDeclarationSyntax memberStx,
+                                                     SemanticModel model,
+                                                     HashSet<ISymbol>? declaredSymbolSet,
+                                                     List<ISymbol>? declaredWithInitializerSymbolList,
+                                                     List<IMemberReferenceOperation> initializerRefOperatorList,
                                                      CancellationToken token
             )
         {
-            foundSymbolList?.Clear();
-            refOperatorList.Clear();
+            declaredWithInitializerSymbolList?.Clear();
+            initializerRefOperatorList.Clear();
 
             // GetOperation must run on EqualsValueClauseSyntax, otherwise returns null
-            foreach (var eq in memberSyntax.DescendantNodes().OfType<EqualsValueClauseSyntax>())
+            foreach (var equalsStx in memberStx.DescendantNodes().OfType<EqualsValueClauseSyntax>())
             {
-                var initOp = semanticModel.GetOperation(eq, token) as ISymbolInitializerOperation;// IFieldInitializerOperation;
-                if (initOp == null || initOp.IsImplicit)
+                if (model.GetOperation(equalsStx, token) is not ISymbolInitializerOperation { IsImplicit: false } initOp)
                     continue;
 
                 //lambda??
                 if (initOp.Children.FirstOrDefault() is IDelegateCreationOperation)
                     continue;
 
-                ISymbol? foundSymbol = null;
+                ISymbol? declaredSymbol = null;
                 if (initOp is IFieldInitializerOperation fieldInitOp)
                 {
                     var fieldSymbol = fieldInitOp.InitializedFields.FirstOrDefault();  // check first one --> static int FIRST, SECOND = 10;
                     if (fieldSymbol == null || fieldSymbol.IsConst || !fieldSymbol.IsStatic || fieldSymbol.IsImplicitlyDeclared)
                         continue;
 
-                    foundSymbol = fieldSymbol;
+                    declaredSymbolSet?.UnionWith(fieldInitOp.InitializedFields);  // for declaring order check
+                    declaredSymbol = fieldSymbol;
                 }
                 else if (initOp is IPropertyInitializerOperation propInitOp)
                 {
                     var propSymbol = propInitOp.InitializedProperties.FirstOrDefault();
                     if (propSymbol == null || !propSymbol.IsStatic || propSymbol.IsImplicitlyDeclared)
+                    {
                         continue;
+                    }
 
-                    foundSymbol = propSymbol;
+                    declaredSymbolSet?.UnionWith(propInitOp.InitializedProperties);  // for declaring order check
+                    declaredSymbol = propSymbol;
                 }
 
-                if (foundSymbol == null)
-                    continue;
 
-                foreach (var refOp in initOp.Descendants().OfType<IFieldReferenceOperation>()) //IMemberReferenceOperation
+                if (declaredSymbol == null)
+                {
+                    continue;
+                }
+
+                foreach (var refOp in initOp.Descendants().OfType<IMemberReferenceOperation>())
                 {
                     if (!refOp.Member.IsStatic || refOp.Member.IsImplicitlyDeclared)
                         continue;
 
                     //const??
-                    if ((refOp.Member as IFieldSymbol)?.IsConst == true)
+                    if (refOp.Member is IFieldSymbol { IsConst: true })
                         continue;
 
                     ////method??
@@ -318,8 +296,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     if (refOp.Parent is INameOfOperation)// or ITypeOfOperation)
                         continue;
 
-                    foundSymbolList?.Add(foundSymbol);  // allow duplicate entry to simplify logic
-                    refOperatorList.Add(refOp);
+                    declaredWithInitializerSymbolList?.Add(declaredSymbol);  // allow duplicate entry to simplify logic
+                    initializerRefOperatorList.Add(refOp);
                 }
             }
         }
