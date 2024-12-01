@@ -29,7 +29,7 @@
 
   <!-- CMD: dotnet restore -p:DontReferenceItself=true  other-options... -->
   <ItemGroup Condition=" '$(DontReferenceItself)' != 'true' and '$(MSBuildProjectFile)' != 'AnalyzerCheck.csproj' ">
-    <PackageReference Include="SatorImaging.StaticMemberAnalyzer" Version="*">
+    <PackageReference Include="SatorImaging.StaticMemberAnalyzer" Version="2.0.0-beta.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

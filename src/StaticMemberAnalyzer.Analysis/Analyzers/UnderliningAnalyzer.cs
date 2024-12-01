@@ -1,17 +1,10 @@
-﻿/*  Core  ================================================================ */
-#define STMG_DEBUG_MESSAGE    // some try-catch will be enabled
+﻿#define STMG_DEBUG_MESSAGE
 #if DEBUG == false
 #undef STMG_DEBUG_MESSAGE
 #endif
 
-#if STMG_DEBUG_MESSAGE
-//#define STMG_DEBUG_MESSAGE_VERBOSE    // for debugging. many of additional debug diagnostics will be emitted
-#endif
-/*  /Core  ================================================================ */
-
 #define STMG_USE_ATTRIBUTE_CACHE
 #define STMG_USE_DESCRIPTION_CACHE
-//#define STMG_ENABLE_LINE_FILL
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -206,22 +199,11 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             //https://github.com/dotnet/roslyn/blob/main/docs/analyzers/Analyzer%20Actions%20Semantics.md
 
-            /* =      symbol      = */
-
             context.RegisterSymbolAction(DrawUnderlineOnSymbols, cache_descriptionTargetSymbols);
-
-
-            /* =      syntax      = */
 
             context.RegisterSyntaxNodeAction(DrawUnderlineOnSyntaxNodes, cache_descriptionTargetSyntaxes);
 
-
-            /* =      operation      = */
-
             context.RegisterOperationAction(DrawUnderlineOnOperators, cache_descriptionTargetOperations);
-
-
-            /* =      cache      = */
 
             context.RegisterCompilationStartAction(InitializeAndRegisterCallbacks);
         }
@@ -323,14 +305,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             var symbolToDescription = (ts_symbolToDescription ??= new());
             var descAttrToMessage = (ts_descAttrToMessage ??= new());
 
-#if STMG_DEBUG_MESSAGE_VERBOSE
-            Core.ReportDebugMessage(context.ReportDiagnostic,
-                "DEBUG SYMBOL",
-                GetAndUpdateDescriptionCache(symbol, symbolToDescription, /*filePathToModel,*/ descAttrToMessage, compilation, token)
-                    ?? "=== NO DESCRIPTION === " + symbol.Name,
-                symbol.Locations);
-#endif
-
             Underlining(symbol.Locations, symbol, Rule_DeclarationDesc,
                 reportAction, symbolToDescription, /*filePathToModel,*/ descAttrToMessage, compilation, token, 0);
 
@@ -407,13 +381,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     goto RERUN_SIMPLE_BASE_TYPE;
                 }
 
-#if STMG_DEBUG_MESSAGE_VERBOSE
-                Core.ReportDebugMessage(context.ReportDiagnostic,
-                    "DEBUG NODE (NOT FOUND)",
-                    "=== SYMBOL NOT FOUND ===",
-                    singleLocation);
-#endif
-
                 symbol = symbolCandidate.CandidateSymbols.FirstOrDefault();
                 if (symbol == null)
                     return;
@@ -425,14 +392,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
             else if (symbol is IParameterSymbol paramSymbol)
             {
-#if STMG_DEBUG_MESSAGE_VERBOSE
-                Core.ReportDebugMessage(context.ReportDiagnostic,
-                    "DEBUG NODE (PARAM)",
-                    GetAndUpdateDescriptionCache(symbol, symbolToDescription, /*filePathToModel,*/ descAttrToMessage, compilation, token)
-                        ?? "=== NO DESCRIPTION === " + symbol.Name,
-                    singleLocation);
-#endif
-
                 // NOTE: draw underline on methodParameter --> void Method([DescriptionAttribute] T methodParameter);
                 Underlining(singleLocation, symbol, rule,
                     reportAction, symbolToDescription, /*filePathToModel,*/ descAttrToMessage, compilation, token,
@@ -443,14 +402,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 rule = Rule_ParameterDesc;
             }
 
-
-#if STMG_DEBUG_MESSAGE_VERBOSE
-            Core.ReportDebugMessage(context.ReportDiagnostic,
-                "DEBUG NODE: " + syntax.Kind(),
-                GetAndUpdateDescriptionCache(symbol, symbolToDescription, /*filePathToModel,*/ descAttrToMessage, compilation, token)
-                    ?? "=== NO DESCRIPTION === " + symbol.Name,
-                singleLocation);
-#endif
 
             if (symbol.IsImplicitlyDeclared)
                 return;
@@ -504,10 +455,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             if (lambdaType == null)
             {
-#if STMG_DEBUG_MESSAGE_VERBOSE
-                Core.ReportDebugMessage(reportAction, "LAMBDA PARAM TYPE NOT FOUND", syntax.Kind().ToString(), syntax.GetLocation());
-#endif
-
                 return;
             }
 
@@ -757,20 +704,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
                     if (description == null)
                     {
-#if STMG_DEBUG_MESSAGE_VERBOSE
-                        Core.ReportDebugMessage(reportAction,
-                            targetSymbol.GetType().Name,
-                            "=== NO DESCRIPTION === " + targetSymbol,
-                            locations);
-#endif
-
                         goto NEXT;
                     }
 
-
-#if STMG_DEBUG_MESSAGE_VERBOSE
-                    description += $" cache:{new Random().Next()}";
-#endif
 
                     var args = GetMessageFormatArgs(targetSymbol, description);
                     foreach (var location in locations)
@@ -1121,10 +1057,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 description = "Take care to use (no details provided)";  //SpanConcat(span, " has Description attribute w/o args".AsSpan());
             }
 
-#if STMG_DEBUG_MESSAGE_VERBOSE
-            description += $" (from:{symbol.Kind})";
-#endif
-
 
 #if STMG_USE_DESCRIPTION_CACHE
             // NOTE: existence checked is done in caller!!
@@ -1195,17 +1127,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                                 Rule_LineLeadingDesc, tree.GetLocation(new(start, length)), messageArgs));
                         }
                     }
-
-#if STMG_ENABLE_LINE_FILL
-                    start += offset;
-                    int linefillEnd = locStart - 1;
-
-                    // add line fill
-                    if (start < linefillEnd)
-                    {
-                        __DrawUnderlinePerChar(reportAction, tree, start, linefillEnd, Rule_LineFillDesc, messageArgs);
-                    }
-#endif
                 }
 
                 //lineEnd!!

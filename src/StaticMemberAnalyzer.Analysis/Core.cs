@@ -126,14 +126,14 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
             [CallerLineNumber] int lineNumber = -1
             )
         {
-            op = UnpackNullCoalesceOperation(op);
+            op = UnwrapNullCoalesceOperation(op);
 
             ReportDebugMessage(reportMethod, $"{callerMember}\n#{lineNumber}", ImmutableArray.Create(location),
                 $"Op: {op.Kind} ({op.Type?.Name})",
-                $"Parent: {op.Parent?.UnpackNullCoalesceOperation().Kind} ({op.Parent?.Type?.Name})",
-                $"Grand Parent: {op.Parent?.Parent?.UnpackNullCoalesceOperation().Kind} ({op.Parent?.Parent?.Type?.Name})",
+                $"Parent: {op.Parent?.UnwrapNullCoalesceOperation().Kind} ({op.Parent?.Type?.Name})",
+                $"Grand Parent: {op.Parent?.Parent?.UnwrapNullCoalesceOperation().Kind} ({op.Parent?.Parent?.Type?.Name})",
                 "> " + new string(op.Syntax?.ToString().Take(72).ToArray()),
-                $"Child: {op.Children?.FirstOrDefault()?.UnpackNullCoalesceOperation().Kind} ({op.Children?.FirstOrDefault().Type?.Name})"
+                $"Child: {op.Children?.FirstOrDefault()?.UnwrapNullCoalesceOperation().Kind} ({op.Children?.FirstOrDefault()?.Type?.Name})"
                 );
         }
 
@@ -214,7 +214,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
 
         /*  node & operation  ================================================================ */
 
-        internal static SyntaxNode UnpackParenthesizeAndNullCoalesceNodes(this SyntaxNode syntax)
+        internal static SyntaxNode UnwrapParenthesizeAndNullSuppressorNodes(this SyntaxNode syntax)
         {
             while (syntax.Parent is ParenthesizedExpressionSyntax || syntax.Parent.IsKind(SyntaxKind.SuppressNullableWarningExpression))
             {
@@ -224,7 +224,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
         }
 
 
-        internal static IOperation UnpackNullCoalesceOperation(this IOperation op)
+        internal static IOperation UnwrapNullCoalesceOperation(this IOperation op)
         {
             return (op as IConditionalAccessOperation)?.Operation ?? op;
         }
