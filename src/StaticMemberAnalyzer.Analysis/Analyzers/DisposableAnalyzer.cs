@@ -206,6 +206,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             if (!disposableSymbol.IsRefLikeType)
             {
+                // Task or Task<T> in System.Threading.Tasks
                 if (disposableSymbol.Name.StartsWith(nameof(Task), StringComparison.Ordinal)
                  && disposableSymbol.ContainingNamespace.Name == nameof(System.Threading.Tasks)
                  && disposableSymbol.ContainingNamespace.ContainingNamespace.Name == nameof(System.Threading)
@@ -272,7 +273,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
         private static bool IsTypeIgnoredByAssemblyAttribute(OperationAnalysisContext context, INamedTypeSymbol disposableSymbol)
         {
-            const string ATTR_NAME = nameof(DisposableAnalyzer);
+            const string ATTR_NAME = "DisposableAnalyzer";
 
             foreach (var attr in context.Compilation.Assembly.GetAttributes())
             {
@@ -365,7 +366,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
 
 
-            var memberRefOrInvokeOp = Core.UnpackNullCoalesceOperation(op);
+            var memberRefOrInvokeOp = Core.UnwrapNullCoalesceOperation(op);
 
             // member reference!!
             // --> disposable.Property;
@@ -381,7 +382,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                         }
                         else
                         {
-                            var parentOp = Core.UnpackNullCoalesceOperation(memberRefOrInvokeOp.Parent);
+                            var parentOp = Core.UnwrapNullCoalesceOperation(memberRefOrInvokeOp.Parent);
                             if (parentOp != null)
                             {
                                 if (parentOp is IMemberReferenceOperation or ILocalReferenceOperation)
@@ -451,7 +452,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             // NOTE: remove parenthesizes and null warning suppressor!!
             //       --> (((new Disposable()))) --> new Disposable()
             //       --> (new Disposable())! --> new Disposable()
-            syntax = Core.UnpackParenthesizeAndNullCoalesceNodes(syntax);
+            syntax = Core.UnwrapParenthesizeAndNullSuppressorNodes(syntax);
 
 
             // return statement?
@@ -529,7 +530,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     }
                 }
                 // --> if (disposable == ...)
-                // --> switch (disposable) ...
+                // --> while (disposable == ...)
                 else if (op.Parent is IBinaryOperation)
                 {
                     // don't allow creation operation pass the warning
