@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.Serialization;
 using ShortAlias = System.Int16;
 
 namespace AnalyzerCheck;
@@ -29,8 +30,10 @@ internal class EnumTests
 
     public enum EInt : int  // <-- int is allowed
     {
-        // warning: unusual enum is not allowed if no 'Flags' attribute
+        // warning: unusual enum definition is not allowed if no 'Flags' attribute
         Value = 0,
+
+        [EnumMember(Value = "Name")]  // expect: no warn
         Other = 1,
     }
 

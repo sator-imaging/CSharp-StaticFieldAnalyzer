@@ -700,20 +700,11 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             {
                 foreach (var childNode in memberDeclare.ChildNodes())
                 {
-                    //var grandNodes = childNode.ChildNodes();
-                    //if (grandNodes.Any())
-                    //{
-                    //    foreach (var grand in grandNodes)
-                    //    {
-                    //        context.ReportDiagnostic(Diagnostic.Create(
-                    //            Rule_UnusualEnum, grand.GetLocation()));
-                    //    }
-                    //}
-                    //else
-                    {
-                        context.ReportDiagnostic(Diagnostic.Create(
-                            Rule_UnusualEnum, childNode.GetLocation()));
-                    }
+                    if (childNode is AttributeListSyntax)
+                        continue;
+
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        Rule_UnusualEnum, childNode.GetLocation()));
                 }
             }
         }
