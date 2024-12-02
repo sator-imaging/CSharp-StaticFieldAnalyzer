@@ -24,7 +24,7 @@
 
     <!-- don't forget to update the following PackageReference version range -->
     <GlobalPackageVersion>2.0.0</GlobalPackageVersion>
-    <GlobalPackageVersionSuffix>-beta.2</GlobalPackageVersionSuffix>
+    <GlobalPackageVersionSuffix>-rc.1</GlobalPackageVersionSuffix>
   </PropertyGroup>
 
   <!-- CMD: dotnet restore -p:DontReferenceItself=true  other-options... -->
