@@ -273,11 +273,11 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
         private static bool IsTypeIgnoredByAssemblyAttribute(OperationAnalysisContext context, INamedTypeSymbol disposableSymbol)
         {
-            const string ATTR_NAME = "DisposableAnalyzer";
+            const string ATTR_NAME = "DisposableAnalyzerSuppressor";
 
             foreach (var attr in context.Compilation.Assembly.GetAttributes())
             {
-                if (attr.AttributeClass.Name.StartsWith(ATTR_NAME, StringComparison.Ordinal))
+                if (attr.AttributeClass.Name == ATTR_NAME)
                 {
                     foreach (var ctorArg in attr.ConstructorArguments)
                     {

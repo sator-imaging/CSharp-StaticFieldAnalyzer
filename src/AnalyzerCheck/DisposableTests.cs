@@ -5,12 +5,12 @@ using System.Reflection;
 using System.Threading.Tasks;
 using NIE = System.NotImplementedException;
 
-[assembly: AnalyzerCheck.DisposableAnalyzer(typeof(AnalyzerCheck.DisposableTests.DisposableNoNoWarn), typeof(Task<>))]
+[assembly: AnalyzerCheck.DisposableAnalyzerSuppressor(typeof(object), typeof(AnalyzerCheck.DisposableTests.DisposableNoNoWarn))]
 
 namespace AnalyzerCheck;
 
 [Conditional("DEBUG"), AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-class DisposableAnalyzer : Attribute { public DisposableAnalyzer(params Type[] _) { } }
+sealed class DisposableAnalyzerSuppressor : Attribute { public DisposableAnalyzerSuppressor(params Type[] _) { } }
 
 
 internal class DisposableTests
