@@ -1,7 +1,7 @@
 # Static Field Analyzer for C# / .NET
 
 [![NuGet](https://img.shields.io/nuget/v/SatorImaging.StaticMemberAnalyzer)](https://www.nuget.org/packages/SatorImaging.StaticMemberAnalyzer)
-<sup>[Devnote](#devnote)</sup>
+&nbsp;<sup>[Devnote / TODO](#devnote)</sup>
 
 Roslyn-based analyzer to provide diagnostics of static fields and properties initialization and more.
 
@@ -289,15 +289,15 @@ Analyzer won't show warning in the following condition:
 
 ## Suppress `Disposable` Analysis
 
-To suppress analysis for specified types, declare attribute named `DisposableAnalyzer` and add it to assembly.
+To suppress analysis for specified types, declare attribute named `DisposableAnalyzerSuppressor` and add it to assembly.
 
 ```cs
-[assembly: DisposableAnalyzer(typeof(Task), typeof(Task<>))]
+[assembly: DisposableAnalyzerSuppressor(typeof(Task), typeof(Task<>))]  // Task and Task<T> are ignored by default
 
 [Conditional("DEBUG"), AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-class DisposableAnalyzer : Attribute
+sealed class DisposableAnalyzerSuppressor : Attribute
 {
-    public DisposableAnalyzer(params Type[] _) { }
+    public DisposableAnalyzerSuppressor(params Type[] _) { }
 }
 ```
 
@@ -401,6 +401,46 @@ Steps to publish new version of nuget package
 
 
 ## TODO
+
+### Disposable Analyzer
+
+#### Known Misdetections
+
+- lambda return statement
+    - `MethodArg(() => DisposableProperty);`
+    - `MethodArg(() => { return DisposableProperty; });`
+- `?:` operator
+    - `DisposableProperty = condition ? null : disposableList[index];` 
+
+
+### Enum Analyzer Features
+- implicit cast suppressor attribute
+    - `[assembly: EnumAnalyzer(SuppressImplicitCast = true)]`
+        - ***DO NOT*** suppress cast to `object` `Enum` `string` `int` or other blittable types
+        - (implicit cast operator is designed function in almost cases. it should be suppressed by default?)
+- allow internal only entry for Enum-like types
+  ```cs
+  sealed class MyEnumLike
+  {
+      public static readonly MyEnumLike PublicEntry = new();
+      internal static readonly MyEnumLike ForDebuggingPurpose = new();
+  }
+  ```
+
+
+### Underlining Analyzer
+
+- features not supported
+    - `ITypeParameterObjectCreationOperation`
+    - `IDefaultValueOperation`
+- unnecessary optimization...??
+    - `ts_singleLocation` --> `ImmutableArray.Create(loc)`
+    - https://github.com/dotnet/runtime/blob/main/src/libraries/System.Collections.Immutable/src/System/Collections/Immutable/ImmutableArray.cs#L37
+- entry method has many `if` statements. seems that ready to be separated
+    - underlining by `CategoryAttribute`
+    - lambda analysis
+    - ...and other if statements can be made more simple by separating analyzer action registration
+
 
 ### Optimization
 
