@@ -24,12 +24,15 @@
 
     <!-- don't forget to update the following PackageReference version range -->
     <GlobalPackageVersion>2.0.0</GlobalPackageVersion>
-    <GlobalPackageVersionSuffix>-rc.1</GlobalPackageVersionSuffix>
+    <GlobalPackageVersionSuffix></GlobalPackageVersionSuffix>
+
   </PropertyGroup>
 
   <!-- CMD: dotnet restore -p:DontReferenceItself=true  other-options... -->
   <ItemGroup Condition=" '$(DontReferenceItself)' != 'true' and '$(MSBuildProjectFile)' != 'AnalyzerCheck.csproj' ">
-    <PackageReference Include="SatorImaging.StaticMemberAnalyzer" Version="2.0.0-beta.1">
+
+    <PackageReference Include="SatorImaging.StaticMemberAnalyzer" Version="2.0.0-rc.1">
+    
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
