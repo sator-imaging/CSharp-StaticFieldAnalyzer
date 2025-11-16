@@ -41,6 +41,7 @@ jobs:
 
     permissions:
       id-token: write  # enable GitHub OIDC token issuance for this job
+      contents: read   # required for private repo
 
     steps:
     - uses: actions/download-artifact@v4
