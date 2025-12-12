@@ -202,7 +202,7 @@ public class EnumLike
     public override string ToString()
     {
         const string SEP = ": ";
-        Span<char> span = stackalloc char[Name.Length + 11];  // int.MinValue
+        Span<char> span = stackalloc char[Name.Length + 11 + SEP.Length];  // 11 for int.MinValue.ToString().Length
 
         Ordinal.TryFormat(span, out var written);
         SEP.AsSpan().CopyTo(span.Slice(written));
