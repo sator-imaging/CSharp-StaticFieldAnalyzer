@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Licensed under the MIT License
+// https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;

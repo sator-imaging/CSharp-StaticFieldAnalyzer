@@ -1,4 +1,7 @@
-﻿using Microsoft.CodeAnalysis.CodeRefactorings;
+// Licensed under the MIT License
+// https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer
+
+using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.Testing;
 using System.Threading;
 using System.Threading.Tasks;

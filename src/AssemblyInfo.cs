@@ -1,4 +1,7 @@
-﻿using System.Resources;
+// Licensed under the MIT License
+// https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer
+
+using System.Resources;
 using System.Reflection;
 using System.Runtime.InteropServices;
 

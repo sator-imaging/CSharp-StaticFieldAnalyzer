@@ -1,4 +1,7 @@
-﻿#define STMG_DEBUG_MESSAGE
+// Licensed under the MIT License
+// https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer
+
+#define STMG_DEBUG_MESSAGE
 #if DEBUG == false
 #undef STMG_DEBUG_MESSAGE
 #endif

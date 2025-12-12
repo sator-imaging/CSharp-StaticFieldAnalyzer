@@ -1,4 +1,7 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+// Licensed under the MIT License
+// https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers;
 using System.Threading.Tasks;
 using VerifyCS = StaticMemberAnalyzer.Test.CSharpCodeFixVerifier<
