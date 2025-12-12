@@ -163,7 +163,7 @@ Helpful annotation and code fix for enum types which prevents modification of st
 
 Analysis to help implementing Kotlin-style enum class.
 
-Here is Enum-like type requirements:
+Here are Enum-like type requirements:
 - `MyEnumLike[]` or `ReadOnlyMemory<MyEnumLike>` field(s) exist
     - analyzer will check field initializer correctness if name is starting with `Entries` (case-sensitive) or ending with `entries` (case-insensitive)
 - `sealed` modifier on type
