@@ -330,6 +330,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 #pragma warning disable RS1008
         [ThreadStatic] static List<IFieldSymbol>? ts_enumLikePatternFieldSymbolList;
         [ThreadStatic] static List<IFieldSymbol>? ts_enumLikePatternEntriesSymbolList;
+        [ThreadStatic] static List<IMethodSymbol>? ts_enumLikePatternEqualsSymbolList;
 #pragma warning restore RS1008
 
         private static void AnalyzeEnumLikePattern(SyntaxNodeAnalysisContext context)
@@ -359,6 +360,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             var enumEntriesList = (ts_enumLikePatternEntriesSymbolList ??= new(capacity: LIST_CAPACITY));
             enumEntriesList.Clear();
 
+            var enumEqualsList = (ts_enumLikePatternEqualsSymbolList ??= new(capacity: LIST_CAPACITY));
+            enumEqualsList.Clear();
+
             bool hasPublicEntries = false;
             foreach (var memberSymbol in fieldContainerSymbol.GetMembers())
             {
@@ -378,16 +382,25 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                             hasPublicEntries = true;
                         }
                     }
+                }
 
-                    // check only name and return type. IEquatable<T> won't require 'override' keyword
-                    if (memberSymbol is IMethodSymbol methodSymbol
-                     && methodSymbol.ReturnType.SpecialType == SpecialType.System_Boolean
-                     && symbolName == NAME_EQUALS
-                    )
+                // check only name and return type. IEquatable<T> won't require 'override' keyword
+                if (memberSymbol is IMethodSymbol methodSymbol && methodSymbol.ReturnType.SpecialType == SpecialType.System_Boolean)
+                {
+                    if (isPublic && symbolName == NAME_EQUALS)
                     {
-                        context.ReportDiagnostic(Diagnostic.Create(
-                            Rule_EnumLike, memberSymbol.Locations[0], NAME_EQUALS,
-                            "equality comparer should not be overridden"));
+                        enumEqualsList.Add(methodSymbol);
+                    }
+                    else
+                    {
+                        foreach (var symbol in methodSymbol.ExplicitInterfaceImplementations)
+                        {
+                            if (symbol.Name == NAME_EQUALS)
+                            {
+                                enumEqualsList.Add(methodSymbol);
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -486,6 +499,18 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     context.ReportDiagnostic(Diagnostic.Create(
                         Rule_EnumLike, clsDeclStx.Identifier.GetLocation(), fieldContainerSymbolName,
                         "'public static' member called '" + NAME_ENTRIES + "' is not found"));
+                }
+
+                //equals
+                if (enumEqualsList.Count > 0)
+                {
+                    foreach (var equalsSymbol in enumEqualsList)
+                    {
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            Rule_EnumLike, equalsSymbol.Locations[0], NAME_EQUALS,
+                            "equality comparer should not be overridden"));
+                    }
+
                 }
             }
 

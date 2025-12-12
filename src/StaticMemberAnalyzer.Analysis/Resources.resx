@@ -409,4 +409,13 @@
   <data name="SMA0015_Description" xml:space="preserve">
     <value>`TSelf` type constraint is not pointing itself.</value>
   </data>
+  <data name="SMA0031_Title" xml:space="preserve">
+    <value>Mutable Struct Field marked as Read-Only</value>
+  </data>
+  <data name="SMA0031_MessageFormat" xml:space="preserve">
+    <value>'{0}' is not readonly struct (InvalidReadOnlyField)</value>
+  </data>
+  <data name="SMA0031_Description" xml:space="preserve">
+    <value>Mutable struct type should not be set to `readonly` field.</value>
+  </data>
 </root>

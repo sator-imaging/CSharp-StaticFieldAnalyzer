@@ -26,6 +26,17 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             isEnabledByDefault: true,
             description: new LocalizableResourceString(nameof(Resources.SMA0030_Description), Resources.ResourceManager, typeof(Resources)));
 
+        public const string RuleId_InvalidReadOnlyField = "SMA0031";
+        private static readonly DiagnosticDescriptor Rule_InvalidReadOnlyField = new(
+            RuleId_InvalidReadOnlyField,
+            new LocalizableResourceString(nameof(Resources.SMA0031_Title), Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString(nameof(Resources.SMA0031_MessageFormat), Resources.ResourceManager, typeof(Resources)),
+            Core.Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: new LocalizableResourceString(nameof(Resources.SMA0031_Description), Resources.ResourceManager, typeof(Resources)));
+
+
         #endregion
 
 
@@ -34,7 +45,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             Core.Rule_DebugError,
             Core.Rule_DebugWarn,
 #endif
-            Rule_InvalidStructCtor
+            Rule_InvalidStructCtor,
+            Rule_InvalidReadOnlyField
             );
 
 
@@ -48,10 +60,12 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             context.RegisterOperationAction(AnalyzeUsualConstructor, OperationKind.ObjectCreation);
             context.RegisterOperationAction(AnalyzeAnonymousConstructor, OperationKind.AnonymousObjectCreation);
+
+            context.RegisterSymbolAction(AnalyzeMutableStructField, SymbolKind.Field);
         }
 
 
-        /*  entry  ================================================================ */
+        /*  ctor  ================================================================ */
 
         private static void AnalyzeUsualConstructor(OperationAnalysisContext context)
         {
@@ -90,6 +104,32 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             context.ReportDiagnostic(Diagnostic.Create(
                 Rule_InvalidStructCtor, context.Operation.Syntax.GetLocation(), structSymbol.Name));
+        }
+
+
+        /*  mutable struct  ================================================================ */
+
+        private static void AnalyzeMutableStructField(SymbolAnalysisContext context)
+        {
+            if (context.Symbol is not IFieldSymbol symbol)
+                return;
+
+            if (!symbol.IsReadOnly || symbol.IsImplicitlyDeclared || !symbol.Type.IsValueType)
+                return;
+
+            AnalyzeMutableStructField_Impl(context, symbol);
+        }
+
+        private static void AnalyzeMutableStructField_Impl(SymbolAnalysisContext context, IFieldSymbol fieldSymbol)
+        {
+            if (fieldSymbol.Type is not ITypeSymbol typeSymbol)
+                return;
+
+            if (typeSymbol.IsReadOnly)
+                return;
+
+            context.ReportDiagnostic(Diagnostic.Create(
+                Rule_InvalidReadOnlyField, fieldSymbol.Locations[0], typeSymbol.Name));
         }
 
     }

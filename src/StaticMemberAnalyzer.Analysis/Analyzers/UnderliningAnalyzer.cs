@@ -18,9 +18,13 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 
+#pragma warning disable RS1001 // Missing diagnostic analyzer attribute.
+
 namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 {
+#if STMG_ENABLE_UNDERLINING_ANALYZER
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
+#endif
     public sealed class UnderliningAnalyzer : DiagnosticAnalyzer
     {
         #region     /* =      DESCRIPTOR      = */

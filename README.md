@@ -36,6 +36,10 @@ Analyze `TSelf` type argument mismatch and `where` clause mismatch.
 
 ## Annotation for Type, Field and Property 💯
 
+> [!IMPORTANT]
+> Underlining analyzer is obsolete: to enable it again, set the preprocessor symbol `STMG_ENABLE_UNDERLINING_ANALYZER` and rebuild.
+
+
 There is fancy extra feature to take your attention while coding in Visual Studio. No more need to use `Obsolete` attribute in case of annotating types, methods, fields and properties.
 
 See [the following section](#annotating--underlining) for details.
@@ -147,7 +151,7 @@ This analyzer will help centerizing and encapsulating enum handling in app's cen
 
 ## Excluding Enum Type from Obfuscation
 
-Helpful annotation and code fix for enum types to prevent modification of string representation by obfuscation tool.
+Helpful annotation and code fix for enum types which prevents modification of string representation by obfuscation tool.
 
 ![Enum Code Fix](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/EnumCodeFix.png)
 
@@ -159,7 +163,7 @@ Helpful annotation and code fix for enum types to prevent modification of string
 
 Analysis to help implementing Kotlin-style enum class.
 
-Enum-like type requirements:
+Here is Enum-like type requirements:
 - `MyEnumLike[]` or `ReadOnlyMemory<MyEnumLike>` field(s) exist
     - analyzer will check field initializer correctness if name is starting with `Entries` (case-sensitive) or ending with `entries` (case-insensitive)
 - `sealed` modifier on type
@@ -198,7 +202,7 @@ public class EnumLike
     public override string ToString()
     {
         const string SEP = ": ";
-        Span<char> span = stackalloc char[Name.Length + 32];
+        Span<char> span = stackalloc char[Name.Length + 11];  // int.MinValue
 
         Ordinal.TryFormat(span, out var written);
         SEP.AsSpan().CopyTo(span.Slice(written));
@@ -212,7 +216,7 @@ public class EnumLike
 ```
 
 
-### Benefits
+### Benefits of Enum-like Types
 
 <p><details lang="en" --open><summary>Benefits</summary>
 
@@ -306,6 +310,10 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 
 
 # Annotating / Underlining
+
+> [!IMPORTANT]
+> Underlining analyzer is obsolete: to enable it again, set the preprocessor symbol `STMG_ENABLE_UNDERLINING_ANALYZER` and rebuild.
+
 
 There is optional feature to draw underline on selected types, fields, properties, generic type/method arguments and parameters of method, delegate and lambda function.
 
