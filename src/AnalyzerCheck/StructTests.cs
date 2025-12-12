@@ -28,4 +28,14 @@ internal class StructTests
         var allowed = new NoCtor();
         NoCtor allowed2 = new();
     }
+
+
+    struct MutableStruct { }
+    readonly struct ReadOnlyStruct { }
+
+    class StructFieldTest
+    {
+        readonly ReadOnlyStruct readOnlyStruct;
+        readonly MutableStruct mutableStruct;
+    }
 }

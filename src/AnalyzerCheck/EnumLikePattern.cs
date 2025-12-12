@@ -27,8 +27,18 @@ sealed class CorrectEnumLike
 }
 
 
+public class NonEnum : IEquatable<NonEnum>
+{
+    public override bool Equals(object? obj) => base.Equals(obj);
+    public override int GetHashCode() => base.GetHashCode();
+
+    public bool Equals() => true;
+    public bool Equals(NonEnum? other) => throw new NotImplementedException();
+    bool IEquatable<NonEnum>.Equals(NonEnum? other) => throw new NotImplementedException();
+}
+
 //sealed
-internal class EnumLikePattern
+internal class EnumLikePattern : IEquatable<EnumLikePattern>
 {
     //protected
     EnumLikePattern()
@@ -43,10 +53,12 @@ internal class EnumLikePattern
     public static void entries() { }
     public /*static*/ void Entries() { }
 
-    // 'public bool Equals' get warning
+    // 'public bool Equals' get warning including explicit interface implementations
     public bool Equals(EnumLikePattern? other) => true;
     public override bool Equals(object? obj) => base.Equals(obj);
-    bool Equals(int _) => true;
+    bool IEquatable<EnumLikePattern>.Equals(EnumLikePattern? other) => throw new NotImplementedException();
+    // non-public, non-bool-returning methods are allowed
+    internal bool Equals(int _) => true;
     public void Equals() { }
 
     internal class EnumLikeGeneric<T> { readonly static EnumLikeGeneric<T>[] Entries; }  // not public 'Entries'

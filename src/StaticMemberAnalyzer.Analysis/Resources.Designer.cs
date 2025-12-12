@@ -584,6 +584,33 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
+        ///   Mutable struct type should not be set to `readonly` field. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0031_Description {
+            get {
+                return ResourceManager.GetString("SMA0031_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   &apos;{0}&apos; is not readonly struct (InvalidReadOnlyField) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0031_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0031_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Mutable Struct Field marked as Read-Only に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0031_Title {
+            get {
+                return ResourceManager.GetString("SMA0031_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Disposable Analysis に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0040__MD_TITLE__ {

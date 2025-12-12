@@ -1,5 +1,9 @@
 <Project>
 
+  <Import Project="$(MSBuildThisFileDirectory)../Directory.Build.props"
+          Condition=" Exists('$(MSBuildThisFileDirectory)../Directory.Build.props') "
+  />
+
   <PropertyGroup>
     <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
@@ -23,8 +27,8 @@
     <GlobalPackageIconUrl>https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer/raw/main/assets/icon-128px.png</GlobalPackageIconUrl>
 
     <!-- don't forget to update the following PackageReference version range -->
-    <GlobalPackageVersion>2.0.1</GlobalPackageVersion>
-    <GlobalPackageVersionSuffix></GlobalPackageVersionSuffix>
+    <GlobalPackageVersion>3.0.0</GlobalPackageVersion>
+    <GlobalPackageVersionSuffix>-rc.1</GlobalPackageVersionSuffix>
 
   </PropertyGroup>
 
