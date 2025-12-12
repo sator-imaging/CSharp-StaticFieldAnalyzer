@@ -37,6 +37,7 @@ Resource suffix: `_Title` `_Description` `__MD_TITLE__`
 | ID      | Diagnostic                                 | Description
 |---------|--------------------------------------------|-------------
 | SMA0030 | Invalid Struct Constructor                 | Constructor has declared explicitly so should not use parameter-less one.
+| SMA0031 | Mutable Struct Field marked as Read-Only   | Mutable struct type should not be set to `readonly` field.
 
 ## Disposable Analysis
 | ID      | Diagnostic                                 | Description
