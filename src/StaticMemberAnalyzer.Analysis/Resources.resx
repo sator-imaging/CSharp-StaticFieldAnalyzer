@@ -354,7 +354,7 @@
     <value>Enum Type Analysis</value>
   </data>
   <data name="SMA9000__MD_TITLE__" xml:space="preserve">
-    <value>Annotating and Underling</value>
+    <value>[Obsolete] Annotating and Underling</value>
   </data>
   <data name="SMA0030__MD_TITLE__" xml:space="preserve">
     <value>Struct Analysis</value>
@@ -381,7 +381,7 @@
     <value>`using` statement should be used for instance that has public `Dispose` or `DisposeAsync` method.</value>
   </data>
   <data name="SMA0050__MD_TITLE__" xml:space="preserve">
-    <value>File Header Comment</value>
+    <value>File Structure Analysis</value>
   </data>
   <data name="SMA0050_Title" xml:space="preserve">
     <value>Missing File Header Comment</value>

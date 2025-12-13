@@ -647,7 +647,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   File Header Comment に類似しているローカライズされた文字列を検索します。
+        ///   File Structure Analysis に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0050__MD_TITLE__ {
             get {
@@ -683,7 +683,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
-        ///   Annotating and Underling に類似しているローカライズされた文字列を検索します。
+        ///   [Obsolete] Annotating and Underling に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA9000__MD_TITLE__ {
             get {
