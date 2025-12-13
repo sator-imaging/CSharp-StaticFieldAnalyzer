@@ -1,4 +1,4 @@
-name: build & nuget push
+name: build & nuget push (resource update required)
 
 on:
   #push:
