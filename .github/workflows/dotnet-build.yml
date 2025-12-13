@@ -10,7 +10,9 @@ on:
   #  branches: [ "main" ]
 
   workflow_dispatch:
+    #
     # keep consistent with workflow_call
+    #
     inputs:
       artifact_name:
         required: false
@@ -18,14 +20,15 @@ on:
         default: 'nupkg'
       release_ver:
         description: |
-          Leave empty to skip creating release branch.
+          Leave empty to skip creating PR for updated DLL files and RULES.md.
           NOTE: 'release' prefix is automatically added.
         required: false
         type: string
-        default: ''
-
-  # make this action reusable
+        default: 'v0.0.0'
   workflow_call:
+    #
+    # keep consistent with workflow_dispatch
+    #
     inputs:
       artifact_name:
         required: false
@@ -33,11 +36,11 @@ on:
         default: 'nupkg'
       release_ver:
         description: |
-          Leave empty to skip creating release branch.
+          Leave empty to skip creating PR for updated DLL files and RULES.md.
           NOTE: 'release' prefix is automatically added.
         required: false
         type: string
-        default: ''
+        default: 'v0.0.0'
 
     outputs:
       artifact_name:
@@ -102,17 +105,6 @@ jobs:
         git config --global --add --bool push.autoSetupRemote true
         git fetch --all
 
-    - name: docsgen
-      run: |
-        cd src/DocsGen
-        dotnet run -c Release  "../StaticMemberAnalyzer.Analysis/Resources.resx"  "../../${{ env.docsgen_file_name }}"
-  
-        # commit docsgen result
-        cd ../..
-        git add ${{ env.docsgen_file_name }}
-        git commit -m "[bot] ${{ env.docsgen_file_name }}" || true
-        git push || true
-
     # actions/cache can be used to share data across jobs
     - name: Commit for Unity
       if: ${{ inputs.release_ver != '' }}
@@ -125,12 +117,23 @@ jobs:
         git pull || true
         git branch -vv
 
+        ##################
+        # commit RULES.md
+        #
+        dotnet run -c Release --project ./src/DocsGen \
+          "./src/StaticMemberAnalyzer.Analysis/Resources.resx" \
+          "./${{ env.docsgen_file_name }}"
+        git add ${{ env.docsgen_file_name }}
+        git commit -m "[bot] ${{ env.docsgen_file_name }}" || true
+
+        ###########################
         # upload compiled assembly
+        #
         # trailing slash is required to sync (copy) contents instead of directory
         rsync -avr --existing --checksum src/StaticMemberAnalyzer.Package/bin/Release/*/  ${{ env.unity_folder }}
         git add --update --ignore-removal  ${{ env.unity_folder }}
+        git commit -m "[bot] Precompiled Assembly for Unity" || true
 
         ### try push and create PR if any changes otherwise exit successfully
-        git commit -m "[bot] Precompiled Assembly for Unity" || true
         git push || true
         gh pr create -B main -t 'release/${{ inputs.release_ver }}' -b '' || true
