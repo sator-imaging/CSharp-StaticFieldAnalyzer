@@ -7,8 +7,8 @@
 #endif
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
 
 namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
@@ -54,59 +54,49 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
         private static void Analyze(SyntaxTreeAnalysisContext context)
         {
+            var root = context.Tree.GetRoot(context.CancellationToken);
+            if (root.FullSpan.Length == 0)
+            {
+                return; // Empty file
+            }
+
+            var triviaList = root.GetLeadingTrivia();
+
+            foreach (var trivia in triviaList)
+            {
+                switch (trivia.Kind())
+                {
+                    case SyntaxKind.SingleLineCommentTrivia:
+                    case SyntaxKind.MultiLineCommentTrivia:
+                        return; // Found a comment, OK.
+
+                    case SyntaxKind.WhitespaceTrivia:
+                    case SyntaxKind.EndOfLineTrivia:
+                        continue; // Skip.
+                }
+
+                // Found something else that is not a comment, whitespace, or directive.
+                // This means the file doesn't start with a comment.
+                break;
+            }
+
+            // If we are here, it means no comment was found before the first token,
+            // or the file consists only of whitespace and/or directives.
             var text = context.Tree.GetText(context.CancellationToken);
-            if (text.Length == 0)
-                return;
-
-            var position = SkipLeadingWhitespace(text);
-            if (position >= text.Length)
-                return;  // file contains only whitespace
-
-            if (HasHeaderComment(text, position))
-                return;
-
             var firstLine = text.Lines[0];
             var span = firstLine.Span;
-            if (span.Length == 0 && firstLine.EndIncludingLineBreak > firstLine.Start)
+            if (span.Length == 0)
             {
-                // Cover the whole first line even if it's currently empty.
-                span = TextSpan.FromBounds(firstLine.Start, firstLine.EndIncludingLineBreak);
+                var firstToken = root.GetFirstToken(includeZeroWidth: false,
+                                                    includeSkipped: true,
+                                                    includeDirectives: true,
+                                                    includeDocumentationComments: true);
+
+                span = firstToken.Span;
             }
 
             var location = Location.Create(context.Tree, span);
             context.ReportDiagnostic(Diagnostic.Create(Rule_MissingFileHeaderComment, location));
-        }
-
-
-        /* =====  helper  ===== */
-
-        private static int SkipLeadingWhitespace(SourceText text)
-        {
-            var position = 0;
-
-            while (position < text.Length && char.IsWhiteSpace(text[position]))
-            {
-                position++;
-            }
-
-            return position;
-        }
-
-        private static bool HasHeaderComment(SourceText text, int position)
-        {
-            if (text[position] != '/')
-            {
-                return false;
-            }
-
-            var nextPosition = position + 1;
-            if (nextPosition >= text.Length)
-            {
-                return false;
-            }
-
-            var nextChar = text[nextPosition];
-            return nextChar is '/' or '*';
         }
     }
 }
