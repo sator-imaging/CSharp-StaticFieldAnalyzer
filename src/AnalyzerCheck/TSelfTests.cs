@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 
 namespace AnalyzerCheck
@@ -14,7 +14,8 @@ namespace AnalyzerCheck
     public class TSelfBase<T, TSelf> { }
 
     abstract public class AbstractTSelf<TSelf>
-            where TSelf : AbstractTSelf<TSelf>, new() { }
+            where TSelf : AbstractTSelf<TSelf>, new()
+    { }
     class InstanceNest
     {
         class Nest : AbstractTSelf<Nest> { }
