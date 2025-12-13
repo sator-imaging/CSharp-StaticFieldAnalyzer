@@ -380,6 +380,18 @@
   <data name="SMA0040_Description" xml:space="preserve">
     <value>`using` statement should be used for instance that has public `Dispose` or `DisposeAsync` method.</value>
   </data>
+  <data name="SMA0050__MD_TITLE__" xml:space="preserve">
+    <value>File Header Comment</value>
+  </data>
+  <data name="SMA0050_Title" xml:space="preserve">
+    <value>Missing File Header Comment</value>
+  </data>
+  <data name="SMA0050_MessageFormat" xml:space="preserve">
+    <value>Add file header comment at the top of the file (MissingFileHeaderComment)</value>
+  </data>
+  <data name="SMA0050_Description" xml:space="preserve">
+    <value>File should start with a header comment such as '//' or '/*'.</value>
+  </data>
   <data name="SMA0028_Title" xml:space="preserve">
     <value>Invalid Enum-like Pattern</value>
   </data>

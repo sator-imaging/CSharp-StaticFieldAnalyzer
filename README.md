@@ -13,6 +13,7 @@ Roslyn-based analyzer to provide diagnostics of static fields and properties ini
 - [`Disposable` analyzer](#disposable-analyzer) to detect missing using statement
 - `TSelf` generic type argument & type constraint analysis
 - Annotating and underlining field, property or etc with custom message
+- File header comment enforcement
 - Find out all diagnostic rules: [RULES.md](RULES.md)
 
 
