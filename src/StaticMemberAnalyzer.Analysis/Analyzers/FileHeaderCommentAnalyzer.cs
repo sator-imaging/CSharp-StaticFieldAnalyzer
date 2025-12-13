@@ -55,7 +55,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         private static void Analyze(SyntaxTreeAnalysisContext context)
         {
             var root = context.Tree.GetRoot(context.CancellationToken);
-            if (root.FullSpan.Length == 0)
+            if (root.FullSpan.IsEmpty)
             {
                 return; // Empty file
             }
@@ -69,14 +69,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     case SyntaxKind.SingleLineCommentTrivia:
                     case SyntaxKind.MultiLineCommentTrivia:
                         return; // Found a comment, OK.
-
-                    case SyntaxKind.WhitespaceTrivia:
-                    case SyntaxKind.EndOfLineTrivia:
-                        continue; // Skip.
                 }
 
-                // Found something else that is not a comment, whitespace, or directive.
-                // This means the file doesn't start with a comment.
                 break;
             }
 
@@ -85,7 +79,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             var text = context.Tree.GetText(context.CancellationToken);
             var firstLine = text.Lines[0];
             var span = firstLine.Span;
-            if (span.Length == 0)
+            if (span.IsEmpty)
             {
                 var firstToken = root.GetFirstToken(includeZeroWidth: false,
                                                     includeSkipped: true,
@@ -93,6 +87,10 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                                                     includeDocumentationComments: true);
 
                 span = firstToken.Span;
+                if (span.IsEmpty)
+                {
+                    span = root.FullSpan;
+                }
             }
 
             var location = Location.Create(context.Tree, span);
