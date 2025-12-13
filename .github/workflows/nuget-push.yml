@@ -13,8 +13,8 @@ on:
         default: false
         required: false
         description: |
-          Should run build only action BEFORE running this action.
-          After PR merged, create GitHub release BEFORE publishing.
+          1) Should run 'resource update' action BEFORE running this action.
+          2) After PR merged, create GitHub release BEFORE publishing.
 
 env:
   push_source: 'StaticMemberAnalyzer.Package/bin/Release/*.nupkg'
@@ -29,7 +29,7 @@ jobs:
       contents: write
       pull-requests: write
 
-    uses: ./.github/workflows/dotnet-build.yml
+    uses: ./.github/workflows/build.yml
     secrets: inherit
 
   nuget:
