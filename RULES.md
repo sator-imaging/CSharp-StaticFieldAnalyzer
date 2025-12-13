@@ -44,12 +44,12 @@ Resource suffix: `_Title` `_Description` `__MD_TITLE__`
 |---------|--------------------------------------------|-------------
 | SMA0040 | Missing Using Statement                    | `using` statement should be used for instance that has public `Dispose` or `DisposeAsync` method.
 
-## File Header Comment
+## File Structure Analysis
 | ID      | Diagnostic                                 | Description
 |---------|--------------------------------------------|-------------
 | SMA0050 | Missing File Header Comment                | File should start with a header comment such as '//' or '/*'.
 
-## Annotating and Underling
+## [Obsolete] Annotating and Underling
 | ID      | Diagnostic                                 | Description
 |---------|--------------------------------------------|-------------
 | SMA9000 | Underlining on Identifier Symbols          | Draw underline in IDE.
