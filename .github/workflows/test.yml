@@ -1,0 +1,30 @@
+name: test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+
+  test:
+    #strategy:
+    #  matrix:
+    #    configuration: [Debug, Release]
+
+    runs-on: ubuntu-latest   # tip: runs-on can use ${{ matrix.<name> }}
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5      # v4.3.1
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9  # v4.3.1
+        with:
+          dotnet-version: 10.x.x
+
+      - name: Test
+        run: |
+          dotnet test ./src/StaticMemberAnalyzer.Test/SatorImaging.StaticMemberAnalyzer.Test.csproj \
+            -c Release --verbosity normal \
+            -p:DontReferenceItself=true
