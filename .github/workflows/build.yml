@@ -104,7 +104,7 @@ jobs:
 
     # actions/cache can be used to share data across jobs
     - name: Commit DLL and RULES.md
-      if: ${{ inputs.release_ver != '' }}
+      if: ${{ inputs.release_ver != '' && inputs.release_ver != 'v0.0.0' }}
       continue-on-error: false
       run: |
         ls -al
