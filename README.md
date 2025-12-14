@@ -75,7 +75,7 @@ You could use this analyzer on older versions of Visual Studio. To do so, update
 
 This analyzer can be used with Unity 2020.2 or above. See the following page for detail.
 
-[SatorImaging.StaticMemberAnalyzer.Unity/](SatorImaging.StaticMemberAnalyzer.Unity)
+[Unity/](Unity)
 
 
 

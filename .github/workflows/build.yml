@@ -46,7 +46,7 @@ on:
         value: ${{ inputs.release_ver }}
 
 env:
-  unity_folder: 'SatorImaging.StaticMemberAnalyzer.Unity'  # no spaces!
+  unity_folder: 'Unity'  # no spaces!
   GH_TOKEN: ${{ github.token }}  # for github CLI
   docsgen_file_name: 'RULES.md'
 
