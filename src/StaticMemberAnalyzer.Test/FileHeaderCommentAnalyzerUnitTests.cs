@@ -2,8 +2,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers;
 using System.Threading.Tasks;
 
-// The custom test runner is used because VerifyCS runs a `#pragma warning disable`
-// test automatically, but this analyzer is not affected by `#pragma`.
+// The custom test runner is used because the default roslyn verifier runs a
+// `#pragma warning disable` test automatically, but this analyzer is not
+// affected by `#pragma`.
 using VerifyCS = StaticMemberAnalyzer.Test.FileHeaderCommentAnalyzerVerifier;
 
 namespace SatorImaging.StaticMemberAnalyzer.Test
