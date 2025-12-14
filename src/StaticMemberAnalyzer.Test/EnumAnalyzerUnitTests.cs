@@ -1,0 +1,197 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers;
+using System.Threading.Tasks;
+using VerifyCS = StaticMemberAnalyzer.Test.CSharpAnalyzerVerifier<
+    SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers.EnumAnalyzer>;
+
+namespace SatorImaging.StaticMemberAnalyzer.Test
+{
+    [TestClass]
+    public class EnumAnalyzerUnitTests
+    {
+        [TestMethod]
+        public async Task TestCastToEnum()
+        {
+            var test = @"
+using System.Reflection;
+
+namespace Test
+{
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public enum ETest { Value }
+    public class CTest
+    {
+        public void Test()
+        {
+            var x = {|#0:(ETest)1|};
+        }
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(EnumAnalyzer.RuleId_CastToEnum).WithLocation(0).WithArguments("ETest");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task TestCastFromEnum()
+        {
+            var test = @"
+using System.Reflection;
+
+namespace Test
+{
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public enum ETest { Value }
+    public class CTest
+    {
+        public void Test()
+        {
+            var x = {|#0:(int)ETest.Value|};
+        }
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(EnumAnalyzer.RuleId_CastFromEnum).WithLocation(0).WithArguments("ETest");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task TestCastToGenericEnum()
+        {
+            var test = @"
+using System;
+using System.Reflection;
+
+namespace Test
+{
+    public class CTest
+    {
+        public void Test<T>() where T : Enum
+        {
+            var x = {|#0:(T)(object)1|};
+        }
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(EnumAnalyzer.RuleId_CastToGenericEnum).WithLocation(0).WithArguments("T");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task TestCastFromGenericEnum()
+        {
+            var test = @"
+using System;
+using System.Reflection;
+
+namespace Test
+{
+    public class CTest
+    {
+        public void Test<T>(T value) where T : Enum
+        {
+            var x = (int){|#0:(object)value|};
+        }
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(EnumAnalyzer.RuleId_CastFromGenericEnum).WithLocation(0).WithArguments("T");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task TestEnumToString()
+        {
+            var test = @"
+using System.Reflection;
+
+namespace Test
+{
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public enum ETest { Value }
+    public class CTest
+    {
+        public void Test()
+        {
+            var x = {|#0:ETest.Value.ToString()|};
+        }
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(EnumAnalyzer.RuleId_EnumToString).WithLocation(0).WithArguments("ETest");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task TestEnumMethod()
+        {
+            var test = @"
+using System;
+using System.Reflection;
+
+namespace Test
+{
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public enum ETest { Value }
+    public class CTest
+    {
+        public void Test()
+        {
+            var x = {|#0:Enum.GetValues(typeof(ETest))|};
+        }
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(EnumAnalyzer.RuleId_EnumMethod).WithLocation(0);
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task TestEnumObfuscation()
+        {
+            var test = @"
+namespace Test
+{
+    public enum {|#0:ETest|} { Value }
+}
+";
+            var expected = VerifyCS.Diagnostic(EnumAnalyzer.RuleId_EnumObfuscation).WithLocation(0).WithArguments("ETest");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task TestUnusualEnum()
+        {
+            var test = @"
+using System.Reflection;
+
+namespace Test
+{
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public enum ETest : {|#0:byte|} { Value }
+}
+";
+            var expected = VerifyCS.Diagnostic(EnumAnalyzer.RuleId_UnusualEnum).WithLocation(0);
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+        [TestMethod]
+        public async Task TestEnumLike()
+        {
+            var test = @"
+using System.Reflection;
+
+namespace Test
+{
+    public sealed class {|#0:ETest|}
+    {
+        public static readonly ETest Value = new ETest();
+        public static ETest[] Entries => new[] { Value };
+        public ETest() {}
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(EnumAnalyzer.RuleId_EnumLike).WithLocation(0).WithArguments("ETest", "constructor is not 'private' or 'protected'");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+    }
+}
