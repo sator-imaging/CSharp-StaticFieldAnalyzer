@@ -11,9 +11,9 @@ on:
 jobs:
 
   test:
-    #strategy:
-    #  matrix:
-    #    configuration: [Debug, Release]
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
 
     runs-on: ubuntu-latest   # tip: runs-on can use ${{ matrix.<name> }}
 
@@ -26,5 +26,6 @@ jobs:
       - name: Test
         run: |
           dotnet test ./src/StaticMemberAnalyzer.Test/SatorImaging.StaticMemberAnalyzer.Test.csproj \
-            -c Release --verbosity normal \
+            -c ${{ matrix.configuration }} \
+            --verbosity minimal \
             -p:DontReferenceItself=true
