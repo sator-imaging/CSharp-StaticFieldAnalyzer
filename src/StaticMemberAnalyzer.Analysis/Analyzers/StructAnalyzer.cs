@@ -128,6 +128,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (fieldSymbol.Type is not ITypeSymbol typeSymbol)
                 return;
 
+            if (typeSymbol.TypeKind == TypeKind.Enum)
+                return;
+
             if (typeSymbol.IsReadOnly)
                 return;
 

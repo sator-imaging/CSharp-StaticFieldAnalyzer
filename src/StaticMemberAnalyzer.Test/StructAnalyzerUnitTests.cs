@@ -214,5 +214,22 @@ namespace Test
                 .WithArguments("NestedStruct");
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
         }
+
+        [TestMethod]
+        public async Task EnumField_ReportsNoDiagnostic()
+        {
+            var test = @"
+    namespace Test
+    {
+        public enum MyEnum { A, B, C }
+
+        class Program
+        {
+            private readonly MyEnum _e;
+        }
+    }
+    ";
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
     }
 }
