@@ -27,7 +27,7 @@
     <GlobalPackageIconUrl>https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer/raw/main/assets/icon-128px.png</GlobalPackageIconUrl>
 
     <!-- don't forget to update the following PackageReference version range -->
-    <GlobalPackageVersion>3.0.0</GlobalPackageVersion>
+    <GlobalPackageVersion>3.0.1</GlobalPackageVersion>
     <GlobalPackageVersionSuffix></GlobalPackageVersionSuffix>
 
   </PropertyGroup>
