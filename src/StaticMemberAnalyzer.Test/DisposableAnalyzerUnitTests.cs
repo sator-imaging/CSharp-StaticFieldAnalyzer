@@ -242,5 +242,105 @@ namespace Test
 
             await VerifyCS.VerifyAnalyzerAsync(test);
         }
+
+        [TestMethod]
+        public async Task NullAssignment_WithoutDispose_ReportsDiagnostic()
+        {
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        void Method()
+        {
+            var d = {|#0:new MyDisposable()|};
+            {|#1:d = null|};
+        }
+    }
+}
+";
+
+            var expected = new[]
+            {
+                VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_MissingUsing)
+                    .WithLocation(0)
+                    .WithArguments("MyDisposable"),
+                VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NullAssignment)
+                    .WithLocation(1)
+                    .WithArguments("MyDisposable")
+            };
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task NullAssignment_WithDispose_ReportsNoDiagnostic()
+        {
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        void Method()
+        {
+            var d = {|#0:new MyDisposable()|};
+            d.Dispose();
+            d = null;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_MissingUsing)
+                .WithLocation(0)
+                .WithArguments("MyDisposable");
+
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task NullAssignment_WithConditionalDispose_ReportsNoDiagnostic()
+        {
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        void Method()
+        {
+            var d = {|#0:new MyDisposable()|};
+            d?.Dispose();
+            d = null;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_MissingUsing)
+                .WithLocation(0)
+                .WithArguments("MyDisposable");
+
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
     }
 }

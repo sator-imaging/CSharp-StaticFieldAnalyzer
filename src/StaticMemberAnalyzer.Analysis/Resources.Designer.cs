@@ -647,6 +647,33 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
         
         /// <summary>
+        ///   Disposable object is assigned null without a preceding .Dispose() or ?.Dispose() call. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0041_Description {
+            get {
+                return ResourceManager.GetString("SMA0041_Description", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   &apos;{0}&apos; is assigned null without a preceding .Dispose() or ?.Dispose() call (NullAssignmentToDisposable) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0041_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0041_MessageFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Null Assignment to Disposable に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0041_Title {
+            get {
+                return ResourceManager.GetString("SMA0041_Title", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   File Structure Analysis に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0050__MD_TITLE__ {
