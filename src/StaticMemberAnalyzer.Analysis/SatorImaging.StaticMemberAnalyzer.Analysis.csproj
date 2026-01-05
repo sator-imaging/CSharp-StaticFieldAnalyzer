@@ -35,8 +35,8 @@
 
   <ItemGroup>
 	<!-- unity 2021.2 uses CodeAnalysis.CSharp v3.9, analyzer WON'T work on piror to 2021.2 when built with v3.6 or later -->
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.9.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="2.9.8" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.3.1" />
   </ItemGroup>
 
   <ItemGroup>
