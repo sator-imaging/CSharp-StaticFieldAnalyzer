@@ -33,6 +33,16 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             isEnabledByDefault: true,
             description: new LocalizableResourceString(nameof(Resources.SMA0040_Description), Resources.ResourceManager, typeof(Resources)));
 
+        public const string RuleId_NullAssignment = "SMA0041";
+        private static readonly DiagnosticDescriptor Rule_NullAssignment = new(
+            RuleId_NullAssignment,
+            new LocalizableResourceString(nameof(Resources.SMA0041_Title), Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString(nameof(Resources.SMA0041_MessageFormat), Resources.ResourceManager, typeof(Resources)),
+            Core.Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: new LocalizableResourceString(nameof(Resources.SMA0041_Description), Resources.ResourceManager, typeof(Resources)));
+
         #endregion
 
 
@@ -41,7 +51,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             Core.Rule_DebugError,
             Core.Rule_DebugWarn,
 #endif
-            Rule_MissingUsing
+            Rule_MissingUsing,
+            Rule_NullAssignment
             );
 
 
@@ -59,6 +70,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             context.RegisterOperationAction(AnalyzeAnonymousCreation, OperationKind.AnonymousObjectCreation);
             context.RegisterOperationAction(AnalyzePropertyReference, OperationKind.PropertyReference);
             context.RegisterOperationAction(AnalyzeArrayElementReference, OperationKind.ArrayElementReference);
+            context.RegisterOperationAction(AnalyzeSimpleAssignment, OperationKind.SimpleAssignment);
         }
 
 
@@ -68,6 +80,12 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         {
             if (context.Operation is not IConversionOperation op)
                 return;
+
+            // Ignore conversions from null, as this is handled by AnalyzeSimpleAssignment.
+            if (op.Operand.ConstantValue.HasValue && op.Operand.ConstantValue.Value == null)
+            {
+                return;
+            }
 
             bool isResultDisposable = op.Type is INamedTypeSymbol resultSymbol && IsDisposable(context, resultSymbol);
             bool isSourceDisposable = op.Operand.Type is INamedTypeSymbol sourceSymbol && IsDisposable(context, sourceSymbol);
@@ -170,6 +188,71 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
 
             CheckAssignmentAndUsingStatementExistence(context, op, op.Type);
+        }
+
+        private static void AnalyzeSimpleAssignment(OperationAnalysisContext context)
+        {
+            if (context.Operation is not IAssignmentOperation assignmentOp)
+                return;
+
+            // Check if the assigned value is null
+            if (assignmentOp.Value.ConstantValue.HasValue && assignmentOp.Value.ConstantValue.Value == null)
+            {
+                // Check if the target is a disposable type
+                if (assignmentOp.Target.Type is INamedTypeSymbol targetTypeSymbol && IsDisposable(context, targetTypeSymbol))
+                {
+                    var semanticModel = context.Compilation.GetSemanticModel(assignmentOp.Syntax.SyntaxTree);
+                    var targetSymbolInfo = semanticModel.GetSymbolInfo(assignmentOp.Target.Syntax);
+                    if (targetSymbolInfo.Symbol == null)
+                        return;
+
+                    if (assignmentOp.Syntax.Parent is not ExpressionStatementSyntax assignmentStatement) return;
+                    if (assignmentStatement.Parent is not BlockSyntax block) return;
+
+                    var statements = block.Statements;
+                    int assignmentIndex = statements.IndexOf(assignmentStatement);
+
+                    if (assignmentIndex > 0)
+                    {
+                        var precedingStatement = statements[assignmentIndex - 1];
+
+                        if (precedingStatement is ExpressionStatementSyntax expressionStatement)
+                        {
+                            ExpressionSyntax? invocationTargetExpression = null;
+                            SimpleNameSyntax? disposeMethodName = null;
+
+                            // d.Dispose()
+                            if (expressionStatement.Expression is InvocationExpressionSyntax invocation &&
+                                invocation.Expression is MemberAccessExpressionSyntax memberAccess)
+                            {
+                                disposeMethodName = memberAccess.Name;
+                                invocationTargetExpression = memberAccess.Expression;
+                            }
+                            // d?.Dispose()
+                            else if (expressionStatement.Expression is ConditionalAccessExpressionSyntax conditionalAccess &&
+                                     conditionalAccess.WhenNotNull is InvocationExpressionSyntax invocationOnNotNull &&
+                                     invocationOnNotNull.Expression is MemberBindingExpressionSyntax memberBinding)
+                            {
+                                disposeMethodName = memberBinding.Name;
+                                invocationTargetExpression = conditionalAccess.Expression;
+                            }
+
+                            if (disposeMethodName != null && disposeMethodName.Identifier.Text == "Dispose" && invocationTargetExpression != null)
+                            {
+                                var disposeTargetSymbolInfo = semanticModel.GetSymbolInfo(invocationTargetExpression);
+                                if (disposeTargetSymbolInfo.Symbol != null && SymbolEqualityComparer.Default.Equals(targetSymbolInfo.Symbol, disposeTargetSymbolInfo.Symbol))
+                                {
+                                    // The dispose call is on the same variable. We're good.
+                                    return;
+                                 }
+                            }
+                        }
+                    }
+
+                    // If we get here, no preceding dispose call was found. Report the diagnostic.
+                    context.ReportDiagnostic(Diagnostic.Create(Rule_NullAssignment, assignmentOp.Syntax.GetLocation(), targetTypeSymbol.Name));
+                }
+            }
         }
 
 
