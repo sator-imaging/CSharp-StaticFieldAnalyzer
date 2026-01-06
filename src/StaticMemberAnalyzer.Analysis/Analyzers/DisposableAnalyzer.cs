@@ -559,30 +559,31 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                         goto NO_WARN;
                     }
                 }
-                else if (op.Parent is IIsPatternOperation isPatternOp) // handles PropertyReference
-                {
-                    if (isPatternOp.Pattern is IConstantPatternOperation constantPattern)
-                    {
-                        if (constantPattern.Value.ConstantValue.HasValue && constantPattern.Value.ConstantValue.Value == null)
-                        {
-                            if (!isCreationOp)
-                            {
-                                goto NO_WARN;
-                            }
-                        }
-                    }
-                }
-                else if (op.Parent is IConstantPatternOperation constantPatternOp && constantPatternOp.Parent is IIsPatternOperation) // handles Conversion of null
-                {
-                    var conversion = (IConversionOperation)op;
-                    if (conversion.Operand is ILiteralOperation literalOp)
-                    {
-                        if (literalOp.ConstantValue.HasValue && literalOp.ConstantValue.Value == null)
-                        {
-                            goto NO_WARN;
-                        }
-                    }
-                }
+                // // UNKNOWN EDIT BY AI
+                // else if (op.Parent is IIsPatternOperation isPatternOp) // handles PropertyReference
+                // {
+                //     if (isPatternOp.Pattern is IConstantPatternOperation constantPattern)
+                //     {
+                //         if (constantPattern.Value.ConstantValue.HasValue && constantPattern.Value.ConstantValue.Value == null)
+                //         {
+                //             if (!isCreationOp)
+                //             {
+                //                 goto NO_WARN;
+                //             }
+                //         }
+                //     }
+                // }
+                // else if (op.Parent is IConstantPatternOperation constantPatternOp && constantPatternOp.Parent is IIsPatternOperation) // handles Conversion of null
+                // {
+                //     var conversion = (IConversionOperation)op;
+                //     if (conversion.Operand is ILiteralOperation literalOp)
+                //     {
+                //         if (literalOp.ConstantValue.HasValue && literalOp.ConstantValue.Value == null)
+                //         {
+                //             goto NO_WARN;
+                //         }
+                //     }
+                // }
             }
 
 
