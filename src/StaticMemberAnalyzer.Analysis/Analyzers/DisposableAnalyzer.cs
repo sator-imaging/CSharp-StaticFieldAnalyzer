@@ -366,7 +366,11 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                         goto NO_WARN;
                     }
                 }
-                else if (op.Parent is IIsPatternOperation isPatternOp)
+            }
+
+            // `is null` or `is not null` pattern
+            {
+                if (op.Parent is IIsPatternOperation isPatternOp)
                 {
                     if (isPatternOp.Pattern is IConstantPatternOperation constantPattern)
                     {
