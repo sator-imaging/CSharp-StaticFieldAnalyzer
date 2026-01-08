@@ -121,6 +121,50 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (op.Type is not INamedTypeSymbol named || !IsDisposable(context, named))
                 return;
 
+            IOperation parentOp = op.Parent;
+            if (parentOp is IConversionOperation conversion)
+            {
+                parentOp = conversion.Parent;
+            }
+
+            if (parentOp is ISimpleAssignmentOperation assignment &&
+                assignment.Target is ILocalReferenceOperation localReference)
+            {
+                var symbol = localReference.Local;
+                var syntax = assignment.Syntax;
+
+                while (syntax != null && !(syntax is TryStatementSyntax))
+                {
+                    syntax = syntax.Parent;
+                }
+
+                if (syntax is TryStatementSyntax tryStatement && tryStatement.Finally != null)
+                {
+                    var finallyBlock = tryStatement.Finally.Block;
+                    var semanticModel = context.Compilation.GetSemanticModel(tryStatement.SyntaxTree);
+                    foreach (var statement in finallyBlock.Statements)
+                    {
+                        if (statement is ExpressionStatementSyntax expressionStatement &&
+                            expressionStatement.Expression is ConditionalAccessExpressionSyntax conditionalAccess)
+                        {
+                            if (conditionalAccess.Expression is IdentifierNameSyntax identifierName)
+                            {
+                                var identifierSymbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
+                                if (SymbolEqualityComparer.Default.Equals(symbol, identifierSymbol))
+                                {
+                                    if (conditionalAccess.WhenNotNull is InvocationExpressionSyntax invocation &&
+                                        invocation.Expression is MemberBindingExpressionSyntax memberBinding &&
+                                        memberBinding.Name.Identifier.Text == "Dispose")
+                                    {
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             CheckAssignmentAndUsingStatementExistence(context, op, op.Type);
         }
 

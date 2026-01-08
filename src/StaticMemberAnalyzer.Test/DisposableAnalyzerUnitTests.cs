@@ -373,5 +373,40 @@ namespace Test
 
             await VerifyCS.VerifyAnalyzerAsync(test);
         }
+
+        [TestMethod]
+        public async Task AssignNullToDisposableInTryFinally_ShouldNotReport()
+        {
+            var test = @"
+#nullable enable
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        void Method()
+        {
+            IDisposable? d = null;
+            try
+            {
+                d = new MyDisposable();
+            }
+            finally
+            {
+                d?.Dispose();
+            }
+        }
+    }
+}
+";
+
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
     }
 }
