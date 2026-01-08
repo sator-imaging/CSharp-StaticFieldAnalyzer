@@ -105,6 +105,12 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (context.Operation is not IInvocationOperation op)
                 return;
 
+            var interlockedType = context.Compilation.GetTypeByMetadataName("System.Threading.Interlocked");
+            if (interlockedType != null && SymbolEqualityComparer.Default.Equals(op.TargetMethod.ContainingType, interlockedType))
+            {
+                return;
+            }
+
             var returnSymbol = op.TargetMethod.ReturnType;
             if (returnSymbol is not INamedTypeSymbol named || !IsDisposable(context, named))
                 return;
@@ -442,8 +448,17 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             // method argument?
             {
-                if (op.Parent is IArgumentOperation)
+                if (op.Parent is IArgumentOperation argumentOp)
                 {
+                    if (argumentOp.Parent is IInvocationOperation invocationOp)
+                    {
+                        var interlockedType = context.Compilation.GetTypeByMetadataName("System.Threading.Interlocked");
+                        if (interlockedType != null && SymbolEqualityComparer.Default.Equals(invocationOp.TargetMethod.ContainingType, interlockedType))
+                        {
+                            goto NO_WARN;
+                        }
+                    }
+
                     if (!isCreationOp)
                     {
                         goto NO_WARN;
