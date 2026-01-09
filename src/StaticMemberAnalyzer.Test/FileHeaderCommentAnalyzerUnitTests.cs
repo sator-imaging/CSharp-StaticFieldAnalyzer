@@ -99,5 +99,19 @@ namespace Test
             var expected = VerifyCS.Diagnostic(FileHeaderCommentAnalyzer.RuleId_MissingFileHeaderComment).WithLocation(0);
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
         }
+
+        [TestMethod]
+        public async Task TestWithMultiLineDocumentationComment()
+        {
+            var test = @"/** this is a multi-line comment */
+using System;
+
+namespace Test
+{
+    class MyClass { }
+}
+";
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
     }
 }
