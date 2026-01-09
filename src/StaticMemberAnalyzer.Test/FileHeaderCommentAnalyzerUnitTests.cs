@@ -113,5 +113,19 @@ namespace Test
 ";
             await VerifyCS.VerifyAnalyzerAsync(test);
         }
+
+        [TestMethod]
+        public async Task TestWithSingleLineDocumentationComment()
+        {
+            var test = @"/// this is a single-line documentation comment
+using System;
+
+namespace Test
+{
+    class MyClass { }
+}
+";
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
     }
 }
