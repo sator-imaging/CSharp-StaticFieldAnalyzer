@@ -43,6 +43,7 @@ Resource suffix: `_Title` `_Description` `__MD_TITLE__`
 | ID      | Diagnostic                                 | Description
 |---------|--------------------------------------------|-------------
 | SMA0040 | Missing Using Statement                    | `using` statement should be used for instance that has public `Dispose` or `DisposeAsync` method.
+| SMA0041 | Null Assignment to Disposable              | Disposable object is assigned null without a preceding .Dispose() or ?.Dispose() call.
 
 ## File Structure Analysis
 | ID      | Diagnostic                                 | Description
