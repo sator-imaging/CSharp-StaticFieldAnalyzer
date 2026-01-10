@@ -68,6 +68,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 {
                     case SyntaxKind.SingleLineCommentTrivia:
                     case SyntaxKind.MultiLineCommentTrivia:
+                    case SyntaxKind.MultiLineDocumentationCommentTrivia:
+                    case SyntaxKind.SingleLineDocumentationCommentTrivia:
                         return; // Found a comment, OK.
                 }
 
