@@ -373,5 +373,63 @@ namespace Test
 
             await VerifyCS.VerifyAnalyzerAsync(test);
         }
+
+        [TestMethod]
+        public async Task InterlockedExchange_ReportsNoDiagnostic()
+        {
+            var test = @"
+using System;
+using System.Threading;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        private MyDisposable _disposable = new MyDisposable();
+
+        void Method()
+        {
+            var oldDisposable = Interlocked.Exchange(ref _disposable, new MyDisposable());
+        }
+    }
+}
+";
+
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
+
+        [TestMethod]
+        public async Task InterlockedCompareExchange_ReportsNoDiagnostic()
+        {
+            var test = @"
+using System;
+using System.Threading;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        private MyDisposable _disposable = new MyDisposable();
+
+        void Method()
+        {
+            var oldDisposable = Interlocked.CompareExchange(ref _disposable, new MyDisposable(), null);
+        }
+    }
+}
+";
+
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
     }
 }
