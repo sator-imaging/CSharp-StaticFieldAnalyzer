@@ -128,6 +128,13 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (fieldSymbol.Type is not ITypeSymbol typeSymbol)
                 return;
 
+            // if it is Nullable<T>, check T instead.
+            if (typeSymbol is INamedTypeSymbol namedType && namedType.IsGenericType
+                && namedType.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+            {
+                typeSymbol = namedType.TypeArguments[0];
+            }
+
             if (typeSymbol.TypeKind == TypeKind.Enum)
                 return;
 

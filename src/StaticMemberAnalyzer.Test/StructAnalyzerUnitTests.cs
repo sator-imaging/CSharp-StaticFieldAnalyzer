@@ -231,5 +231,58 @@ namespace Test
     ";
             await VerifyCS.VerifyAnalyzerAsync(test);
         }
+
+        [TestMethod]
+        public async Task ReadOnlyNullableInt_ShouldNotReportDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        private readonly int? _i;
+    }
+}
+";
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
+
+        [TestMethod]
+        public async Task ReadOnlyNullableReadOnlyStruct_ShouldNotReportDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    readonly struct MyReadOnlyStruct { }
+
+    class Program
+    {
+        private readonly MyReadOnlyStruct? _s;
+    }
+}
+";
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
+
+        [TestMethod]
+        public async Task ReadOnlyNullableMutableStruct_ShouldReportDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    struct MyMutableStruct { }
+
+    class Program
+    {
+        private readonly MyMutableStruct? {|#0:_s|};
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(StructAnalyzer.RuleId_InvalidReadOnlyField)
+                .WithLocation(0)
+                .WithArguments("MyMutableStruct");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
     }
 }
