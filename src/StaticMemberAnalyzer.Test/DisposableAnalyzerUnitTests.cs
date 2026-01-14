@@ -431,5 +431,80 @@ namespace Test
 
             await VerifyCS.VerifyAnalyzerAsync(test);
         }
+
+        [TestMethod]
+        public async Task DoubleNullAssignment_ReportsDiagnostic()
+        {
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        void Method()
+        {
+            var d = {|#0:new MyDisposable()|};
+
+            {|#1:d = null|};
+            {|#2:d = null|};
+        }
+    }
+}
+";
+
+            var expected = new[]
+            {
+                VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_MissingUsing)
+                    .WithLocation(0)
+                    .WithArguments("MyDisposable"),
+                VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NullAssignment)
+                    .WithLocation(1)
+                    .WithArguments("MyDisposable"),
+                VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NullAssignment)
+                    .WithLocation(2)
+                    .WithArguments("MyDisposable")
+            };
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task NullAssignmentAfterDisposeWithInterveningComment_IsNotReported()
+        {
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        void Method()
+        {
+            var d = {|#0:new MyDisposable()|};
+            d.Dispose();
+
+            // comment
+
+            d = null;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_MissingUsing)
+                .WithLocation(0)
+                .WithArguments("MyDisposable");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
     }
 }
