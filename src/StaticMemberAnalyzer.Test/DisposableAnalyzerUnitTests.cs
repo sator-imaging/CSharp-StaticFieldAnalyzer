@@ -433,7 +433,7 @@ namespace Test
         }
 
         [TestMethod]
-        public async Task DoubleNullAssignment_ReportsDiagnostic()
+        public async Task DoubleNullAssignmentAfterDispose_ReportsDiagnosticOnSecondAssignment()
         {
             var test = @"
 using System;
@@ -451,8 +451,10 @@ namespace Test
         {
             var d = {|#0:new MyDisposable()|};
 
+            d.Dispose();
+
+            d = null;
             {|#1:d = null|};
-            {|#2:d = null|};
         }
     }
 }
@@ -465,9 +467,6 @@ namespace Test
                     .WithArguments("MyDisposable"),
                 VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NullAssignment)
                     .WithLocation(1)
-                    .WithArguments("MyDisposable"),
-                VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NullAssignment)
-                    .WithLocation(2)
                     .WithArguments("MyDisposable")
             };
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
