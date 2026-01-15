@@ -313,6 +313,15 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             if (IsEnumDerivedType(symbol))
             {
+                // check if cast is from enum to nullable enum
+                if (castOp.Type is INamedTypeSymbol namedType
+                 && namedType.IsGenericType
+                 && namedType.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T
+                 && SymbolEqualityComparer.Default.Equals(namedType.TypeArguments[0], symbol))
+                {
+                    return;
+                }
+
                 context.ReportDiagnostic(Diagnostic.Create(
                     concreteDescriptor, castOp.Syntax.GetLocation(), symbol.Name));
             }
