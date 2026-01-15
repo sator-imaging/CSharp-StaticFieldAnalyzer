@@ -54,7 +54,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
         private static void Analyze(SyntaxTreeAnalysisContext context)
         {
-            if (context.Tree.FilePath.Contains("test"))
+            if (context.Tree.FilePath.Contains("test", System.StringComparison.Ordinal))
             {
                 return;
             }
