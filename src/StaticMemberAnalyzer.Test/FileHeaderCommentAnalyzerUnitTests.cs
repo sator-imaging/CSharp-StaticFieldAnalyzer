@@ -1,6 +1,10 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Testing;
+using System.Threading;
+using StaticMemberAnalyzer.Test;
+using System.Linq;
 
 // The custom test runner is used because the default roslyn verifier runs a
 // `#pragma warning disable` test automatically, but this analyzer is not
@@ -126,6 +130,31 @@ namespace Test
 }
 ";
             await VerifyCS.VerifyAnalyzerAsync(test);
+        }
+
+        [TestMethod]
+        public async Task TestFileNameContainsTest()
+        {
+            var test = @"using System;
+
+namespace Test
+{
+    class MyClass { }
+}
+";
+
+            var verifier = new CSharpAnalyzerVerifier<FileHeaderCommentAnalyzer>.Test
+            {
+                TestCode = test,
+                TestBehaviors = TestBehaviors.SkipSuppressionCheck,
+            };
+            verifier.SolutionTransforms.Add((solution, projectId) =>
+            {
+                var project = solution.GetProject(projectId);
+                var document = project.Documents.First();
+                return solution.WithDocumentFilePath(document.Id, "test.cs");
+            });
+            await verifier.RunAsync(CancellationToken.None);
         }
     }
 }
