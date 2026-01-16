@@ -263,5 +263,31 @@ namespace Test
 ";
             await VerifyCS.VerifyAnalyzerAsync(test);
         }
+
+        [TestMethod]
+        public async Task TestCastFromEnum_ToNullableArgument_IsNotReported()
+        {
+            var test = @"
+#nullable enable
+
+using System.Reflection;
+
+namespace Test
+{
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public enum ETest { Value }
+    public class CTest
+    {
+        private void MethodTakesNullableEnum(ETest? value) { }
+
+        public void Test()
+        {
+            MethodTakesNullableEnum(ETest.Value);
+        }
+    }
+}
+";
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
     }
 }
