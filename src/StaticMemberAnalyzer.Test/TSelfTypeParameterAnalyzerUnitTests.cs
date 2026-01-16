@@ -162,5 +162,18 @@ namespace Test
             var expected = VerifyCS.Diagnostic(TSelfTypeParameterAnalyzer.RuleId_TSelfInvariant).WithLocation(0).WithArguments("Test.Outer<T>.Nested");
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
         }
+
+        [TestMethod]
+        public async Task TSelfIsNotMisreported_SameLengthIdentifier()
+        {
+            var test = @"
+using System.Threading.Tasks;
+namespace Test
+{
+    public class Foo<TTask> where TTask : Task { }
+}
+";
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
     }
 }
