@@ -239,5 +239,29 @@ namespace Test
 ";
             await VerifyCS.VerifyAnalyzerAsync(test);
         }
+
+        [TestMethod]
+        public async Task TestCastFromEnum_ToNullable_IsNotReported()
+        {
+            var test = @"
+#nullable enable
+
+using System.Reflection;
+
+namespace Test
+{
+    [Obfuscation(Exclude = true, ApplyToMembers = true)]
+    public enum ETest { Value }
+    public class CTest
+    {
+        public void Test()
+        {
+            ETest? nullable = ETest.Value;
+        }
+    }
+}
+";
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
     }
 }
