@@ -607,6 +607,20 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                         {
                             goto NO_WARN;
                         }
+
+                        if (op.Parent.Parent.Parent is IVariableDeclarationOperation varDeclOp)
+                        {
+                            foreach (var declarator in varDeclOp.Declarators)
+                            {
+                                if (declarator.Syntax == declaratorStx)
+                                {
+                                    if (IsReturnedOnAllPaths(context, declarator))
+                                    {
+                                        goto NO_WARN;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -712,5 +726,77 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             return;
         }
 
+        private static bool IsReturnedOnAllPaths(OperationAnalysisContext context, IVariableDeclaratorOperation variableDeclarator)
+        {
+            var enclosingMember = variableDeclarator.Syntax.Ancestors().FirstOrDefault(x => x is MethodDeclarationSyntax || x is AccessorDeclarationSyntax);
+            if (enclosingMember == null) return false;
+
+            var semanticModel = context.Operation.SemanticModel;
+            if (semanticModel == null) return false;
+
+            var declaredSymbol = semanticModel.GetDeclaredSymbol(variableDeclarator.Syntax);
+            if (declaredSymbol == null) return false;
+
+            SyntaxNode? body = null;
+            ArrowExpressionClauseSyntax? expressionBody = null;
+
+            if (enclosingMember is MethodDeclarationSyntax method)
+            {
+                body = method.Body;
+                expressionBody = method.ExpressionBody;
+            }
+            else if (enclosingMember is AccessorDeclarationSyntax accessor)
+            {
+                body = accessor.Body;
+                expressionBody = accessor.ExpressionBody;
+            }
+
+            if (body != null)
+            {
+                if (body.DescendantNodes().Any(x => x is ThrowStatementSyntax || x is ThrowExpressionSyntax))
+                {
+                    return false;
+                }
+
+                var controlFlow = semanticModel.AnalyzeControlFlow(body);
+                if (!controlFlow.Succeeded || controlFlow.EndPointIsReachable || controlFlow.ReturnStatements.IsEmpty)
+                {
+                    return false;
+                }
+
+                foreach (var returnSyntax in controlFlow.ReturnStatements.Cast<ReturnStatementSyntax>())
+                {
+                    if (returnSyntax.Expression is IdentifierNameSyntax identifierName)
+                    {
+                        var returnedSymbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
+                        if (!SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol))
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            if (expressionBody != null)
+            {
+                if (expressionBody.Expression is ThrowExpressionSyntax)
+                {
+                    return false;
+                }
+
+                if (expressionBody.Expression is IdentifierNameSyntax identifierName)
+                {
+                    var returnedSymbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
+                    return SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol);
+                }
+            }
+
+            return false;
+        }
     }
 }
