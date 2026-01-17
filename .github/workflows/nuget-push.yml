@@ -1,11 +1,8 @@
 name: build & nuget push (resource update required)
 
 on:
-  #push:
-  #  branches: [ "main" ]
-  #pull_request:
-  #  branches: [ "main" ]
-
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       confirmed:
@@ -23,7 +20,7 @@ jobs:
 
   # 'workflow_call' action must have no steps!
   build:
-    if: ${{ inputs.confirmed }}
+    if: github.event_name == 'release' || inputs.confirmed
 
     permissions:
       contents: write
@@ -34,7 +31,8 @@ jobs:
 
   nuget:
     needs: build
-    if: ${{ !failure() }}
+    if: success()
+
     runs-on: ubuntu-latest
 
     permissions:
