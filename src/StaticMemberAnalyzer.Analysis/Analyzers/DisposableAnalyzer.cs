@@ -608,16 +608,14 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                             goto NO_WARN;
                         }
 
-                        if (op.Parent.Parent.Parent is IVariableDeclarationOperation varDeclOp)
+                        if (op.Parent.Parent.Parent is IVariableDeclarationOperation varDeclOp && varDeclOp.Declarators.Length == 1)
                         {
-                            foreach (var declarator in varDeclOp.Declarators)
+                            var declarator = varDeclOp.Declarators[0];
+                            if (declarator.Syntax == declaratorStx)
                             {
-                                if (declarator.Syntax == declaratorStx)
+                                if (IsReturnedOnAllPaths(context, declarator))
                                 {
-                                    if (IsReturnedOnAllPaths(context, declarator))
-                                    {
-                                        goto NO_WARN;
-                                    }
+                                    goto NO_WARN;
                                 }
                             }
                         }
