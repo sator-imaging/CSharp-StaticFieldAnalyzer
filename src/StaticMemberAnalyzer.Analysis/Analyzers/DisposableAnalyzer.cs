@@ -608,15 +608,11 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                             goto NO_WARN;
                         }
 
-                        if (op.Parent.Parent.Parent is IVariableDeclarationOperation varDeclOp && varDeclOp.Declarators.Length == 1)
+                        if (localVarStx.Declaration.Variables.Count == 1)
                         {
-                            var declarator = varDeclOp.Declarators[0];
-                            if (declarator.Syntax == declaratorStx)
+                            if (IsReturnedOnAllPaths(context, declaratorStx))
                             {
-                                if (IsReturnedOnAllPaths(context, declarator))
-                                {
-                                    goto NO_WARN;
-                                }
+                                goto NO_WARN;
                             }
                         }
                     }
@@ -724,15 +720,15 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             return;
         }
 
-        private static bool IsReturnedOnAllPaths(OperationAnalysisContext context, IVariableDeclaratorOperation variableDeclarator)
+        private static bool IsReturnedOnAllPaths(OperationAnalysisContext context, VariableDeclaratorSyntax variableDeclarator)
         {
-            var enclosingMember = variableDeclarator.Syntax.Ancestors().FirstOrDefault(x => x is MethodDeclarationSyntax || x is AccessorDeclarationSyntax);
+            var enclosingMember = variableDeclarator.Ancestors().FirstOrDefault(x => x is MethodDeclarationSyntax || x is AccessorDeclarationSyntax);
             if (enclosingMember == null) return false;
 
             var semanticModel = context.Operation.SemanticModel;
             if (semanticModel == null) return false;
 
-            var declaredSymbol = semanticModel.GetDeclaredSymbol(variableDeclarator.Syntax);
+            var declaredSymbol = semanticModel.GetDeclaredSymbol(variableDeclarator);
             if (declaredSymbol == null) return false;
 
             SyntaxNode? body = null;
