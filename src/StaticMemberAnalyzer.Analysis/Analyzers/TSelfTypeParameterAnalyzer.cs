@@ -286,7 +286,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (context.Node is not TypeParameterConstraintClauseSyntax typeConstStx)
                 return;
 
-            if (typeConstStx.Name.ToString() != TSELF_NAME)
+            if (typeConstStx.Name.Span.Length != TSELF_NAME.Length ||
+                typeConstStx.Name.ToString() != TSELF_NAME)
                 return;
 
             if (typeConstStx.Parent is not ClassDeclarationSyntax classDeclStx)
