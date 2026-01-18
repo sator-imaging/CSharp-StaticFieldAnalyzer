@@ -93,7 +93,7 @@ namespace Test
     {
         MyDisposable Method(bool condition)
         {
-            var {|d|} = #0:new MyDisposable();
+            var {|#0:d|} = new MyDisposable();
             if (condition)
             {
                 return d;
@@ -594,7 +594,7 @@ namespace Test
     {
         MyDisposable Method(bool condition)
         {
-            var {|d|} = #0:new MyDisposable();
+            var d = {|#0:new MyDisposable()|};
             if (condition)
             {
                 return d;

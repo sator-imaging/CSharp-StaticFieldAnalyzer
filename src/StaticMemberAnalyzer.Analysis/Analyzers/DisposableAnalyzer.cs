@@ -765,11 +765,14 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 expressionBody = accessor.ExpressionBody;
             }
 
+            // TODO: allow returning declared local OR 'null' (don't allow 'default').
+
             if (body != null)
             {
                 if (body.DescendantNodes().Any(x => x is ThrowStatementSyntax || x is ThrowExpressionSyntax))
                 {
-                    return true;  // assumes that some paths throw
+                   // NOTE: keep consistent with '=> ...' syntax.
+                    return false;  // assumes that some paths throw (reports generic diagnostic)
                 }
 
                 var controlFlow = semanticModel.AnalyzeControlFlow(body);
@@ -802,6 +805,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             {
                 if (expressionBody.Expression is ThrowExpressionSyntax)
                 {
+                   // NOTE: keep consistent with statement syntax.
                     return false;
                 }
 
