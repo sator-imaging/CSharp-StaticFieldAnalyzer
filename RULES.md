@@ -43,12 +43,13 @@ Resource suffix: `_Title` `_Description` `__MD_TITLE__`
 | ID      | Diagnostic                                 | Description
 |---------|--------------------------------------------|-------------
 | SMA0040 | Missing Using Statement                    | `using` statement should be used for instance that has public `Dispose` or `DisposeAsync` method.
-| SMA0041 | Null Assignment to Disposable              | Disposable object is assigned null without a preceding .Dispose() or ?.Dispose() call.
+| SMA0041 | Null Assignment to Disposable              | Disposable object is assigned null without a preceding `.Dispose()` or `?.Dispose()` call.
+| SMA0042 | Not All Code Paths Return a Value          | A locally declared disposable object must be returned on all code paths.
 
 ## File Structure Analysis
 | ID      | Diagnostic                                 | Description
 |---------|--------------------------------------------|-------------
-| SMA0050 | Missing File Header Comment                | File should start with a header comment such as '//' or '/*'.
+| SMA0050 | Missing File Header Comment                | File should start with a header comment such as `//` or `/*`.
 
 ## [Obsolete] Annotating and Underling
 | ID      | Diagnostic                                 | Description
