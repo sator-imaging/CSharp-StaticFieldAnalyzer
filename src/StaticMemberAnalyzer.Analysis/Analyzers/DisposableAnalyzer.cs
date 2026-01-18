@@ -785,12 +785,12 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                         var returnedSymbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
                         if (!SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol))
                         {
-                            return false;
+                            return true;  // returns another local
                         }
                     }
                     else
                     {
-                        return false;
+                        return true;  // `return Foo();` or something
                     }
                 }
 

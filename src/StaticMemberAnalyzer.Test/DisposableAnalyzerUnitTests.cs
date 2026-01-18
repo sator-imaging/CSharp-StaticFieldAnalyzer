@@ -662,23 +662,30 @@ namespace Test
         MyDisposable Method(bool condition)
         {
             var {|#0:d|} = new MyDisposable();
+            var {|#0:other|} = new MyDisposable();
+
             if (condition)
             {
                 return d;
             }
             else
             {
-                return new MyDisposable();
+                return other;
             }
         }
     }
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NotAllCodePathsReturn)
-                .WithLocation(0)
-                .WithArguments("MyDisposable");
-            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+            await VerifyCS.VerifyAnalyzerAsync(test, new[]
+            {
+                VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NotAllCodePathsReturn)
+                    .WithLocation(0)
+                    .WithArguments("MyDisposable"),
+                VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NotAllCodePathsReturn)
+                    .WithLocation(1)
+                    .WithArguments("MyDisposable")
+            });
         }
     }
 }
