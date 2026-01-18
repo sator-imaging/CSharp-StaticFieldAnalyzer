@@ -43,6 +43,16 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             isEnabledByDefault: true,
             description: new LocalizableResourceString(nameof(Resources.SMA0041_Description), Resources.ResourceManager, typeof(Resources)));
 
+        public const string RuleId_NotAllCodePathsReturn = "SMA0042";
+        private static readonly DiagnosticDescriptor Rule_NotAllCodePathsReturn = new(
+            RuleId_NotAllCodePathsReturn,
+            new LocalizableResourceString(nameof(Resources.SMA0042_Title), Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString(nameof(Resources.SMA0042_MessageFormat), Resources.ResourceManager, typeof(Resources)),
+            Core.Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: new LocalizableResourceString(nameof(Resources.SMA0042_Description), Resources.ResourceManager, typeof(Resources)));
+
         #endregion
 
 
@@ -52,7 +62,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             Core.Rule_DebugWarn,
 #endif
             Rule_MissingUsing,
-            Rule_NullAssignment
+            Rule_NullAssignment,
+            Rule_NotAllCodePathsReturn
             );
 
 
@@ -476,6 +487,13 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                         {
                             if (!isCreationOp)
                             {
+                                goto NO_WARN;
+                            }
+                            else
+                            {
+                                context.ReportDiagnostic(Diagnostic.Create(Rule_NotAllCodePathsReturn, declaratorStx.Identifier.GetLocation(), disposableSymbol.Name));
+                                // reporting new diagnostic doesn't mean it is not disposable and can be ignored by analyzer.
+                                // so, just go to NO_WARN to avoid reporting SMA0040.
                                 goto NO_WARN;
                             }
                         }

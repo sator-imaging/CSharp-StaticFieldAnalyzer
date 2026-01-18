@@ -674,6 +674,33 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
 
         /// <summary>
+        ///   A locally declared disposable object must be returned on all code paths or thrown. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0042_Description {
+            get {
+                return ResourceManager.GetString("SMA0042_Description", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   &apos;{0}&apos; is not returned on all code paths (NotAllCodePathsReturn) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0042_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0042_MessageFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Not All Code Paths Return a Value に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0042_Title {
+            get {
+                return ResourceManager.GetString("SMA0042_Title", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   File Structure Analysis に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0050__MD_TITLE__ {

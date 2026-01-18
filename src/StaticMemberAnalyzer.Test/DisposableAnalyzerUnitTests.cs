@@ -643,5 +643,38 @@ namespace Test
 
             await VerifyCS.VerifyAnalyzerAsync(test);
         }
+
+        [TestMethod]
+        public async Task NotAllCodePathsReturn_ReportsDiagnostic()
+        {
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        MyDisposable Method(bool condition)
+        {
+            var {|#0:d|} = new MyDisposable();
+            if (condition)
+            {
+                return d;
+            }
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NotAllCodePathsReturn)
+                .WithLocation(0)
+                .WithArguments("MyDisposable");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
     }
 }
