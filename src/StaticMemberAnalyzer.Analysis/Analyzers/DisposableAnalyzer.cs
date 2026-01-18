@@ -621,15 +621,14 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
                         if (localVarStx.Declaration.Variables.Count == 1)
                         {
-                            if (IsReturnedOnAllPaths(context, declaratorStx))
+                            if (IsLocalVariableReturned(context, declaratorStx, out var inAllCodePaths))
                             {
-                                goto NO_WARN;
-                            }
-                            else
-                            {
-                                // reporting detailed diagnostic instead of generic one.
-                                context.ReportDiagnostic(Diagnostic.Create(Rule_NotAllCodePathsReturn, declaratorStx.Identifier.GetLocation(), disposableSymbol.Name));
-                                
+                                if (!inAllCodePaths)
+                                {
+                                    // reporting detailed diagnostic instead of generic one.
+                                    context.ReportDiagnostic(Diagnostic.Create(Rule_NotAllCodePathsReturn, declaratorStx.Identifier.GetLocation(), disposableSymbol.Name));
+                                }
+
                                 // then, just go to NO_WARN to avoid additionally reporting SMA0040.
                                 goto NO_WARN;
                             }
@@ -739,8 +738,10 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             return;
         }
 
-        private static bool IsReturnedOnAllPaths(OperationAnalysisContext context, VariableDeclaratorSyntax variableDeclarator)
+        private static bool IsLocalVariableReturned(OperationAnalysisContext context, VariableDeclaratorSyntax variableDeclarator, out bool inAllCodePaths)
         {
+            inAllCodePaths = false;
+
             var enclosingMember = variableDeclarator.Ancestors().FirstOrDefault(x => x is MethodDeclarationSyntax || x is AccessorDeclarationSyntax);
             if (enclosingMember == null) return false;
 
@@ -768,7 +769,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             {
                 if (body.DescendantNodes().Any(x => x is ThrowStatementSyntax || x is ThrowExpressionSyntax))
                 {
-                    return false;
+                    return true;  // assumes that some paths throw
                 }
 
                 var controlFlow = semanticModel.AnalyzeControlFlow(body);
@@ -792,6 +793,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                         return false;
                     }
                 }
+
+                inAllCodePaths = true;
                 return true;
             }
 
@@ -805,7 +808,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 if (expressionBody.Expression is IdentifierNameSyntax identifierName)
                 {
                     var returnedSymbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
-                    return SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol);
+
+                    inAllCodePaths = SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol);
+                    return true;
                 }
             }
 
