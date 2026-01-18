@@ -662,7 +662,7 @@ namespace Test
         MyDisposable Method(bool condition)
         {
             var {|#0:d|} = new MyDisposable();
-            var {|#0:other|} = new MyDisposable();
+            var {|#1:other|} = new MyDisposable();
 
             if (condition)
             {
