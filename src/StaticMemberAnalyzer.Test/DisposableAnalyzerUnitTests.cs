@@ -93,7 +93,7 @@ namespace Test
     {
         MyDisposable Method(bool condition)
         {
-            var d = {|#0:new MyDisposable()|};
+            var {|d|} = #0:new MyDisposable();
             if (condition)
             {
                 return d;
@@ -107,7 +107,7 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_MissingUsing)
+            var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NotAllCodePathsReturn)
                 .WithLocation(0)
                 .WithArguments("MyDisposable");
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
