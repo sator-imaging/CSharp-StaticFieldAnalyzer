@@ -43,6 +43,16 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             isEnabledByDefault: true,
             description: new LocalizableResourceString(nameof(Resources.SMA0041_Description), Resources.ResourceManager, typeof(Resources)));
 
+        public const string RuleId_NotAllCodePathsReturn = "SMA0042";
+        private static readonly DiagnosticDescriptor Rule_NotAllCodePathsReturn = new(
+            RuleId_NotAllCodePathsReturn,
+            new LocalizableResourceString(nameof(Resources.SMA0042_Title), Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString(nameof(Resources.SMA0042_MessageFormat), Resources.ResourceManager, typeof(Resources)),
+            Core.Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: new LocalizableResourceString(nameof(Resources.SMA0042_Description), Resources.ResourceManager, typeof(Resources)));
+
         #endregion
 
 
@@ -52,7 +62,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             Core.Rule_DebugWarn,
 #endif
             Rule_MissingUsing,
-            Rule_NullAssignment
+            Rule_NullAssignment,
+            Rule_NotAllCodePathsReturn
             );
 
 
@@ -610,8 +621,15 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
                         if (localVarStx.Declaration.Variables.Count == 1)
                         {
-                            if (IsReturnedOnAllPaths(context, declaratorStx))
+                            if (IsLocalVariableReturned(context, declaratorStx, out var inAllCodePaths))
                             {
+                                if (!inAllCodePaths)
+                                {
+                                    // reporting detailed diagnostic instead of generic one.
+                                    context.ReportDiagnostic(Diagnostic.Create(Rule_NotAllCodePathsReturn, declaratorStx.Identifier.GetLocation(), disposableSymbol.Name));
+                                }
+
+                                // then, just go to NO_WARN to avoid additionally reporting SMA0040.
                                 goto NO_WARN;
                             }
                         }
@@ -720,8 +738,10 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             return;
         }
 
-        private static bool IsReturnedOnAllPaths(OperationAnalysisContext context, VariableDeclaratorSyntax variableDeclarator)
+        private static bool IsLocalVariableReturned(OperationAnalysisContext context, VariableDeclaratorSyntax variableDeclarator, out bool inAllCodePaths)
         {
+            inAllCodePaths = false;
+
             var enclosingMember = variableDeclarator.Ancestors().FirstOrDefault(x => x is MethodDeclarationSyntax || x is AccessorDeclarationSyntax);
             if (enclosingMember == null) return false;
 
@@ -745,11 +765,14 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 expressionBody = accessor.ExpressionBody;
             }
 
+            // TODO: allow returning declared local OR 'null' (don't allow 'default').
+
             if (body != null)
             {
                 if (body.DescendantNodes().Any(x => x is ThrowStatementSyntax || x is ThrowExpressionSyntax))
                 {
-                    return false;
+                   // NOTE: keep consistent with '=> ...' syntax.
+                    return false;  // assumes that some paths throw (reports generic diagnostic)
                 }
 
                 var controlFlow = semanticModel.AnalyzeControlFlow(body);
@@ -765,14 +788,16 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                         var returnedSymbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
                         if (!SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol))
                         {
-                            return false;
+                            return true;  // returns another local
                         }
                     }
                     else
                     {
-                        return false;
+                        return true;  // `return Foo();` or something
                     }
                 }
+
+                inAllCodePaths = true;
                 return true;
             }
 
@@ -780,13 +805,17 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             {
                 if (expressionBody.Expression is ThrowExpressionSyntax)
                 {
+                   // NOTE: keep consistent with statement syntax.
                     return false;
                 }
 
                 if (expressionBody.Expression is IdentifierNameSyntax identifierName)
                 {
                     var returnedSymbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
-                    return SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol);
+                    var isReturned = SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol);
+
+                    inAllCodePaths = isReturned;
+                    return isReturned;
                 }
             }
 
