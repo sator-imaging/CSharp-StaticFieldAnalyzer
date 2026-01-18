@@ -781,32 +781,28 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     return false;
                 }
 
+                var returnStatements = controlFlow.ReturnStatements.Cast<ReturnStatementSyntax>().ToList();
                 var isVariableEverReturned = false;
-                inAllCodePaths = true;
+                var handledPaths = 0;
 
-                foreach (var returnSyntax in controlFlow.ReturnStatements.Cast<ReturnStatementSyntax>())
+                foreach (var returnSyntax in returnStatements)
                 {
-                    var isThisPathHandled = false;
                     if (returnSyntax.Expression is IdentifierNameSyntax identifierName)
                     {
                         var returnedSymbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
                         if (SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol))
                         {
                             isVariableEverReturned = true;
-                            isThisPathHandled = true;
+                            handledPaths++;
                         }
                     }
                     else if (returnSyntax.Expression?.IsKind(SyntaxKind.NullLiteralExpression) ?? false)
                     {
-                        isThisPathHandled = true;
-                    }
-
-                    if (!isThisPathHandled)
-                    {
-                        inAllCodePaths = false;
+                        handledPaths++;
                     }
                 }
 
+                inAllCodePaths = (handledPaths == returnStatements.Count);
                 return isVariableEverReturned;
             }
 
