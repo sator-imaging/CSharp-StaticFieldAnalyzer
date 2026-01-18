@@ -43,77 +43,6 @@ namespace Test
         }
 
         [TestMethod]
-        public async Task ReturnedOnAllPaths_ReportsNoDiagnostic()
-        {
-            var test = @"
-using System;
-
-namespace Test
-{
-    class MyDisposable : IDisposable
-    {
-        public void Dispose() { }
-    }
-
-    class Program
-    {
-        MyDisposable Method(bool condition)
-        {
-            var d = new MyDisposable();
-            if (condition)
-            {
-                return d;
-            }
-            else
-            {
-                return d;
-            }
-        }
-    }
-}
-";
-
-            await VerifyCS.VerifyAnalyzerAsync(test);
-        }
-
-        [TestMethod]
-        public async Task ReturnedOnSomePaths_ReportsDiagnostic()
-        {
-            var test = @"
-using System;
-
-namespace Test
-{
-    class MyDisposable : IDisposable
-    {
-        public void Dispose() { }
-    }
-
-    class Program
-    {
-        MyDisposable Method(bool condition)
-        {
-            var {|#0:d|} = new MyDisposable();
-            if (condition)
-            {
-                return d;
-            }
-            else
-            {
-                return null;
-            }
-        }
-    }
-}
-";
-
-            var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NotAllCodePathsReturn)
-                .WithLocation(0)
-                .WithArguments("MyDisposable");
-            await VerifyCS.VerifyAnalyzerAsync(test, expected);
-        }
-
-        [TestMethod]
         public async Task SimpleDisposable_WithUsing_ReportsNoDiagnostic()
         {
             var test = @"
@@ -686,6 +615,77 @@ namespace Test
                     .WithLocation(1)
                     .WithArguments("MyDisposable")
             });
+        }
+
+        [TestMethod]
+        public async Task ReturnedOnAllPaths_ReportsNoDiagnostic()
+        {
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        MyDisposable Method(bool condition)
+        {
+            var d = new MyDisposable();
+            if (condition)
+            {
+                return d;
+            }
+            else
+            {
+                return d;
+            }
+        }
+    }
+}
+";
+
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
+
+        [TestMethod]
+        public async Task ReturnedOnSomePaths_ReportsDiagnostic()
+        {
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        MyDisposable Method(bool condition)
+        {
+            var {|#0:d|} = new MyDisposable();
+            if (condition)
+            {
+                return d;
+            }
+            else
+            {
+                return null;
+            }
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NotAllCodePathsReturn)
+                .WithLocation(0)
+                .WithArguments("MyDisposable");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
         }
     }
 }
