@@ -771,7 +771,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             {
                 if (body.DescendantNodes().Any(x => x is ThrowStatementSyntax || x is ThrowExpressionSyntax))
                 {
-                   // NOTE: keep consistent with '=> ...' syntax.
+                    // NOTE: keep consistent with '=> ...' syntax.
                     return false;  // assumes that some paths throw (reports generic diagnostic)
                 }
 
@@ -781,24 +781,33 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     return false;
                 }
 
+                var isVariableEverReturned = false;
+                inAllCodePaths = true;
+
                 foreach (var returnSyntax in controlFlow.ReturnStatements.Cast<ReturnStatementSyntax>())
                 {
+                    var isThisPathHandled = false;
                     if (returnSyntax.Expression is IdentifierNameSyntax identifierName)
                     {
                         var returnedSymbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
-                        if (!SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol))
+                        if (SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol))
                         {
-                            return true;  // returns another local
+                            isVariableEverReturned = true;
+                            isThisPathHandled = true;
                         }
                     }
-                    else
+                    else if (returnSyntax.Expression?.IsKind(SyntaxKind.NullLiteralExpression) ?? false)
                     {
-                        return true;  // `return Foo();` or something
+                        isThisPathHandled = true;
+                    }
+
+                    if (!isThisPathHandled)
+                    {
+                        inAllCodePaths = false;
                     }
                 }
 
-                inAllCodePaths = true;
-                return true;
+                return isVariableEverReturned;
             }
 
             if (expressionBody != null)

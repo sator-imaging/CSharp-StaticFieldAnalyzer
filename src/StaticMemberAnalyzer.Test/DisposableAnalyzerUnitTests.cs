@@ -652,10 +652,12 @@ namespace Test
         }
 
         [TestMethod]
-        public async Task ReturnedOnSomePaths_ReportsDiagnostic()
+        public async Task ReturnedOnSomePaths_ShouldNotReportDiagnostic()
         {
             var test = @"
 using System;
+
+#nullable enable
 
 namespace Test
 {
@@ -666,7 +668,43 @@ namespace Test
 
     class Program
     {
-        MyDisposable Method(bool condition)
+        MyDisposable? Method(bool condition)
+        {
+            var d = new MyDisposable();
+            if (condition)
+            {
+                return d;
+            }
+            else
+            {
+                return null;
+            }
+        }
+    }
+}
+";
+
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
+
+        [TestMethod]
+        public async Task ReturnedOnSomePaths_WithDefault_ReportsDiagnostic()
+        {
+            var test = @"
+using System;
+
+#nullable enable
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        MyDisposable? Method(bool condition)
         {
             var {|#0:d|} = new MyDisposable();
             if (condition)
@@ -675,7 +713,7 @@ namespace Test
             }
             else
             {
-                return null;
+                return default;
             }
         }
     }
