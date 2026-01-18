@@ -771,7 +771,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             {
                 if (body.DescendantNodes().Any(x => x is ThrowStatementSyntax || x is ThrowExpressionSyntax))
                 {
-                   // NOTE: keep consistent with '=> ...' syntax.
+                    // NOTE: keep consistent with '=> ...' syntax.
                     return false;  // assumes that some paths throw (reports generic diagnostic)
                 }
 
@@ -781,24 +781,29 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     return false;
                 }
 
-                foreach (var returnSyntax in controlFlow.ReturnStatements.Cast<ReturnStatementSyntax>())
+                var returnStatements = controlFlow.ReturnStatements.Cast<ReturnStatementSyntax>().ToList();
+                var isVariableEverReturned = false;
+                var handledPaths = 0;
+
+                foreach (var returnSyntax in returnStatements)
                 {
                     if (returnSyntax.Expression is IdentifierNameSyntax identifierName)
                     {
                         var returnedSymbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
-                        if (!SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol))
+                        if (SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol))
                         {
-                            return true;  // returns another local
+                            isVariableEverReturned = true;
+                            handledPaths++;
                         }
                     }
-                    else
+                    else if (returnSyntax.Expression?.IsKind(SyntaxKind.NullLiteralExpression) ?? false)
                     {
-                        return true;  // `return Foo();` or something
+                        handledPaths++;
                     }
                 }
 
-                inAllCodePaths = true;
-                return true;
+                inAllCodePaths = (handledPaths == returnStatements.Count);
+                return isVariableEverReturned;
             }
 
             if (expressionBody != null)
