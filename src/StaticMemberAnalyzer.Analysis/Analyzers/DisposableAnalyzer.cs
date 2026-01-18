@@ -808,9 +808,10 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 if (expressionBody.Expression is IdentifierNameSyntax identifierName)
                 {
                     var returnedSymbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
+                    var isReturned = SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol);
 
-                    inAllCodePaths = SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol);
-                    return true;
+                    inAllCodePaths = isReturned;
+                    return isReturned;
                 }
             }
 
