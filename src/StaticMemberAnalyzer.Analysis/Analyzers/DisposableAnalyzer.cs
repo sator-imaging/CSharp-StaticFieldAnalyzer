@@ -489,13 +489,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                             {
                                 goto NO_WARN;
                             }
-                            else
-                            {
-                                context.ReportDiagnostic(Diagnostic.Create(Rule_NotAllCodePathsReturn, declaratorStx.Identifier.GetLocation(), disposableSymbol.Name));
-                                // reporting new diagnostic doesn't mean it is not disposable and can be ignored by analyzer.
-                                // so, just go to NO_WARN to avoid reporting SMA0040.
-                                goto NO_WARN;
-                            }
                         }
                     }
                 }
@@ -630,6 +623,14 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                         {
                             if (IsReturnedOnAllPaths(context, declaratorStx))
                             {
+                                goto NO_WARN;
+                            }
+                            else
+                            {
+                                // reporting detailed diagnostic instead of generic one.
+                                context.ReportDiagnostic(Diagnostic.Create(Rule_NotAllCodePathsReturn, declaratorStx.Identifier.GetLocation(), disposableSymbol.Name));
+                                
+                                // then, just go to NO_WARN to avoid additionally reporting SMA0040.
                                 goto NO_WARN;
                             }
                         }
