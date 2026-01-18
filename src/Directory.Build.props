@@ -28,7 +28,7 @@
 
     <!-- don't forget to update the following PackageReference version range -->
     <GlobalPackageVersion>3.1.0</GlobalPackageVersion>
-    <GlobalPackageVersionSuffix>-rc.4</GlobalPackageVersionSuffix>
+    <GlobalPackageVersionSuffix>-rc.5</GlobalPackageVersionSuffix>
 
   </PropertyGroup>
 
