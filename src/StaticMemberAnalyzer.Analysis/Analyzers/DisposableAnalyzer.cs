@@ -779,7 +779,16 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     return false;
                 }
 
-                var returnStatements = controlFlow.ReturnStatements.Cast<ReturnStatementSyntax>().ToList();
+                var allReturnStatements = controlFlow.ReturnStatements;
+                var returnStatements = allReturnStatements.OfType<ReturnStatementSyntax>().ToList();
+
+                if (allReturnStatements.Length != returnStatements.Count)
+                {
+                    // If not all return statements can be cast to ReturnStatementSyntax,
+                    // we can't be sure about the variable's lifecycle.
+                    return false;
+                }
+
                 var isVariableEverReturned = false;
                 var handledPaths = 0;
 
@@ -794,9 +803,20 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                             handledPaths++;
                         }
                     }
-                    else if (returnSyntax.Expression?.IsKind(SyntaxKind.NullLiteralExpression) ?? false)
+                    else if (returnSyntax.Expression is null)
+                    {
+                        // e.g. return;
+                        // This path does not return the variable, but it's a valid exit.
+                        // We don't increment handledPaths here because the variable is not returned.
+                    }
+                    else if (returnSyntax.Expression.IsKind(SyntaxKind.NullLiteralExpression))
                     {
                         handledPaths++;
+                    }
+                    else
+                    {
+                        // Another variable or a new object is returned.
+                        // This path is handled, but doesn't return our variable.
                     }
                 }
 
