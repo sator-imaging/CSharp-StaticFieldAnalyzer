@@ -725,5 +725,74 @@ namespace Test
                 .WithArguments("MyDisposable");
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
         }
+
+        [TestMethod]
+        public async Task NotAllCodePathsReturn_ObjectCreation_ReportsDiagnostic()
+        {
+            var test = @"
+using System;
+
+#nullable enable
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        MyDisposable? Method()
+        {
+            var {|#0:d|} = new MyDisposable();
+            if (DateTime.Now.Year > 3000)
+            {
+                return new MyDisposable();
+            }
+            return d;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NotAllCodePathsReturn)
+                .WithLocation(0)
+                .WithArguments("MyDisposable");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task IteratorMethod_NotDisposed_ReportsDiagnostic()
+        {
+            var test = @"
+using System;
+using System.Collections.Generic;
+
+#nullable enable
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        IEnumerable<int> Method()
+        {
+            var d = {|#0:new MyDisposable()|};
+            yield return 1;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_MissingUsing)
+                .WithLocation(0)
+                .WithArguments("MyDisposable");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
     }
 }
