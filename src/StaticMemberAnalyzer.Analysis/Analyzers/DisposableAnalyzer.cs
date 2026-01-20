@@ -626,12 +626,19 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                             {
                                 if (!inAllCodePaths)
                                 {
-                                    // reporting detailed diagnostic instead of generic one.
-                                    context.ReportDiagnostic(Diagnostic.Create(Rule_NotAllCodePathsReturn, localVarDeclaratorStx.Identifier.GetLocation(), disposableSymbol.Name));
+                                    // NOTE: Workaround for Roslyn bug
+                                    //       Even through 'localVarDeclaratorStx.Identifier.ToString()' returns 'd',
+                                    //       'localVarDeclaratorStx.Identifier.GetLocation()' may NOT be pointing 'd' location.
+                                    //       As a result, although a violation is detected correctly, a warning is not reported at all.
+                                    //       --> var d = new MyDisposable();
+                                    //               ~~~~~~~~~~~~~~~~~~~~~~  fixed location (declarator syntax; formerly 'd' only)
 
-                                    // then, just go to NO_WARN to avoid additionally reporting SMA0040.
+                                    // reporting detailed diagnostic instead of generic one.
+                                    context.ReportDiagnostic(Diagnostic.Create(
+                                        Rule_NotAllCodePathsReturn, localVarDeclaratorStx.GetLocation(), localVarDeclaratorStx.Identifier));
                                 }
 
+                                // then, just go to NO_WARN to avoid additionally reporting SMA0040.
                                 goto NO_WARN;
                             }
                         }
