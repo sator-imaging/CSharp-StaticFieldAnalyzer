@@ -610,10 +610,10 @@ namespace Test
             {
                 VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NotAllCodePathsReturn)
                     .WithLocation(0)
-                    .WithArguments("MyDisposable"),
+                    .WithArguments("d"),
                 VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NotAllCodePathsReturn)
                     .WithLocation(1)
-                    .WithArguments("MyDisposable")
+                    .WithArguments("other")
             });
         }
 
@@ -722,7 +722,7 @@ namespace Test
 
             var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NotAllCodePathsReturn)
                 .WithLocation(0)
-                .WithArguments("MyDisposable");
+                .WithArguments("d");
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
         }
 
@@ -758,7 +758,7 @@ namespace Test
 
             var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NotAllCodePathsReturn)
                 .WithLocation(0)
-                .WithArguments("MyDisposable");
+                .WithArguments("d");
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
         }
 
