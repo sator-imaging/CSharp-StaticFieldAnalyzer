@@ -1,7 +1,6 @@
-# Static Field Analyzer for C# / .NET
-
 [![NuGet](https://img.shields.io/nuget/vpre/SatorImaging.StaticMemberAnalyzer)](https://www.nuget.org/packages/SatorImaging.StaticMemberAnalyzer)
-&nbsp;<sup>[Devnote / TODO](#devnote)</sup>
+
+
 
 Roslyn-based analyzer to provide diagnostics of static fields and properties initialization and more.
 
