@@ -590,8 +590,8 @@ namespace Test
     {
         MyDisposable Method(bool condition)
         {
-            var {|#0:d = new MyDisposable|}();
-            var {|#1:other = new MyDisposable|}();
+            var {|#0:d = new MyDisposable()|};
+            var {|#1:other = new MyDisposable()|};
 
             if (condition)
             {
@@ -706,7 +706,7 @@ namespace Test
     {
         MyDisposable? Method(bool condition)
         {
-            var {|#0:d = new MyDisposable|}();
+            var {|#0:d = new MyDisposable()|};
             if (condition)
             {
                 return d;
@@ -745,7 +745,7 @@ namespace Test
     {
         MyDisposable? Method()
         {
-            var {|#0:d = new MyDisposable|}();
+            var {|#0:d = new MyDisposable()|};
             if (DateTime.Now.Year > 3000)
             {
                 return new MyDisposable();
