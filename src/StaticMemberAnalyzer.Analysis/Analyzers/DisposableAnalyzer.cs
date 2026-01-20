@@ -621,15 +621,17 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
                         if (localVarStx.Declaration.Variables.Count == 1)
                         {
-                            if (IsLocalVariableReturned(context, declaratorStx, out var inAllCodePaths))
+                            var localVarDeclaratorStx = localVarStx.Declaration.Variables[0];
+                            if (IsLocalVariableReturned(context, localVarDeclaratorStx, out var inAllCodePaths))
                             {
                                 if (!inAllCodePaths)
                                 {
                                     // reporting detailed diagnostic instead of generic one.
-                                    context.ReportDiagnostic(Diagnostic.Create(Rule_NotAllCodePathsReturn, declaratorStx.Identifier.GetLocation(), disposableSymbol.Name));
+                                    context.ReportDiagnostic(Diagnostic.Create(Rule_NotAllCodePathsReturn, localVarDeclaratorStx.Identifier.GetLocation(), disposableSymbol.Name));
+
+                                    // then, just go to NO_WARN to avoid additionally reporting SMA0040.
                                 }
 
-                                // then, just go to NO_WARN to avoid additionally reporting SMA0040.
                                 goto NO_WARN;
                             }
                         }
@@ -800,7 +802,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 var allReturnStatements = controlFlow.ReturnStatements;
                 var returnStatements = allReturnStatements.OfType<ReturnStatementSyntax>().ToList();
 
-                if (allReturnStatements.Length != returnStatements.Count)
+                if (returnStatements.Count == 0 ||
+                    allReturnStatements.Length != returnStatements.Count)
                 {
                     // If not all return statements can be cast to ReturnStatementSyntax,
                     // we can't be sure about the variable's lifecycle.
