@@ -765,6 +765,24 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 expressionBody = accessor.ExpressionBody;
             }
 
+            if (expressionBody != null)
+            {
+                if (expressionBody.Expression is ThrowExpressionSyntax)
+                {
+                   // NOTE: keep consistent with statement syntax.
+                    return false;
+                }
+
+                if (expressionBody.Expression is IdentifierNameSyntax identifierName)
+                {
+                    var returnedSymbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
+                    var isReturned = SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol);
+
+                    inAllCodePaths = isReturned;
+                    return isReturned;
+                }
+            }
+
             if (body != null)
             {
                 if (body.DescendantNodes().Any(x => x is ThrowStatementSyntax || x is ThrowExpressionSyntax))
@@ -822,24 +840,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
                 inAllCodePaths = (handledPaths == returnStatements.Count);
                 return isVariableEverReturned;
-            }
-
-            if (expressionBody != null)
-            {
-                if (expressionBody.Expression is ThrowExpressionSyntax)
-                {
-                   // NOTE: keep consistent with statement syntax.
-                    return false;
-                }
-
-                if (expressionBody.Expression is IdentifierNameSyntax identifierName)
-                {
-                    var returnedSymbol = semanticModel.GetSymbolInfo(identifierName).Symbol;
-                    var isReturned = SymbolEqualityComparer.Default.Equals(returnedSymbol, declaredSymbol);
-
-                    inAllCodePaths = isReturned;
-                    return isReturned;
-                }
             }
 
             return false;
