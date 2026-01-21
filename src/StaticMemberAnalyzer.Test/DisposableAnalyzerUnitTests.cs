@@ -652,7 +652,7 @@ namespace Test
         }
 
         [TestMethod]
-        public async Task ReturnedOnSomePaths_ShouldNotReportDiagnostic()
+        public async Task ReturnedOnSomePaths_ReportsDiagnostic()
         {
             var test = @"
 using System;
@@ -670,7 +670,7 @@ namespace Test
     {
         MyDisposable? Method(bool condition)
         {
-            var d = new MyDisposable();
+            var {|#0:d = new MyDisposable()|};
             if (condition)
             {
                 return d;
@@ -683,8 +683,10 @@ namespace Test
     }
 }
 ";
-
-            await VerifyCS.VerifyAnalyzerAsync(test);
+            var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NotAllCodePathsReturn)
+                .WithLocation(0)
+                .WithArguments("d");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
         }
 
         [TestMethod]

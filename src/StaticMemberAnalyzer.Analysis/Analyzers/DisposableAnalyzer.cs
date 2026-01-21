@@ -837,10 +837,13 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                         // This path does not return the variable, but it's a valid exit.
                         // We don't increment handledPaths here because the variable is not returned.
                     }
-                    else if (returnSyntax.Expression.IsKind(SyntaxKind.NullLiteralExpression))
-                    {
-                        handledPaths++;
-                    }
+                    // // NOTE: Disallow returning 'null' if local is declared.
+                    // //       * Analyzer already allows returning a new instance on 'return' statement.
+                    // //         So instead, create 2 paths one returns new instance, another one returns null.
+                    // else if (returnSyntax.Expression.IsKind(SyntaxKind.NullLiteralExpression))
+                    // {
+                    //     handledPaths++;
+                    // }
                     else
                     {
                         // Another variable or a new object is returned.
