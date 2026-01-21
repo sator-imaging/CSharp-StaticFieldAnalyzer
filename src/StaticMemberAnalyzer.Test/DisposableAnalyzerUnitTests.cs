@@ -43,6 +43,41 @@ namespace Test
         }
 
         [TestMethod]
+        public async Task ReturnedOnSomePaths_WithDefaultExpression_IsNotReported()
+        {
+            var test = @"
+using System;
+
+#nullable enable
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        IDisposable? Method(bool condition)
+        {
+            var d = new MyDisposable();
+            if (condition)
+            {
+                return d;
+            }
+            else
+            {
+                return default(IDisposable);
+            }
+        }
+    }
+}
+";
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
+
+        [TestMethod]
         public async Task SimpleDisposable_WithUsing_ReportsNoDiagnostic()
         {
             var test = @"
@@ -688,7 +723,7 @@ namespace Test
         }
 
         [TestMethod]
-        public async Task ReturnedOnSomePaths_WithDefault_ReportsDiagnostic()
+        public async Task ReturnedOnSomePaths_WithDefault_IsNotReported()
         {
             var test = @"
 using System;
@@ -706,7 +741,7 @@ namespace Test
     {
         MyDisposable? Method(bool condition)
         {
-            var {|#0:d = new MyDisposable()|};
+            var d = new MyDisposable();
             if (condition)
             {
                 return d;
@@ -719,11 +754,7 @@ namespace Test
     }
 }
 ";
-
-            var expected = VerifyCS.Diagnostic(DisposableAnalyzer.RuleId_NotAllCodePathsReturn)
-                .WithLocation(0)
-                .WithArguments("d");
-            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+            await VerifyCS.VerifyAnalyzerAsync(test);
         }
 
         [TestMethod]
