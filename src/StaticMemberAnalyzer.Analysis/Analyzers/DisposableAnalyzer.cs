@@ -831,6 +831,11 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                             handledPaths++;
                         }
                     }
+
+                    // NOTE: The following code is preserved to prevent relaxing the restriction unexpectedly.
+                    //       * This disposable analyzer is designed in restrict-first and we accept false positive.
+
+                    /*
                     else if (returnSyntax.Expression is null)
                     {
                         // e.g. return;
@@ -849,6 +854,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                         // Another variable or a new object is returned.
                         // This path is handled, but doesn't return our variable.
                     }
+                    */
                 }
 
                 inAllCodePaths = (handledPaths == returnStatements.Count);
