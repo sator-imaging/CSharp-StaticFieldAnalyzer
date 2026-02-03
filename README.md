@@ -31,7 +31,7 @@ Restrict both cast from/to integer number! Disallow user-level enum value conver
 
 ## `TSelf` Type Argument Analysis
 
-Analyze `TSelf` type argument mismatch and `where` clause mismatch.
+Analyze `TSelf` type argument mismatch for Curiously Recurring Template Pattern (CRTP).
 
 ![TSelf Type Argument](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/GenericTypeArgTSelf.png)
 
