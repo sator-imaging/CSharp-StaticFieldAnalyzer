@@ -10,13 +10,13 @@
 
 基于 Roslyn 的分析器，用于诊断静态字段/属性初始化以及其他问题。
 
-- [Static Field Analysis](#static-field-analysis) 检测不稳定初始化
+- [不稳定初始化分析](#不稳定初始化分析) 检测不稳定初始化
     - 静态字段与属性声明顺序错误
     - partial 类型跨文件成员引用
-    - 跨类型静态字段的 [Cross-Referencing Problem](#cross-referencing-problem)
-- [Read-Only Variable Analysis](#read-only-variable-analysis) 检测对局部变量/参数赋值，以及可变参数传递
-- [`Enum` Analyzer and Code Fix Provider](#enum-analyzer-and-code-fix-provider) 防止用户层面的值转换，并支持 [Kotlin-like Enum Pattern](#kotlin-like-enum-pattern)
-- [`Disposable` Analyzer](#disposable-analyzer) 检测缺少 `using` 语句
+    - 跨类型静态字段的 [交叉引用问题](#交叉引用问题)
+- [只读变量分析](#只读变量分析) 检测对局部变量/参数赋值，以及可变参数传递
+- [`Enum` 分析器与代码修复提供程序](#enum-分析器与代码修复提供程序) 防止用户层面的值转换，并支持 [Kotlin 风格 Enum 模式](#kotlin-风格-enum-模式)
+- [Disposable 分析器](#disposable-分析器) 检测缺少 `using` 语句
 - `struct` 无参构造函数误用分析
 - `TSelf` 泛型类型参数与类型约束分析
 - 文件头注释强制规则
@@ -27,17 +27,17 @@
 
 
 
-## Static Field Analysis
+## 不稳定初始化分析
 
 ![Analyzer in Action](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/InAction.gif)
 
-## Enum Type Analysis
+## `Enum` 类型分析
 
 限制与整数之间的双向转换，彻底禁止用户代码直接进行 enum 值转换。
 
 ![Enum Analyzer](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/EnumAnalyzer.png)
 
-## `TSelf` Type Argument Analysis
+## `TSelf` 类型参数分析
 
 用于分析 CRTP（Curiously Recurring Template Pattern）中 `TSelf` 类型参数不匹配问题。
 
@@ -45,7 +45,7 @@
 
 
 
-## Annotation for Type, Field and Property 💯
+## 类型、字段与属性标注 💯
 
 > [!IMPORTANT]
 > Underlining analyzer 已废弃。如需重新启用，请设置预处理符号 `STMG_ENABLE_UNDERLINING_ANALYZER` 并重新构建。
@@ -53,7 +53,7 @@
 
 这是一个在 Visual Studio 编码时用于增强提示的附加功能。你不再需要通过 `Obsolete` 属性来标注类型、方法、字段和属性。
 
-详见 [该章节](#annotating--underlining)。
+详见 [该章节](#标注--下划线)。
 
 
 ![Draw Underline](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/DrawUnderline.png)
@@ -64,7 +64,7 @@
 
 &nbsp;
 
-# Installation
+# 安装
 
 - NuGet
 	- https://www.nuget.org/packages/SatorImaging.StaticMemberAnalyzer
@@ -73,7 +73,7 @@
       ```
 
 
-## Visual Studio 2019 or Earlier
+## Visual Studio 2019 或更早版本
 
 该分析器在 Visual Studio 2022 上已测试。
 
@@ -85,7 +85,7 @@
 
 &nbsp;
 
-# Unity Integration
+# Unity 集成
 
 该分析器可用于 Unity 2020.2 及以上版本，详见：
 
@@ -97,7 +97,7 @@
 
 &nbsp;
 
-# Cross-Referencing Problem
+# 交叉引用问题
 
 这是一个设计层面的问题，会让初始化逻辑变得复杂，并且只在特定条件下触发初始化错误。
 
@@ -159,7 +159,7 @@ public static class Test
 
 &nbsp;
 
-# `Enum` Analyzer and Code Fix Provider
+# `Enum` 分析器与代码修复提供程序
 
 enum 的处理很容易变得混乱。通常应避免在业务代码中直接做与整数/字符串之间的转换与解析。
 
@@ -168,7 +168,7 @@ enum 的处理很容易变得混乱。通常应避免在业务代码中直接做
 ![Enum Analyzer](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/EnumAnalyzer.png)
 
 
-## Excluding Enum Type from Obfuscation
+## 从混淆中排除 `Enum` 类型
 
 提供注解与代码修复，避免混淆工具修改 enum 的字符串表示。
 
@@ -178,7 +178,7 @@ enum 的处理很容易变得混乱。通常应避免在业务代码中直接做
 > `Obfuscation` 属性来自 C# 基础库，本身不提供混淆功能。它只是向识别该属性的混淆工具传递配置。
 
 
-## Kotlin-like Enum Pattern
+## Kotlin 风格 Enum 模式
 
 用于辅助实现 Kotlin 风格的 enum class 模式。
 
@@ -235,7 +235,7 @@ public class EnumLike
 ```
 
 
-### Benefits of Enum-like Types
+### 类 Enum 类型的优势
 
 <p><details --open><summary>优势</summary>
 
@@ -291,7 +291,7 @@ switch (val)
 
 &nbsp;
 
-# Disposable Analyzer
+# Disposable 分析器
 
 ```cs
 var d = new Disposable();
@@ -312,7 +312,7 @@ d = (new object()) as IDisposable;
 
 
 
-## Suppress `Disposable` Analysis
+## 抑制 `Disposable` 分析
 
 若需对指定类型抑制分析，声明名为 `DisposableAnalyzerSuppressor` 的特性并加到程序集上。
 
@@ -332,7 +332,7 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 
 &nbsp;
 
-# Read-Only Variable Analysis
+# 只读变量分析
 
 该分析器通过标记写操作，帮助保持局部变量和参数的不可变性。
 
@@ -437,7 +437,7 @@ class Demo
 
 &nbsp;
 
-# Annotating / Underlining
+# 标注 / 下划线
 
 > [!IMPORTANT]
 > Underlining analyzer 已废弃。如需重新启用，请设置预处理符号 `STMG_ENABLE_UNDERLINING_ANALYZER` 并重新构建。
@@ -454,7 +454,7 @@ class Demo
 > 消息以 `!` 开头时，会在关键字上添加 warning 标注，而不是 info 标注。
 
 
-## How to Use
+## 使用方法
 
 为避免对该分析器产生依赖，下划线功能所需特性选用了内置的 `System.ComponentModel`，因此语法看起来会有些特殊。
 
@@ -494,7 +494,7 @@ public static int Underline_Drawn = 310;
 
 
 
-## Verbosity Control
+## 详细级别控制
 
 下划线共有 4 类：line head、line leading、line end 和 keyword。
 
@@ -506,7 +506,7 @@ public static int Underline_Drawn = 310;
 
 
 
-## Unity Tips
+## Unity 提示
 
 下划线功能基于 [Description](https://learn.microsoft.com/dotnet/api/system.componentmodel.descriptionattribute) 特性实现，该特性原本用于 Visual Studio 的可视化设计器（旧称 Form Designer）。
 
