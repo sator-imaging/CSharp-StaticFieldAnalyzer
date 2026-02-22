@@ -184,6 +184,7 @@ namespace Test
             var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
                 .WithLocation(1)
                 .WithArguments("right");
+            // TODO: Remove this compiler-error expectation after upgrading Unity to a version that includes Roslyn 4+ (C# 10 support).
             var expectedCompiler = Microsoft.CodeAnalysis.Testing.DiagnosticResult.CompilerError("CS8184")
                 .WithSpan(9, 13, 9, 30);
 
@@ -213,6 +214,7 @@ namespace Test
             var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
                 .WithLocation(1)
                 .WithArguments("right");
+            // TODO: Remove this compiler-error expectation after upgrading Unity to a version that includes Roslyn 4+ (C# 10 support).
             var expectedCompiler = Microsoft.CodeAnalysis.Testing.DiagnosticResult.CompilerError("CS8184")
                 .WithSpan(9, 13, 9, 30);
 
