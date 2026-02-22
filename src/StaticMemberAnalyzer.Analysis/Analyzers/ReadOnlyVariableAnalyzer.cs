@@ -70,6 +70,27 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             context.RegisterOperationAction(AnalyzeIncrementOrDecrement, OperationKind.Increment, OperationKind.Decrement);
             context.RegisterOperationAction(AnalyzeDeconstructionAssignment, OperationKind.DeconstructionAssignment);
             context.RegisterOperationAction(AnalyzeArgumentOperation, OperationKind.Argument);
+            context.RegisterOperationAction(AnalyzeMemberInitializer, OperationKind.MemberInitializer);
+
+            context.RegisterOperationAction(_ => { }, OperationKind.MethodBody, OperationKind.AnonymousFunction, OperationKind.LocalFunction);
+        }
+
+        private static void AnalyzeMemberInitializer(OperationAnalysisContext context)
+        {
+            if (context.Operation is not IMemberInitializerOperation op)
+            {
+                return;
+            }
+
+            // In some versions of Roslyn, IMemberInitializerOperation properties are named differently or missing.
+            // Using Children is a safer way to access MemberReference (index 0) and Value (index 1).
+            var children = op.Children.ToImmutableArray();
+            if (children.Length < 2)
+            {
+                return;
+            }
+
+            CheckPropertySetterValue(context, children[0], children[1]);
         }
 
         private static void AnalyzeSimpleAssignment(OperationAnalysisContext context)
@@ -80,6 +101,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
 
             ReportIfDisallowedLocal(context, op.Target);
+            CheckPropertySetterValue(context, op.Target, op.Value);
         }
 
         private static void AnalyzeCompoundAssignment(OperationAnalysisContext context)
@@ -90,6 +112,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
 
             ReportIfDisallowedLocal(context, op.Target);
+            CheckPropertySetterValue(context, op.Target, op.Value);
         }
 
         private static void AnalyzeCoalesceAssignment(OperationAnalysisContext context)
@@ -100,6 +123,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
 
             ReportIfDisallowedLocal(context, op.Target);
+            CheckPropertySetterValue(context, op.Target, op.Value);
         }
 
         private static void AnalyzeIncrementOrDecrement(OperationAnalysisContext context)
@@ -129,16 +153,47 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
 
             ReportIfDisallowedLocal(context, target);
+            CheckDeconstructionTargetForProperties(context, target, op.Value);
+        }
+
+        private static void CheckDeconstructionTargetForProperties(OperationAnalysisContext context, IOperation target, IOperation value)
+        {
+            while (target is IConversionOperation targetConversion) target = targetConversion.Operand;
+            while (value is IConversionOperation valueConversion) value = valueConversion.Operand;
+
+            if (target is ITupleOperation tuple && value is ITupleOperation valueTuple)
+            {
+                for (int i = 0; i < tuple.Elements.Length && i < valueTuple.Elements.Length; i++)
+                {
+                    CheckDeconstructionTargetForProperties(context, tuple.Elements[i], valueTuple.Elements[i]);
+                }
+            }
+            else
+            {
+                CheckPropertySetterValue(context, target, value);
+            }
+        }
+
+        private static void CheckPropertySetterValue(OperationAnalysisContext context, IOperation target, IOperation value)
+        {
+            if (target is IPropertyReferenceOperation propertyReference)
+            {
+                var setter = propertyReference.Property.SetMethod;
+                if (setter != null && setter.Parameters.Length > 0)
+                {
+                    AnalyzeArgumentValue(context, value, setter.Parameters[setter.Parameters.Length - 1]);
+                }
+            }
         }
 
         private static void AnalyzeArgumentOperation(OperationAnalysisContext context)
         {
-            if (context.Operation is not IArgumentOperation argument)
+            if (context.Operation is not IArgumentOperation argument || argument.Parameter == null)
             {
                 return;
             }
 
-            AnalyzeArgument(context, argument);
+            AnalyzeArgumentValue(context, argument.Value, argument.Parameter);
         }
 
         private static void ReportIfDisallowedLocal(OperationAnalysisContext context, IOperation target)
@@ -226,21 +281,15 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             return name.StartsWith("mut_");
         }
 
-        private static void AnalyzeArgument(OperationAnalysisContext context, IArgumentOperation argument)
+        private static void AnalyzeArgumentValue(OperationAnalysisContext context, IOperation value, IParameterSymbol parameter)
         {
-            var argumentValue = argument.Value;
+            var argumentValue = value;
             while (argumentValue is IConversionOperation conversion)
             {
                 argumentValue = conversion.Operand;
             }
 
             if (IsAllowedArgumentValue(argumentValue))
-            {
-                return;
-            }
-
-            var parameter = argument.Parameter;
-            if (parameter == null)
             {
                 return;
             }

@@ -39,6 +39,106 @@ namespace Test
         }
 
         [TestMethod]
+        public async Task DeconstructionAssignment_WithProperty_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class C { }
+    class Box { public C Prop { get; set; } }
+
+    class Program
+    {
+        void M()
+        {
+            var foo = new C();
+            var box = new Box();
+            var x = 0;
+            ({|#1:box.Prop|}, {|#2:x|}) = ({|#0:foo|}, 1);
+        }
+    }
+}
+";
+
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument)
+                .WithLocation(0)
+                .WithArguments("foo");
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(1)
+                .WithArguments("box");
+            var expected2 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(2)
+                .WithArguments("x");
+
+            await VerifyWithRuleEnabledAsync(test, expected0, expected1, expected2);
+        }
+
+        [TestMethod]
+        public async Task AssignmentsInDifferentBodies_ReportDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        int _field;
+        public int Prop
+        {
+            get
+            {
+                int x = 1;
+                {|#0:x|} = 2;
+                return x;
+            }
+            set
+            {
+                int x = 1;
+                {|#1:x|} = 2;
+                {|#2:value|} = 3;
+            }
+        }
+
+        public int this[int index]
+        {
+            get
+            {
+                {|#3:index|} = 1;
+                return index;
+            }
+        }
+
+        void M()
+        {
+            System.Action<int> a = (x) => {
+                {|#4:x|} = 1;
+            };
+
+            void Local(int x)
+            {
+                {|#5:x|} = 1;
+            }
+        }
+    }
+}
+";
+
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0).WithArguments("x");
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(1).WithArguments("x");
+            var expected2 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter)
+                .WithLocation(2).WithArguments("value");
+            var expected3 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter)
+                .WithLocation(3).WithArguments("index");
+            var expected4 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter)
+                .WithLocation(4).WithArguments("x");
+            var expected5 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter)
+                .WithLocation(5).WithArguments("x");
+
+            await VerifyWithRuleEnabledAsync(test, expected0, expected1, expected2, expected3, expected4, expected5);
+        }
+
+        [TestMethod]
         public async Task CompoundAssignment_ReportsDiagnostic()
         {
             var test = @"
@@ -666,6 +766,95 @@ namespace Test
 ";
 
             await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task PropertyAssignment_ReferenceType_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class C { }
+    class Box { public C Prop { get; set; } }
+
+    class Program
+    {
+        void M()
+        {
+            var foo = new C();
+            var box = new Box();
+            {|#1:box.Prop|} = {|#0:foo|};
+        }
+    }
+}
+";
+
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument)
+                .WithLocation(0)
+                .WithArguments("foo");
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(1)
+                .WithArguments("box");
+
+            await VerifyWithRuleEnabledAsync(test, expected0, expected1);
+        }
+
+        [TestMethod]
+        public async Task IndexerAssignment_ReferenceType_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class C { }
+    class Box { public C this[int i] { get => null; set { } } }
+
+    class Program
+    {
+        void M()
+        {
+            var foo = new C();
+            var box = new Box();
+            {|#1:box[0]|} = {|#0:foo|};
+        }
+    }
+}
+";
+
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument)
+                .WithLocation(0)
+                .WithArguments("foo");
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(1)
+                .WithArguments("box");
+
+            await VerifyWithRuleEnabledAsync(test, expected0, expected1);
+        }
+
+        [TestMethod]
+        public async Task MemberInitializer_ReferenceType_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class C { }
+    class Box { public C Prop { get; set; } }
+
+    class Program
+    {
+        void M()
+        {
+            var foo = new C();
+            var box = new Box { Prop = {|#0:foo|} };
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument)
+                .WithLocation(0)
+                .WithArguments("foo");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
         }
 
         [TestMethod]
