@@ -8,22 +8,22 @@
 
 
 
-Roslyn-based analyzer to provide diagnostics of static fields and properties initialization and more.
+Roslyn ベースのアナライザーです。静的フィールド/プロパティ初期化やその他の問題を診断します。
 
-- [Static Field Analysis](#static-field-analysis) detects flaky initialization
-    - Wrong order of static field and property declaration
-    - Partial type member reference across files
-    - [Cross-Referencing Problem](#cross-referencing-problem) of static field across type
-- [Immutable/Read-Only Variable Analysis](#read-only-variable-analysis) detects assignment to locals/parameters and writable call-site argument passing
-- [`Enum` Type Analysis](#enum-analyzer-and-code-fix-provider) to prevent user-level value conversion & [more](#kotlin-like-enum-pattern)
-- [`Disposable` Analysis](#disposable-analyzer) to detect missing using statement
-- `struct` parameter-less constructor misuse analysis
-- `TSelf` generic type argument & type constraint analysis
-- File header comment enforcement
-- ~~Annotating and underlining field, property or etc with custom message~~
+- [Static Field Analysis](#static-field-analysis) で不安定な初期化を検出
+    - 静的フィールド/プロパティ宣言順の誤り
+    - partial 型でのファイル跨ぎ参照
+    - 型を跨ぐ静的フィールドの [Cross-Referencing Problem](#cross-referencing-problem)
+- [Read-Only Variable Analysis](#read-only-variable-analysis) でローカル/引数への代入と可変な引数受け渡しを検出
+- [`Enum` Analyzer and Code Fix Provider](#enum-analyzer-and-code-fix-provider) でユーザー側の値変換を禁止し、[Kotlin-like Enum Pattern](#kotlin-like-enum-pattern) も検査
+- [`Disposable` Analyzer](#disposable-analyzer) で `using` の欠落を検出
+- `struct` の引数なしコンストラクター誤用解析
+- `TSelf` ジェネリック型引数と型制約の解析
+- ファイルヘッダーコメントの強制
+- ~~カスタムメッセージでのフィールド/プロパティ等の注釈と下線表示~~
 
 > [!TIP]
-> Find out all diagnostic rules: [**RULES.md**](RULES.md)
+> 診断ルール一覧: [**RULES.md**](RULES.md)
 
 
 
@@ -33,13 +33,13 @@ Roslyn-based analyzer to provide diagnostics of static fields and properties ini
 
 ## Enum Type Analysis
 
-Restrict both cast from/to integer number! Disallow user-level enum value conversion completely!!
+整数との相互キャストを制限します。ユーザーコードでの enum 値変換を全面的に禁止できます。
 
 ![Enum Analyzer](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/EnumAnalyzer.png)
 
 ## `TSelf` Type Argument Analysis
 
-Analyze `TSelf` type argument mismatch for Curiously Recurring Template Pattern (CRTP).
+CRTP (Curiously Recurring Template Pattern) 向けに `TSelf` 型引数の不一致を解析します。
 
 ![TSelf Type Argument](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/GenericTypeArgTSelf.png)
 
@@ -48,12 +48,12 @@ Analyze `TSelf` type argument mismatch for Curiously Recurring Template Pattern 
 ## Annotation for Type, Field and Property 💯
 
 > [!IMPORTANT]
-> Underlining analyzer is obsolete: to enable it again, set the preprocessor symbol `STMG_ENABLE_UNDERLINING_ANALYZER` and rebuild.
+> Underlining analyzer は廃止扱いです。再度有効化するには、プリプロセッサシンボル `STMG_ENABLE_UNDERLINING_ANALYZER` を設定して再ビルドしてください。
 
 
-There is fancy extra feature to take your attention while coding in Visual Studio. No more need to use `Obsolete` attribute in case of annotating types, methods, fields and properties.
+Visual Studio でのコーディング時に注意を引く追加機能です。型/メソッド/フィールド/プロパティへの注釈に `Obsolete` 属性を使う必要がなくなります。
 
-See [the following section](#annotating--underlining) for details.
+[以下のセクション](#annotating--underlining) で詳細を確認できます。
 
 
 ![Draw Underline](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/DrawUnderline.png)
@@ -75,9 +75,9 @@ See [the following section](#annotating--underlining) for details.
 
 ## Visual Studio 2019 or Earlier
 
-Analyzer is tested on Visual Studio 2022.
+このアナライザーは Visual Studio 2022 でテストされています。
 
-You could use this analyzer on older versions of Visual Studio. To do so, update `Vsix` project file by following instructions written in memo and build project.
+旧バージョンの Visual Studio でも利用可能です。その場合は `Vsix` プロジェクトのメモに従って設定を更新し、ビルドしてください。
 
 
 
@@ -87,7 +87,7 @@ You could use this analyzer on older versions of Visual Studio. To do so, update
 
 # Unity Integration
 
-This analyzer can be used with Unity 2020.2 or above. See the following page for detail.
+このアナライザーは Unity 2020.2 以降で利用できます。詳細は次のページを参照してください。
 
 [Unity/README.md](Unity/README.md)
 
@@ -99,9 +99,9 @@ This analyzer can be used with Unity 2020.2 or above. See the following page for
 
 # Cross-Referencing Problem
 
-It is a design bug makes all things complex. Not only that but also it causes initialization error only when meet a specific condition.
+これは設計上の問題で、複雑さを増やすだけでなく特定条件下でのみ初期化エラーを引き起こします。
 
-So it must be fixed even if app works correctly at a moment, to prevent simple but complicated potential bug which is hard to find in large code base by hand. As you know static fields will never report error when initialization failed!!
+一見動いていても、手作業では発見しづらい潜在バグの原因になるため修正が必要です。静的フィールドは初期化失敗を例外として報告しない点にも注意が必要です。
 
 
 ```cs
@@ -138,19 +138,19 @@ public static class Test
 **C# Compiler Initialization Sequence**
 
 - `A.Value = B.Other;`
-    - // 'B' initialization is started by member access
+    - // `B` の初期化がメンバーアクセスで開始
     - `B.Other = 620;`
-    - `B.Value = A.Other;`  // BUG: B.Value will be 0 because reading uninitialized `A.Other`
-    - // then, assign `B.Other` value (620) to `A.Value`
-- `A.Other = 310;`  // initialized here!! this value is not assigned to B.Value
+    - `B.Value = A.Other;`  // BUG: 未初期化 `A.Other` を読むため 0
+    - // その後 `B.Other` の値 620 を `A.Value` に代入
+- `A.Other = 310;`  // ここで初期化。B.Value には反映されない
 
 
-When reading B value first, initialization order is changed and resulting value is also changed accordingly:
+先に B 側を読むと初期化順が変わり、結果も変わります。
 
 - `B.Other = 620;`
 - `B.Value = A.Other;`
-    - // 'A' initialization is started by member access
-    - `A.Value = B.Other;`  // correct: B.Other is initialized before reading value
+    - // `A` の初期化がメンバーアクセスで開始
+    - `A.Value = B.Other;`  // 正常: `B.Other` は先に初期化済み
     - `A.Other = 310;`
 
 
@@ -161,34 +161,34 @@ When reading B value first, initialization order is changed and resulting value 
 
 # `Enum` Analyzer and Code Fix Provider
 
-Enum type handling is really headaching. To make enum operation under control, good to avoid user-level enum handling such as converting to integer or string, parse from string and etc.
+enum の扱いは複雑になりがちです。整数/文字列への変換や文字列からの解析などをユーザーコードで直接行わないようにすると、運用を一元化しやすくなります。
 
-This analyzer will help centerizing and encapsulating enum handling in app's central enum utility.
+このアナライザーは、アプリ中央の enum ユーティリティへ処理を集約するのに役立ちます。
 
 ![Enum Analyzer](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/EnumAnalyzer.png)
 
 
 ## Excluding Enum Type from Obfuscation
 
-Helpful annotation and code fix for enum types which prevents modification of string representation by obfuscation tool.
+難読化ツールによる文字列表現の変更を防ぐための注釈とコード修正を提供します。
 
 ![Enum Code Fix](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/EnumCodeFix.png)
 
 > [!NOTE]
-> `Obfuscation` attribute is from C# base library and it does NOT provide feature to obfuscate compiled assembly. It just provides configuration option to obfuscation tools which recognizing this attribute.
+> `Obfuscation` 属性は C# 標準ライブラリの属性であり、単体で難読化機能を提供するものではありません。対応ツールに設定を伝えるためのものです。
 
 
 ## Kotlin-like Enum Pattern
 
-Analysis to help implementing Kotlin-style enum class.
+Kotlin 風 enum class の実装を支援する解析です。
 
-Here are Enum-like type requirements:
-- `MyEnumLike[]` or `ReadOnlyMemory<MyEnumLike>` field(s) exist
-    - analyzer will check field initializer correctness if name is starting with `Entries` (case-sensitive) or ending with `entries` (case-insensitive)
-- `sealed` modifier on type
-- `private` constructor only
-- `public static` member called `Entries` exists
-- `public bool Equals` method should not be declared/overridden
+Enum ライク型の要件:
+- `MyEnumLike[]` または `ReadOnlyMemory<MyEnumLike>` フィールドが存在
+    - フィールド名が `Entries` で始まる (大文字小文字区別) か `entries` で終わる (大文字小文字非区別) 場合、初期化子の妥当性を検査
+- 型に `sealed` 修飾子
+- コンストラクターは `private` のみ
+- `Entries` という名前の `public static` メンバーが存在
+- `public bool Equals` を宣言/オーバーライドしない
 
 
 ```cs
@@ -237,9 +237,9 @@ public class EnumLike
 
 ### Benefits of Enum-like Types
 
-<p><details lang="en" --open><summary>Benefits</summary>
+<p><details lang="en" --open><summary>利点</summary>
 
-Kotlin-like enum (algebraic data type) can prevent invalid value creation.
+Kotlin 風 enum (代数的データ型) は無効値の生成を防ぎやすくします。
 
 ```cs
 var invalid = Activator.CreateInstance(typeof(EnumLike));
@@ -252,7 +252,7 @@ if (EnumLike.A == invalid || EnumLike.B == invalid)
 ```
 
 
-Unfortunately, use in `switch` statement is a bit weird.
+ただし `switch` での利用は少し独特になります。
 
 ```cs
 var val = EnumLike.A;
@@ -302,19 +302,19 @@ d = (new object()) as IDisposable;
 ```
 
 
-Analyzer won't show warning in the following condition:
-- instance is created on `return` statement
+次の条件では警告を出しません:
+- `return` 文でインスタンスを生成
     - `return new Disposable();`
-- assign instance to field or property
+- フィールド/プロパティへの代入
     - `m_field = new Disposable();`
-- cast between disposable types
+- `IDisposable` 型同士のキャスト
     - `var x = myDisposable as IDisposable;`
 
 
 
 ## Suppress `Disposable` Analysis
 
-To suppress analysis for specified types, declare attribute named `DisposableAnalyzerSuppressor` and add it to assembly.
+特定型の解析を抑制するには、`DisposableAnalyzerSuppressor` という属性を定義し、アセンブリに付与します。
 
 ```cs
 [assembly: DisposableAnalyzerSuppressor(typeof(Task), typeof(Task<>))]  // Task and Task<T> are ignored by default
@@ -334,31 +334,31 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 
 # Read-Only Variable Analysis
 
-This analyzer helps keep local values and parameters immutable by flagging write operations.  
+このアナライザーは、書き込み操作を検出してローカル値/引数の不変性維持を支援します。
 
-- Assignment
+- 代入
     - `=`
     - `??=`
     - `= ref`
-    - Deconstruction assignment: `(x, y) = ...` / `(x, var y) = ...`
-        - Deconstruction declaration assignment is allowed: `var (x, y) = ...`
-    - *Note*: Assignment to `out` method parameter is always allowed
-- Increment and decrement
+    - 分解代入: `(x, y) = ...` / `(x, var y) = ...`
+        - 分解「宣言」代入は許可: `var (x, y) = ...`
+    - *注*: メソッド `out` 引数への代入は常に許可
+- インクリメント/デクリメント
     - `++x`, `x++`, `--x`, `x--`
-- Compound assignment
+- 複合代入
     - `+=`, `-=`, `*=`, `/=`, `%=`
     - `&=`, `|=`, `^=`, `<<=`, `>>=`
-- Argument handling
-    - Allowed: Method invocation and object creation (e.g. `Use(Create())`, `Use(new C())`)
-    - Allowed: Anonymous object and array creation (e.g. `Use(new { X = 1 })`, `Use(new[] { 1, 2 })`)
-    - Allowed: `out var x` / `out T x` declaration at call site
-    - Allowed: Root local/parameter name starts with `mut_`
-    - Type checks (`string` is treated as readonly struct)
-        - Reference type argument (except string) is always reported
-        - Struct argument:
-            - Allowed: Callee parameter has `in` modifier
-            - Allowed: Callee parameter has no modifier and struct is `readonly`
-            - Otherwise reported
+- 引数処理
+    - 許可: メソッド呼び出し/オブジェクト生成 (例: `Use(Create())`, `Use(new C())`)
+    - 許可: 匿名オブジェクト/配列生成 (例: `Use(new { X = 1 })`, `Use(new[] { 1, 2 })`)
+    - 許可: 呼び出し側 `out var x` / `out T x` 宣言
+    - 許可: ルートローカル/引数名が `mut_` で始まる
+    - 型チェック (`string` は読み取り専用 struct 相当として扱う)
+        - 参照型引数 (`string` 以外) は常に報告
+        - struct 引数:
+            - 許可: 呼び出し先引数が `in`
+            - 許可: 呼び出し先引数に修飾子なし かつ struct が `readonly`
+            - それ以外は報告
 
 
 ```cs
@@ -429,7 +429,7 @@ class Demo
 ```
 
 > [!NOTE]
-> Member access assignments are reported when rooted at local/parameter (e.g. `foo.Bar.Value = 1` where `foo` is local/parameter), but not when rooted at field.
+> ローカル/引数をルートにしたメンバー代入 (例: `foo.Bar.Value = 1` の `foo`) は報告対象です。フィールドをルートにした場合は報告しません。
 
 
 
@@ -440,31 +440,31 @@ class Demo
 # Annotating / Underlining
 
 > [!IMPORTANT]
-> Underlining analyzer is obsolete: to enable it again, set the preprocessor symbol `STMG_ENABLE_UNDERLINING_ANALYZER` and rebuild.
+> Underlining analyzer は廃止扱いです。再度有効化するには、プリプロセッサシンボル `STMG_ENABLE_UNDERLINING_ANALYZER` を設定して再ビルドしてください。
 
 
-There is optional feature to draw underline on selected types, fields, properties, generic type/method arguments and parameters of method, delegate and lambda function.
+型、フィールド、プロパティ、ジェネリック型/メソッド引数、メソッド/デリゲート/ラムダ引数に下線を描画するオプション機能です。
 
-As of Visual Studio's UX design, `Info` severity diagnostic underlines are drawn only on a few leading chars, not drawn whole marked area. So for workaround, underline on keyword is dashed.
+Visual Studio の仕様上、`Info` 重要度の下線は先頭数文字にしか描画されない場合があります。その回避として、キーワード上の下線は破線で描画されます。
 
 
 ![Draw Underline](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/DrawUnderline.png)
 
 > [!TIP]
-> `!`-starting message will add warning annotation on keyword instead of info diagnostic annotation.
+> メッセージを `!` で始めると、info ではなく warning 注釈としてキーワードに表示します。
 
 
 ## How to Use
 
-To avoid dependency to this analyzer, required attribute for underlining is chosen from builtin `System.ComponentModel` assembly so that syntax is little bit weird.
+このアナライザーへの依存を避けるため、下線用属性には組み込みの `System.ComponentModel` を利用します。そのため記法はやや独特です。
 
-Analyzer is checking identifier keyword in C# source code, not checking actual C# type. `DescriptionAttribute` in C# attribute syntax is the only keyword to draw underline. Omitting `Attribute` or adding namespace are not recognized.
+解析は C# の実型ではなく、ソース上の識別子キーワードを見ます。下線描画対象として認識されるのは C# 属性構文での `DescriptionAttribute` だけです。`Attribute` の省略や名前空間付き指定は認識されません。
 
 
 > [!TIP]
 > `CategoryAttribute` can be used instead of `DescriptionAttribute`.
 >
-> By contrast from Description, CategoryAttribute draws underline only on exact type reference and constructors including `base()`. Any inherited types, variables, fields and properties don't get underline.
+> Description と異なり、`CategoryAttribute` は厳密な型参照とコンストラクター (`base()`) のみに下線を描画します。継承型・変数・フィールド・プロパティには適用されません。
 
 
 ```cs
@@ -496,10 +496,10 @@ public static int Underline_Drawn = 310;
 
 ## Verbosity Control
 
-There are 4 types of underline, line head, line leading, line end and keyword.
+下線には 4 種類あります: line head, line leading, line end, keyword。
 
-By default, static field analyzer will draw most verbose underline.
-You can omit specific type of underline by using `#pragma` preprocessor directive or adding `SuppressMessage` attribute or etc.
+デフォルトでは静的フィールドアナライザーが最も詳細な下線を描画します。
+`#pragma` プリプロセッサディレクティブや `SuppressMessage` 属性などで特定種類の下線を抑制できます。
 
 
 ![Verbosity Control](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/VerbosityControl.png)
@@ -508,9 +508,9 @@ You can omit specific type of underline by using `#pragma` preprocessor directiv
 
 ## Unity Tips
 
-Underlining is achieved by using [Description](https://learn.microsoft.com/dotnet/api/system.componentmodel.descriptionattribute) attribute designed for Visual Studio's visual designer, formerly known as form designer.
+下線表示は、Visual Studio のビジュアルデザイナー (旧 Form Designer) 向けの [Description](https://learn.microsoft.com/dotnet/api/system.componentmodel.descriptionattribute) 属性を使って実現しています。
 
-To remove unnecessary attribute from Unity build, add the following `link.xml` file in Unity project's `Assets` folder.
+Unity ビルドから不要属性を除去するには、Unity プロジェクトの `Assets` フォルダーに次の `link.xml` を追加してください。
 
 ```xml
 <linker>
@@ -519,36 +519,3 @@ To remove unnecessary attribute from Unity build, add the following `link.xml` f
     </assembly>
 </linker>
 ```
-
-
-
-
-
-&nbsp;
-
-# TODO
-
-## Disposable Analyzer
-
-### Known Misdetections
-
-- lambda return statement
-    - `MethodArg(() => DisposableProperty);`
-    - `MethodArg(() => { return DisposableProperty; });`
-- `?:` operator
-    - `DisposableProperty = condition ? null : disposableList[index];` 
-
-
-## Enum Analyzer Features
-- implicit cast suppressor attribute
-    - `[assembly: EnumAnalyzer(SuppressImplicitCast = true)]`
-        - ***DO NOT*** suppress cast to `object` `Enum` `string` `int` or other blittable types
-        - (implicit cast operator is designed function in almost cases. it should be suppressed by default?)
-- allow internal only entry for Enum-like types
-  ```cs
-  sealed class MyEnumLike
-  {
-      public static readonly MyEnumLike PublicEntry = new();
-      internal static readonly MyEnumLike ForDebuggingPurpose = new();
-  }
-  ```

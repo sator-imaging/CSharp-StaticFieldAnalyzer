@@ -8,22 +8,22 @@
 
 
 
-Roslyn-based analyzer to provide diagnostics of static fields and properties initialization and more.
+基于 Roslyn 的分析器，用于诊断静态字段/属性初始化以及其他问题。
 
-- [Static Field Analysis](#static-field-analysis) detects flaky initialization
-    - Wrong order of static field and property declaration
-    - Partial type member reference across files
-    - [Cross-Referencing Problem](#cross-referencing-problem) of static field across type
-- [Immutable/Read-Only Variable Analysis](#read-only-variable-analysis) detects assignment to locals/parameters and writable call-site argument passing
-- [`Enum` Type Analysis](#enum-analyzer-and-code-fix-provider) to prevent user-level value conversion & [more](#kotlin-like-enum-pattern)
-- [`Disposable` Analysis](#disposable-analyzer) to detect missing using statement
-- `struct` parameter-less constructor misuse analysis
-- `TSelf` generic type argument & type constraint analysis
-- File header comment enforcement
-- ~~Annotating and underlining field, property or etc with custom message~~
+- [Static Field Analysis](#static-field-analysis) 检测不稳定初始化
+    - 静态字段与属性声明顺序错误
+    - partial 类型跨文件成员引用
+    - 跨类型静态字段的 [Cross-Referencing Problem](#cross-referencing-problem)
+- [Read-Only Variable Analysis](#read-only-variable-analysis) 检测对局部变量/参数赋值，以及可变参数传递
+- [`Enum` Analyzer and Code Fix Provider](#enum-analyzer-and-code-fix-provider) 防止用户层面的值转换，并支持 [Kotlin-like Enum Pattern](#kotlin-like-enum-pattern)
+- [`Disposable` Analyzer](#disposable-analyzer) 检测缺少 `using` 语句
+- `struct` 无参构造函数误用分析
+- `TSelf` 泛型类型参数与类型约束分析
+- 文件头注释强制规则
+- ~~对字段/属性等进行自定义消息标注与下划线~~
 
 > [!TIP]
-> Find out all diagnostic rules: [**RULES.md**](RULES.md)
+> 查看全部诊断规则: [**RULES.md**](RULES.md)
 
 
 
@@ -33,13 +33,13 @@ Roslyn-based analyzer to provide diagnostics of static fields and properties ini
 
 ## Enum Type Analysis
 
-Restrict both cast from/to integer number! Disallow user-level enum value conversion completely!!
+限制与整数之间的双向转换，彻底禁止用户代码直接进行 enum 值转换。
 
 ![Enum Analyzer](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/EnumAnalyzer.png)
 
 ## `TSelf` Type Argument Analysis
 
-Analyze `TSelf` type argument mismatch for Curiously Recurring Template Pattern (CRTP).
+用于分析 CRTP（Curiously Recurring Template Pattern）中 `TSelf` 类型参数不匹配问题。
 
 ![TSelf Type Argument](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/GenericTypeArgTSelf.png)
 
@@ -48,12 +48,12 @@ Analyze `TSelf` type argument mismatch for Curiously Recurring Template Pattern 
 ## Annotation for Type, Field and Property 💯
 
 > [!IMPORTANT]
-> Underlining analyzer is obsolete: to enable it again, set the preprocessor symbol `STMG_ENABLE_UNDERLINING_ANALYZER` and rebuild.
+> Underlining analyzer 已废弃。如需重新启用，请设置预处理符号 `STMG_ENABLE_UNDERLINING_ANALYZER` 并重新构建。
 
 
-There is fancy extra feature to take your attention while coding in Visual Studio. No more need to use `Obsolete` attribute in case of annotating types, methods, fields and properties.
+这是一个在 Visual Studio 编码时用于增强提示的附加功能。你不再需要通过 `Obsolete` 属性来标注类型、方法、字段和属性。
 
-See [the following section](#annotating--underlining) for details.
+详见 [该章节](#annotating--underlining)。
 
 
 ![Draw Underline](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/DrawUnderline.png)
@@ -75,9 +75,9 @@ See [the following section](#annotating--underlining) for details.
 
 ## Visual Studio 2019 or Earlier
 
-Analyzer is tested on Visual Studio 2022.
+该分析器在 Visual Studio 2022 上已测试。
 
-You could use this analyzer on older versions of Visual Studio. To do so, update `Vsix` project file by following instructions written in memo and build project.
+你也可以在更早版本的 Visual Studio 中使用。请按项目中的说明更新 `Vsix` 项目文件后再构建。
 
 
 
@@ -87,7 +87,7 @@ You could use this analyzer on older versions of Visual Studio. To do so, update
 
 # Unity Integration
 
-This analyzer can be used with Unity 2020.2 or above. See the following page for detail.
+该分析器可用于 Unity 2020.2 及以上版本，详见：
 
 [Unity/README.md](Unity/README.md)
 
@@ -99,9 +99,9 @@ This analyzer can be used with Unity 2020.2 or above. See the following page for
 
 # Cross-Referencing Problem
 
-It is a design bug makes all things complex. Not only that but also it causes initialization error only when meet a specific condition.
+这是一个设计层面的问题，会让初始化逻辑变得复杂，并且只在特定条件下触发初始化错误。
 
-So it must be fixed even if app works correctly at a moment, to prevent simple but complicated potential bug which is hard to find in large code base by hand. As you know static fields will never report error when initialization failed!!
+即使当前看起来运行正常，也必须修复，以避免在大型代码库中难以手工发现的潜在问题。静态字段初始化失败通常不会直接抛出易见错误。
 
 
 ```cs
@@ -135,22 +135,22 @@ public static class Test
 ```
 
 
-**C# Compiler Initialization Sequence**
+**C# 编译器初始化顺序**
 
 - `A.Value = B.Other;`
-    - // 'B' initialization is started by member access
+    - // 访问成员触发 `B` 初始化
     - `B.Other = 620;`
-    - `B.Value = A.Other;`  // BUG: B.Value will be 0 because reading uninitialized `A.Other`
-    - // then, assign `B.Other` value (620) to `A.Value`
-- `A.Other = 310;`  // initialized here!! this value is not assigned to B.Value
+    - `B.Value = A.Other;`  // BUG: 读取未初始化 `A.Other`，结果为 0
+    - // 然后把 `B.Other` 的值 620 赋给 `A.Value`
+- `A.Other = 310;`  // 在这里才初始化，这个值不会回填到 B.Value
 
 
-When reading B value first, initialization order is changed and resulting value is also changed accordingly:
+如果先读取 B 侧，初始化顺序会改变，结果也会随之变化。
 
 - `B.Other = 620;`
 - `B.Value = A.Other;`
-    - // 'A' initialization is started by member access
-    - `A.Value = B.Other;`  // correct: B.Other is initialized before reading value
+    - // 访问成员触发 `A` 初始化
+    - `A.Value = B.Other;`  // 正确: `B.Other` 已先初始化
     - `A.Other = 310;`
 
 
@@ -161,34 +161,34 @@ When reading B value first, initialization order is changed and resulting value 
 
 # `Enum` Analyzer and Code Fix Provider
 
-Enum type handling is really headaching. To make enum operation under control, good to avoid user-level enum handling such as converting to integer or string, parse from string and etc.
+enum 的处理很容易变得混乱。通常应避免在业务代码中直接做与整数/字符串之间的转换与解析。
 
-This analyzer will help centerizing and encapsulating enum handling in app's central enum utility.
+该分析器可帮助你将 enum 处理集中并封装到统一的工具层中。
 
 ![Enum Analyzer](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/EnumAnalyzer.png)
 
 
 ## Excluding Enum Type from Obfuscation
 
-Helpful annotation and code fix for enum types which prevents modification of string representation by obfuscation tool.
+提供注解与代码修复，避免混淆工具修改 enum 的字符串表示。
 
 ![Enum Code Fix](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/EnumCodeFix.png)
 
 > [!NOTE]
-> `Obfuscation` attribute is from C# base library and it does NOT provide feature to obfuscate compiled assembly. It just provides configuration option to obfuscation tools which recognizing this attribute.
+> `Obfuscation` 属性来自 C# 基础库，本身不提供混淆功能。它只是向识别该属性的混淆工具传递配置。
 
 
 ## Kotlin-like Enum Pattern
 
-Analysis to help implementing Kotlin-style enum class.
+用于辅助实现 Kotlin 风格的 enum class 模式。
 
-Here are Enum-like type requirements:
-- `MyEnumLike[]` or `ReadOnlyMemory<MyEnumLike>` field(s) exist
-    - analyzer will check field initializer correctness if name is starting with `Entries` (case-sensitive) or ending with `entries` (case-insensitive)
-- `sealed` modifier on type
-- `private` constructor only
-- `public static` member called `Entries` exists
-- `public bool Equals` method should not be declared/overridden
+类 enum 类型要求：
+- 存在 `MyEnumLike[]` 或 `ReadOnlyMemory<MyEnumLike>` 字段
+    - 字段名以 `Entries` 开头（区分大小写）或以 `entries` 结尾（不区分大小写）时，会检查初始化器正确性
+- 类型带 `sealed` 修饰符
+- 仅允许 `private` 构造函数
+- 存在名为 `Entries` 的 `public static` 成员
+- 不应声明/重写 `public bool Equals`
 
 
 ```cs
@@ -237,9 +237,9 @@ public class EnumLike
 
 ### Benefits of Enum-like Types
 
-<p><details lang="en" --open><summary>Benefits</summary>
+<p><details lang="en" --open><summary>优势</summary>
 
-Kotlin-like enum (algebraic data type) can prevent invalid value creation.
+Kotlin 风格 enum（代数数据类型）可以防止无效值被创建。
 
 ```cs
 var invalid = Activator.CreateInstance(typeof(EnumLike));
@@ -252,7 +252,7 @@ if (EnumLike.A == invalid || EnumLike.B == invalid)
 ```
 
 
-Unfortunately, use in `switch` statement is a bit weird.
+不过在 `switch` 中使用会稍显别扭。
 
 ```cs
 var val = EnumLike.A;
@@ -302,19 +302,19 @@ d = (new object()) as IDisposable;
 ```
 
 
-Analyzer won't show warning in the following condition:
-- instance is created on `return` statement
+以下情况不会报警：
+- 在 `return` 语句中创建实例
     - `return new Disposable();`
-- assign instance to field or property
+- 赋值给字段或属性
     - `m_field = new Disposable();`
-- cast between disposable types
+- 在可释放类型之间转换
     - `var x = myDisposable as IDisposable;`
 
 
 
 ## Suppress `Disposable` Analysis
 
-To suppress analysis for specified types, declare attribute named `DisposableAnalyzerSuppressor` and add it to assembly.
+若需对指定类型抑制分析，声明名为 `DisposableAnalyzerSuppressor` 的特性并加到程序集上。
 
 ```cs
 [assembly: DisposableAnalyzerSuppressor(typeof(Task), typeof(Task<>))]  // Task and Task<T> are ignored by default
@@ -334,31 +334,31 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 
 # Read-Only Variable Analysis
 
-This analyzer helps keep local values and parameters immutable by flagging write operations.  
+该分析器通过标记写操作，帮助保持局部变量和参数的不可变性。
 
-- Assignment
+- 赋值
     - `=`
     - `??=`
     - `= ref`
-    - Deconstruction assignment: `(x, y) = ...` / `(x, var y) = ...`
-        - Deconstruction declaration assignment is allowed: `var (x, y) = ...`
-    - *Note*: Assignment to `out` method parameter is always allowed
-- Increment and decrement
+    - 解构赋值: `(x, y) = ...` / `(x, var y) = ...`
+        - 允许解构声明赋值: `var (x, y) = ...`
+    - *注*: 对 `out` 参数赋值始终允许
+- 自增/自减
     - `++x`, `x++`, `--x`, `x--`
-- Compound assignment
+- 复合赋值
     - `+=`, `-=`, `*=`, `/=`, `%=`
     - `&=`, `|=`, `^=`, `<<=`, `>>=`
-- Argument handling
-    - Allowed: Method invocation and object creation (e.g. `Use(Create())`, `Use(new C())`)
-    - Allowed: Anonymous object and array creation (e.g. `Use(new { X = 1 })`, `Use(new[] { 1, 2 })`)
-    - Allowed: `out var x` / `out T x` declaration at call site
-    - Allowed: Root local/parameter name starts with `mut_`
-    - Type checks (`string` is treated as readonly struct)
-        - Reference type argument (except string) is always reported
-        - Struct argument:
-            - Allowed: Callee parameter has `in` modifier
-            - Allowed: Callee parameter has no modifier and struct is `readonly`
-            - Otherwise reported
+- 参数处理
+    - 允许: 方法调用和对象创建（如 `Use(Create())`, `Use(new C())`）
+    - 允许: 匿名对象和数组创建（如 `Use(new { X = 1 })`, `Use(new[] { 1, 2 })`）
+    - 允许: 调用点 `out var x` / `out T x` 声明
+    - 允许: 根局部变量/参数名以 `mut_` 开头
+    - 类型检查（`string` 按只读 struct 处理）
+        - 引用类型参数（除 `string` 外）总是报告
+        - struct 参数:
+            - 允许: 被调用参数带 `in`
+            - 允许: 被调用参数无修饰符且 struct 为 `readonly`
+            - 否则报告
 
 
 ```cs
@@ -429,7 +429,7 @@ class Demo
 ```
 
 > [!NOTE]
-> Member access assignments are reported when rooted at local/parameter (e.g. `foo.Bar.Value = 1` where `foo` is local/parameter), but not when rooted at field.
+> 当赋值根节点是局部变量/参数时会被报告（例如 `foo.Bar.Value = 1` 中的 `foo`）。根节点是字段时不会报告。
 
 
 
@@ -440,31 +440,31 @@ class Demo
 # Annotating / Underlining
 
 > [!IMPORTANT]
-> Underlining analyzer is obsolete: to enable it again, set the preprocessor symbol `STMG_ENABLE_UNDERLINING_ANALYZER` and rebuild.
+> Underlining analyzer 已废弃。如需重新启用，请设置预处理符号 `STMG_ENABLE_UNDERLINING_ANALYZER` 并重新构建。
 
 
-There is optional feature to draw underline on selected types, fields, properties, generic type/method arguments and parameters of method, delegate and lambda function.
+这是一个可选功能，可在类型、字段、属性、泛型类型/方法参数，以及方法/委托/Lambda 参数上绘制下划线。
 
-As of Visual Studio's UX design, `Info` severity diagnostic underlines are drawn only on a few leading chars, not drawn whole marked area. So for workaround, underline on keyword is dashed.
+由于 Visual Studio 的 UX 设计，`Info` 级别诊断下划线通常只显示在前几个字符上，而不是整个标记区域。为规避此问题，关键字处会绘制虚线下划线。
 
 
 ![Draw Underline](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/DrawUnderline.png)
 
 > [!TIP]
-> `!`-starting message will add warning annotation on keyword instead of info diagnostic annotation.
+> 消息以 `!` 开头时，会在关键字上添加 warning 标注，而不是 info 标注。
 
 
 ## How to Use
 
-To avoid dependency to this analyzer, required attribute for underlining is chosen from builtin `System.ComponentModel` assembly so that syntax is little bit weird.
+为避免对该分析器产生依赖，下划线功能所需特性选用了内置的 `System.ComponentModel`，因此语法看起来会有些特殊。
 
-Analyzer is checking identifier keyword in C# source code, not checking actual C# type. `DescriptionAttribute` in C# attribute syntax is the only keyword to draw underline. Omitting `Attribute` or adding namespace are not recognized.
+分析器检查的是 C# 源码中的关键字标识，而非真实类型。只有在 C# 特性语法中使用 `DescriptionAttribute` 才会触发下划线。省略 `Attribute` 后缀或添加命名空间都不会被识别。
 
 
 > [!TIP]
 > `CategoryAttribute` can be used instead of `DescriptionAttribute`.
 >
-> By contrast from Description, CategoryAttribute draws underline only on exact type reference and constructors including `base()`. Any inherited types, variables, fields and properties don't get underline.
+> 与 Description 不同，`CategoryAttribute` 只会在精确类型引用和构造函数（含 `base()`）上绘制下划线。继承类型、变量、字段和属性不会绘制。
 
 
 ```cs
@@ -496,10 +496,10 @@ public static int Underline_Drawn = 310;
 
 ## Verbosity Control
 
-There are 4 types of underline, line head, line leading, line end and keyword.
+下划线共有 4 类：line head、line leading、line end 和 keyword。
 
-By default, static field analyzer will draw most verbose underline.
-You can omit specific type of underline by using `#pragma` preprocessor directive or adding `SuppressMessage` attribute or etc.
+默认情况下，静态字段分析器会绘制最详细的下划线。
+你可以通过 `#pragma` 预处理指令、`SuppressMessage` 特性等方式屏蔽指定类型的下划线。
 
 
 ![Verbosity Control](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/VerbosityControl.png)
@@ -508,9 +508,9 @@ You can omit specific type of underline by using `#pragma` preprocessor directiv
 
 ## Unity Tips
 
-Underlining is achieved by using [Description](https://learn.microsoft.com/dotnet/api/system.componentmodel.descriptionattribute) attribute designed for Visual Studio's visual designer, formerly known as form designer.
+下划线功能基于 [Description](https://learn.microsoft.com/dotnet/api/system.componentmodel.descriptionattribute) 特性实现，该特性原本用于 Visual Studio 的可视化设计器（旧称 Form Designer）。
 
-To remove unnecessary attribute from Unity build, add the following `link.xml` file in Unity project's `Assets` folder.
+若要从 Unity 构建中移除不必要特性，请在 Unity 项目的 `Assets` 目录添加如下 `link.xml`：
 
 ```xml
 <linker>
@@ -519,36 +519,3 @@ To remove unnecessary attribute from Unity build, add the following `link.xml` f
     </assembly>
 </linker>
 ```
-
-
-
-
-
-&nbsp;
-
-# TODO
-
-## Disposable Analyzer
-
-### Known Misdetections
-
-- lambda return statement
-    - `MethodArg(() => DisposableProperty);`
-    - `MethodArg(() => { return DisposableProperty; });`
-- `?:` operator
-    - `DisposableProperty = condition ? null : disposableList[index];` 
-
-
-## Enum Analyzer Features
-- implicit cast suppressor attribute
-    - `[assembly: EnumAnalyzer(SuppressImplicitCast = true)]`
-        - ***DO NOT*** suppress cast to `object` `Enum` `string` `int` or other blittable types
-        - (implicit cast operator is designed function in almost cases. it should be suppressed by default?)
-- allow internal only entry for Enum-like types
-  ```cs
-  sealed class MyEnumLike
-  {
-      public static readonly MyEnumLike PublicEntry = new();
-      internal static readonly MyEnumLike ForDebuggingPurpose = new();
-  }
-  ```
