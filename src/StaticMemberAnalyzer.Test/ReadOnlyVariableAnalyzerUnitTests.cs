@@ -1139,6 +1139,73 @@ namespace Test
         }
 
         [TestMethod]
+        public async Task LiteralArgument_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        static void UseInt(int value) { }
+        static void UseString(string value) { }
+
+        void M()
+        {
+            UseInt(0);
+            UseString(""text"");
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task DefaultArgument_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        static void UseInt(int value) { }
+        static void UseString(string value) { }
+
+        void M()
+        {
+            UseInt(default);
+            UseString(default);
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task NullArgument_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        static void Use(object value) { }
+
+        void M()
+        {
+            Use(null);
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
         public async Task RuleSuppressed_NoDiagnostic()
         {
             var test = @"
