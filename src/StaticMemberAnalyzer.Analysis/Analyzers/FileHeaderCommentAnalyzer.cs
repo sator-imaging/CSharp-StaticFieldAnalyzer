@@ -54,11 +54,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
         private static void Analyze(SyntaxTreeAnalysisContext context)
         {
-            if (context.Tree.FilePath.IndexOf("test", System.StringComparison.Ordinal) >= 0)
-            {
-                return;
-            }
-
             var root = context.Tree.GetRoot(context.CancellationToken);
             if (root.FullSpan.IsEmpty)
             {
