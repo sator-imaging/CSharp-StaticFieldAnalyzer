@@ -83,6 +83,33 @@ namespace Test
             await VerifyWithRuleEnabledAsync(test, expected);
         }
 
+        [TestMethod]
+        public async Task WhileStatementBody_Assignment_ReportsDiagnostic()
+        {
+            var test = @"
+using System.IO;
+namespace Test
+{
+    class Program
+    {
+        void M(Stream stream)
+        {
+            int read;
+            while ((read = stream.Read(new byte[0], 0, 0)) > 0)
+            {
+                {|#0:read|} = 0;
+            }
+        }
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("read");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
         private static async Task VerifyWithRuleEnabledAsync(string source, params DiagnosticResult[] expected)
         {
             var test = new VerifyCS.Test
