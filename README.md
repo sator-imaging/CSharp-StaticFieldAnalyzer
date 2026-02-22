@@ -1,8 +1,8 @@
 [![NuGet](https://img.shields.io/nuget/vpre/SatorImaging.StaticMemberAnalyzer)](https://www.nuget.org/packages/SatorImaging.StaticMemberAnalyzer)
 &nbsp;
-[![🇺🇸](https://img.shields.io/badge/🇺🇸-English-789)](./README.md)
 [![🇯🇵](https://img.shields.io/badge/🇯🇵-日本語-789)](./README.ja.md)
 [![🇨🇳](https://img.shields.io/badge/🇨🇳-简体中文-789)](./README.zh-CN.md)
+[![🇺🇸](https://img.shields.io/badge/🇺🇸-English-789)](./README.md)
 
 
 
