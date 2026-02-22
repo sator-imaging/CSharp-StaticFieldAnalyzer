@@ -6,6 +6,8 @@
 #undef STMG_DEBUG_MESSAGE
 #endif
 
+#if STMG_ENABLE_UNDERLINING_ANALYZER
+
 #define STMG_USE_ATTRIBUTE_CACHE
 #define STMG_USE_DESCRIPTION_CACHE
 
@@ -25,9 +27,7 @@ using System.Threading;
 
 namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 {
-#if STMG_ENABLE_UNDERLINING_ANALYZER
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-#endif
     public sealed class UnderliningAnalyzer : DiagnosticAnalyzer
     {
         #region     /* =      DESCRIPTOR      = */
@@ -1193,3 +1193,5 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
     }
 }
+
+#endif
