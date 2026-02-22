@@ -20,7 +20,7 @@ using System.Threading;
 namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class StaticMemberAnalyzer : DiagnosticAnalyzer
+    public sealed class FlakyInitializationAnalyzer : DiagnosticAnalyzer
     {
         #region     /* =      DESCRIPTOR      = */
 
