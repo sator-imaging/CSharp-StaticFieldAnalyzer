@@ -384,7 +384,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             return value is IInvocationOperation
                 or IObjectCreationOperation
                 or IAnonymousObjectCreationOperation
-                or IArrayCreationOperation;
+                or IArrayCreationOperation
+                or ILiteralOperation
+                or IDefaultValueOperation;
         }
     }
 }
