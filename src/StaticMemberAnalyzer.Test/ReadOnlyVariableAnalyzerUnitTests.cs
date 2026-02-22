@@ -1335,6 +1335,64 @@ namespace Test
         }
 
         [TestMethod]
+        public async Task PropertyAccessors_MutPrefix_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        public int MyProp
+        {
+            get
+            {
+                int mut_x = 0;
+                mut_x = 1;
+                return mut_x;
+            }
+            set
+            {
+                int mut_y = 0;
+                mut_y = value;
+            }
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task IndexerAccessors_MutPrefix_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        public int this[int index]
+        {
+            get
+            {
+                int mut_x = 0;
+                mut_x = index;
+                return mut_x;
+            }
+            set
+            {
+                int mut_y = 0;
+                mut_y = value;
+            }
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
         public async Task RuleSuppressed_NoDiagnostic()
         {
             var test = @"
