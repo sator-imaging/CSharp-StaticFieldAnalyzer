@@ -128,7 +128,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 return;
             }
 
-            ReportIfDisallowedLocal(context, op.Target);
+ReportIfDisallowedLocal(context, target);
         }
 
         private static void AnalyzeArgumentOperation(OperationAnalysisContext context)
