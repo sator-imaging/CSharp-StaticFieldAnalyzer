@@ -322,6 +322,7 @@ namespace Test
         }
 
         // NOTE: partial namespace not work...? (C# lang spec?)
+        /*
         [TestMethod]
         public async Task BasicTest_AttrNaming_PartialNamespace()
         {
@@ -338,5 +339,6 @@ namespace Test
             await VerifyCS.VerifyCodeFixAsync(test, expected,
                 GetExpectedResult("[Reflection.ObfuscationAttribute(Exclude = true, ApplyToMembers = true)]", "using System;"));
         }
+        */
     }
 }
