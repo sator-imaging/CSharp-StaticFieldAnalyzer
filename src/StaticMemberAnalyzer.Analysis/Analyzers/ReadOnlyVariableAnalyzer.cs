@@ -16,7 +16,7 @@ using System.Collections.Immutable;
 namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class ReadOnlyLocalsAnalyzer : DiagnosticAnalyzer
+    public sealed class ReadOnlyVariableAnalyzer : DiagnosticAnalyzer
     {
         public const string RuleId_ReadOnlyLocal = "SMA0060";
         public const string RuleId_ReadOnlyParameter = "SMA0061";
