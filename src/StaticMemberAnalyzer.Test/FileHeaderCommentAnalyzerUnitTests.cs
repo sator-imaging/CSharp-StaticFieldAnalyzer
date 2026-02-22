@@ -135,7 +135,7 @@ namespace Test
         [TestMethod]
         public async Task TestFileNameContainsTest()
         {
-            var test = @"using System;
+            var test = @"{|#0:using System;|}
 
 namespace Test
 {
@@ -143,11 +143,13 @@ namespace Test
 }
 ";
 
+            var expected = VerifyCS.Diagnostic(FileHeaderCommentAnalyzer.RuleId_MissingFileHeaderComment).WithSpan("test.cs", 1, 1, 1, 14);
             var verifier = new CSharpAnalyzerVerifier<FileHeaderCommentAnalyzer>.Test
             {
                 TestCode = test,
                 TestBehaviors = TestBehaviors.SkipSuppressionCheck,
             };
+            verifier.ExpectedDiagnostics.Add(expected);
             verifier.SolutionTransforms.Add((solution, projectId) =>
             {
                 var project = solution.GetProject(projectId);
