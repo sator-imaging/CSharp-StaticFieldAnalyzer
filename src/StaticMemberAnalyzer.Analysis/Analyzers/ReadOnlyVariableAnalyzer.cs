@@ -64,61 +64,76 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
             context.EnableConcurrentExecution();
 
-            context.RegisterOperationAction(AnalyzeSimpleAssignment, OperationKind.SimpleAssignment);
-            context.RegisterOperationAction(AnalyzeCoalesceAssignment, OperationKind.CoalesceAssignment);
-            context.RegisterOperationAction(AnalyzeCompoundAssignment, OperationKind.CompoundAssignment);
-            context.RegisterOperationAction(AnalyzeIncrementOrDecrement, OperationKind.Increment, OperationKind.Decrement);
-            context.RegisterOperationAction(AnalyzeDeconstructionAssignment, OperationKind.DeconstructionAssignment);
-            context.RegisterOperationAction(AnalyzeArgumentOperation, OperationKind.Argument);
+            context.RegisterOperationAction(AnalyzeMethodBody,
+                OperationKind.MethodBody,
+                OperationKind.ConstructorBody,
+                OperationKind.AnonymousFunction,
+                OperationKind.LocalFunction);
         }
 
-        private static void AnalyzeSimpleAssignment(OperationAnalysisContext context)
+        private static void AnalyzeMethodBody(OperationAnalysisContext context)
         {
-            if (context.Operation is not ISimpleAssignmentOperation op)
-            {
-                return;
-            }
+            AnalyzeBody(context, context.Operation);
+        }
 
+        private static void AnalyzeBody(OperationAnalysisContext context, IOperation body)
+        {
+            foreach (var op in body.Descendants())
+            {
+                if (IsInsideNestedBody(op, body))
+                {
+                    continue;
+                }
+
+                if (op is ISimpleAssignmentOperation simple)
+                {
+                    AnalyzeSimpleAssignment(context, simple);
+                }
+                else if (op is ICompoundAssignmentOperation compound)
+                {
+                    AnalyzeCompoundAssignment(context, compound);
+                }
+                else if (op is ICoalesceAssignmentOperation coalesce)
+                {
+                    AnalyzeCoalesceAssignment(context, coalesce);
+                }
+                else if (op is IIncrementOrDecrementOperation incrementOrDecrement)
+                {
+                    AnalyzeIncrementOrDecrement(context, incrementOrDecrement);
+                }
+                else if (op is IDeconstructionAssignmentOperation deconstruction)
+                {
+                    AnalyzeDeconstructionAssignment(context, deconstruction);
+                }
+                else if (op is IArgumentOperation argument)
+                {
+                    AnalyzeArgumentOperation(context, argument);
+                }
+            }
+        }
+
+        private static void AnalyzeSimpleAssignment(OperationAnalysisContext context, ISimpleAssignmentOperation op)
+        {
             ReportIfDisallowedLocal(context, op.Target);
         }
 
-        private static void AnalyzeCompoundAssignment(OperationAnalysisContext context)
+        private static void AnalyzeCompoundAssignment(OperationAnalysisContext context, ICompoundAssignmentOperation op)
         {
-            if (context.Operation is not ICompoundAssignmentOperation op)
-            {
-                return;
-            }
-
             ReportIfDisallowedLocal(context, op.Target);
         }
 
-        private static void AnalyzeCoalesceAssignment(OperationAnalysisContext context)
+        private static void AnalyzeCoalesceAssignment(OperationAnalysisContext context, ICoalesceAssignmentOperation op)
         {
-            if (context.Operation is not ICoalesceAssignmentOperation op)
-            {
-                return;
-            }
-
             ReportIfDisallowedLocal(context, op.Target);
         }
 
-        private static void AnalyzeIncrementOrDecrement(OperationAnalysisContext context)
+        private static void AnalyzeIncrementOrDecrement(OperationAnalysisContext context, IIncrementOrDecrementOperation op)
         {
-            if (context.Operation is not IIncrementOrDecrementOperation op)
-            {
-                return;
-            }
-
             ReportIfDisallowedLocal(context, op.Target);
         }
 
-        private static void AnalyzeDeconstructionAssignment(OperationAnalysisContext context)
+        private static void AnalyzeDeconstructionAssignment(OperationAnalysisContext context, IDeconstructionAssignmentOperation op)
         {
-            if (context.Operation is not IDeconstructionAssignmentOperation op)
-            {
-                return;
-            }
-
             var target = op.Target is IConversionOperation conversion
                 ? conversion.Operand
                 : op.Target;
@@ -131,14 +146,26 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             ReportIfDisallowedLocal(context, target);
         }
 
-        private static void AnalyzeArgumentOperation(OperationAnalysisContext context)
+        private static void AnalyzeArgumentOperation(OperationAnalysisContext context, IArgumentOperation argument)
         {
-            if (context.Operation is not IArgumentOperation argument)
-            {
-                return;
-            }
-
             AnalyzeArgument(context, argument);
+        }
+
+        private static bool IsInsideNestedBody(IOperation op, IOperation currentBody)
+        {
+            var parent = op.Parent;
+            while (parent != null && parent != currentBody)
+            {
+                if (parent is IMethodBodyOperation
+                    or IConstructorBodyOperation
+                    or IAnonymousFunctionOperation
+                    or ILocalFunctionOperation)
+                {
+                    return true;
+                }
+                parent = parent.Parent;
+            }
+            return false;
         }
 
         private static void ReportIfDisallowedLocal(OperationAnalysisContext context, IOperation target)
