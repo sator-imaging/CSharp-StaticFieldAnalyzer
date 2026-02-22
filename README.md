@@ -10,7 +10,7 @@
 
 Roslyn-based analyzer to provide diagnostics of static fields and properties initialization and more.
 
-- [Static Field Analysis](#static-field-analysis) detects flaky initialization
+- [Flaky Initialization Analysis](#flaky-initialization-analysis) detects flaky initialization
     - Wrong order of static field and property declaration
     - Partial type member reference across files
     - [Cross-Referencing Problem](#cross-referencing-problem) of static field across type
@@ -27,7 +27,7 @@ Roslyn-based analyzer to provide diagnostics of static fields and properties ini
 
 
 
-## Static Field Analysis
+## Flaky Initialization Analysis
 
 ![Analyzer in Action](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/InAction.gif)
 

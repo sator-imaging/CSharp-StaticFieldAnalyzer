@@ -10,13 +10,13 @@
 
 Roslyn ベースのアナライザーです。静的フィールド/プロパティ初期化やその他の問題を診断します。
 
-- [Static Field Analysis](#static-field-analysis) で不安定な初期化を検出
+- [初期化の不安定性解析](#初期化の不安定性解析) で不安定な初期化を検出
     - 静的フィールド/プロパティ宣言順の誤り
     - partial 型でのファイル跨ぎ参照
-    - 型を跨ぐ静的フィールドの [Cross-Referencing Problem](#cross-referencing-problem)
-- [Read-Only Variable Analysis](#read-only-variable-analysis) でローカル/引数への代入と可変な引数受け渡しを検出
-- [`Enum` Analyzer and Code Fix Provider](#enum-analyzer-and-code-fix-provider) でユーザー側の値変換を禁止し、[Kotlin-like Enum Pattern](#kotlin-like-enum-pattern) も検査
-- [`Disposable` Analyzer](#disposable-analyzer) で `using` の欠落を検出
+    - 型を跨ぐ静的フィールドの [相互参照問題](#相互参照問題)
+- [読み取り専用変数解析](#読み取り専用変数解析) でローカル/引数への代入と可変な引数受け渡しを検出
+- [`Enum` アナライザーとコード修正プロバイダー](#enum-アナライザーとコード修正プロバイダー) でユーザー側の値変換を禁止し、[Kotlin 風 Enum パターン](#kotlin-風-enum-パターン) も検査
+- [Disposable アナライザー](#disposable-アナライザー) で `using` の欠落を検出
 - `struct` の引数なしコンストラクター誤用解析
 - `TSelf` ジェネリック型引数と型制約の解析
 - ファイルヘッダーコメントの強制
@@ -27,17 +27,17 @@ Roslyn ベースのアナライザーです。静的フィールド/プロパテ
 
 
 
-## Static Field Analysis
+## 初期化の不安定性解析
 
 ![Analyzer in Action](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/InAction.gif)
 
-## Enum Type Analysis
+## `Enum` 型解析
 
 整数との相互キャストを制限します。ユーザーコードでの enum 値変換を全面的に禁止できます。
 
 ![Enum Analyzer](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/EnumAnalyzer.png)
 
-## `TSelf` Type Argument Analysis
+## `TSelf` 型引数解析
 
 CRTP (Curiously Recurring Template Pattern) 向けに `TSelf` 型引数の不一致を解析します。
 
@@ -45,7 +45,7 @@ CRTP (Curiously Recurring Template Pattern) 向けに `TSelf` 型引数の不一
 
 
 
-## Annotation for Type, Field and Property 💯
+## 型・フィールド・プロパティへの注釈 💯
 
 > [!IMPORTANT]
 > Underlining analyzer は廃止扱いです。再度有効化するには、プリプロセッサシンボル `STMG_ENABLE_UNDERLINING_ANALYZER` を設定して再ビルドしてください。
@@ -53,7 +53,7 @@ CRTP (Curiously Recurring Template Pattern) 向けに `TSelf` 型引数の不一
 
 Visual Studio でのコーディング時に注意を引く追加機能です。型/メソッド/フィールド/プロパティへの注釈に `Obsolete` 属性を使う必要がなくなります。
 
-[以下のセクション](#annotating--underlining) で詳細を確認できます。
+[以下のセクション](#注釈--下線表示) で詳細を確認できます。
 
 
 ![Draw Underline](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/DrawUnderline.png)
@@ -64,7 +64,7 @@ Visual Studio でのコーディング時に注意を引く追加機能です。
 
 &nbsp;
 
-# Installation
+# インストール
 
 - NuGet
 	- https://www.nuget.org/packages/SatorImaging.StaticMemberAnalyzer
@@ -73,7 +73,7 @@ Visual Studio でのコーディング時に注意を引く追加機能です。
       ```
 
 
-## Visual Studio 2019 or Earlier
+## Visual Studio 2019 以前
 
 このアナライザーは Visual Studio 2022 でテストされています。
 
@@ -85,7 +85,7 @@ Visual Studio でのコーディング時に注意を引く追加機能です。
 
 &nbsp;
 
-# Unity Integration
+# Unity 連携
 
 このアナライザーは Unity 2020.2 以降で利用できます。詳細は次のページを参照してください。
 
@@ -97,7 +97,7 @@ Visual Studio でのコーディング時に注意を引く追加機能です。
 
 &nbsp;
 
-# Cross-Referencing Problem
+# 相互参照問題
 
 これは設計上の問題で、複雑さを増やすだけでなく特定条件下でのみ初期化エラーを引き起こします。
 
@@ -159,7 +159,7 @@ public static class Test
 
 &nbsp;
 
-# `Enum` Analyzer and Code Fix Provider
+# `Enum` アナライザーとコード修正プロバイダー
 
 enum の扱いは複雑になりがちです。整数/文字列への変換や文字列からの解析などをユーザーコードで直接行わないようにすると、運用を一元化しやすくなります。
 
@@ -168,7 +168,7 @@ enum の扱いは複雑になりがちです。整数/文字列への変換や�
 ![Enum Analyzer](https://raw.githubusercontent.com/sator-imaging/CSharp-StaticFieldAnalyzer/main/assets/EnumAnalyzer.png)
 
 
-## Excluding Enum Type from Obfuscation
+## 難読化から `Enum` 型を除外
 
 難読化ツールによる文字列表現の変更を防ぐための注釈とコード修正を提供します。
 
@@ -178,7 +178,7 @@ enum の扱いは複雑になりがちです。整数/文字列への変換や�
 > `Obfuscation` 属性は C# 標準ライブラリの属性であり、単体で難読化機能を提供するものではありません。対応ツールに設定を伝えるためのものです。
 
 
-## Kotlin-like Enum Pattern
+## Kotlin 風 Enum パターン
 
 Kotlin 風 enum class の実装を支援する解析です。
 
@@ -235,7 +235,7 @@ public class EnumLike
 ```
 
 
-### Benefits of Enum-like Types
+### Enum ライク型の利点
 
 <p><details --open><summary>利点</summary>
 
@@ -291,7 +291,7 @@ switch (val)
 
 &nbsp;
 
-# Disposable Analyzer
+# Disposable アナライザー
 
 ```cs
 var d = new Disposable();
@@ -312,7 +312,7 @@ d = (new object()) as IDisposable;
 
 
 
-## Suppress `Disposable` Analysis
+## `Disposable` 解析の抑制
 
 特定型の解析を抑制するには、`DisposableAnalyzerSuppressor` という属性を定義し、アセンブリに付与します。
 
@@ -332,7 +332,7 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 
 &nbsp;
 
-# Read-Only Variable Analysis
+# 読み取り専用変数解析
 
 このアナライザーは、書き込み操作を検出してローカル値/引数の不変性維持を支援します。
 
@@ -437,7 +437,7 @@ class Demo
 
 &nbsp;
 
-# Annotating / Underlining
+# 注釈 / 下線表示
 
 > [!IMPORTANT]
 > Underlining analyzer は廃止扱いです。再度有効化するには、プリプロセッサシンボル `STMG_ENABLE_UNDERLINING_ANALYZER` を設定して再ビルドしてください。
@@ -454,7 +454,7 @@ Visual Studio の仕様上、`Info` 重要度の下線は先頭数文字にし�
 > メッセージを `!` で始めると、info ではなく warning 注釈としてキーワードに表示します。
 
 
-## How to Use
+## 使い方
 
 このアナライザーへの依存を避けるため、下線用属性には組み込みの `System.ComponentModel` を利用します。そのため記法はやや独特です。
 
@@ -494,7 +494,7 @@ public static int Underline_Drawn = 310;
 
 
 
-## Verbosity Control
+## 詳細度の制御
 
 下線には 4 種類あります: line head, line leading, line end, keyword。
 
@@ -506,7 +506,7 @@ public static int Underline_Drawn = 310;
 
 
 
-## Unity Tips
+## Unity 向けヒント
 
 下線表示は、Visual Studio のビジュアルデザイナー (旧 Form Designer) 向けの [Description](https://learn.microsoft.com/dotnet/api/system.componentmodel.descriptionattribute) 属性を使って実現しています。
 
