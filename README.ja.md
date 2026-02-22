@@ -519,3 +519,36 @@ Unity ビルドから不要属性を除去するには、Unity プロジェク�
     </assembly>
 </linker>
 ```
+
+
+
+
+
+&nbsp;
+
+# TODO
+
+## Disposable アナライザー
+
+### 既知の誤検出
+
+- ラムダの `return` 文
+    - `MethodArg(() => DisposableProperty);`
+    - `MethodArg(() => { return DisposableProperty; });`
+- `?:` 演算子
+    - `DisposableProperty = condition ? null : disposableList[index];` 
+
+
+## Enum アナライザー機能
+- 暗黙的キャスト抑制属性
+    - `[assembly: EnumAnalyzer(SuppressImplicitCast = true)]`
+        - `object` `Enum` `string` `int` や他の blittable 型へのキャストは***抑制しないこと***
+        - （暗黙的キャスト演算子は多くの場合で設計意図があるため、既定で抑制すべき？）
+- Enum ライク型で internal 専用エントリを許可
+  ```cs
+  sealed class MyEnumLike
+  {
+      public static readonly MyEnumLike PublicEntry = new();
+      internal static readonly MyEnumLike ForDebuggingPurpose = new();
+  }
+  ```
