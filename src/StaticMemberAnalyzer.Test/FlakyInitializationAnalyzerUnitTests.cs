@@ -1,11 +1,15 @@
+// Licensed under the MIT License
+// https://github.com/sator-imaging/CSharp-StaticFieldAnalyzer
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers;
+using System.Threading;
 using System.Threading.Tasks;
-using VerifyCS = StaticMemberAnalyzer.Test.CSharpAnalyzerVerifier<
-    SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers.FlakyInitializationAnalyzer>;
 
 namespace SatorImaging.StaticMemberAnalyzer.Test
 {
+    using VerifyCS = global::StaticMemberAnalyzer.Test.CSharpAnalyzerVerifier<FlakyInitializationAnalyzer>;
+
     [TestClass]
     public class FlakyInitializationAnalyzerUnitTests
     {
@@ -46,6 +50,39 @@ namespace Test
             var expected0 = VerifyCS.Diagnostic(FlakyInitializationAnalyzer.RuleId_CrossRef).WithLocation(0).WithArguments("C2", "C1");
             var expected1 = VerifyCS.Diagnostic(FlakyInitializationAnalyzer.RuleId_CrossRef).WithLocation(1).WithArguments("C1", "C2");
             await VerifyCS.VerifyAnalyzerAsync(test, expected0, expected1);
+        }
+
+        [TestMethod]
+        public async Task SMA0003_StaticMemberInAnotherFile()
+        {
+            var source1 = @"
+namespace Test
+{
+    public partial class CTest
+    {
+        public static int A = {|#0:B|};
+    }
+}
+";
+            var source2 = @"
+namespace Test
+{
+    public partial class CTest
+    {
+        public static int B = 10;
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(FlakyInitializationAnalyzer.RuleId_AnotherFile).WithLocation(0).WithArguments("B");
+
+            var test = new VerifyCS.Test
+            {
+                TestCode = source1,
+            };
+            test.TestState.Sources.Add(source2);
+
+            test.ExpectedDiagnostics.Add(expected);
+            await test.RunAsync(CancellationToken.None);
         }
 
         [TestMethod]
