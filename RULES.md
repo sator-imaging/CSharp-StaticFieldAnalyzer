@@ -51,6 +51,13 @@ Resource suffix: `_Title` `_Description` `__MD_TITLE__`
 |---------|--------------------------------------------|-------------
 | SMA0050 | Missing File Header Comment                | File should start with a header comment such as `//` or `/*`.
 
+## Read-Only Variable Analysis
+| ID      | Diagnostic                                 | Description
+|---------|--------------------------------------------|-------------
+| SMA0060 | Avoid Reassigning Locals                   | Avoid assignments to locals unless the local is intentionally mutable.
+| SMA0061 | Avoid Reassigning Parameters               | Avoid assignments to parameters unless the parameter is intentionally mutable.
+| SMA0062 | Avoid Passing Writable Variables to Calls  | Avoid passing local/parameter-rooted variables to method/indexer calls in writable forms unless explicitly mutable.
+
 ## [Obsolete] Annotating and Underling
 | ID      | Diagnostic                                 | Description
 |---------|--------------------------------------------|-------------
