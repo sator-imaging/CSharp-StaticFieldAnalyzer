@@ -455,7 +455,7 @@
     <value>Avoid Reassigning Locals</value>
   </data>
   <data name="SMA0060_MessageFormat" xml:space="preserve">
-    <value>Local '{0}' is assigned (ReadOnlyLocal)</value>
+    <value>Cannot modify immutable local '{0}'. Rename it to 'mut_{0}' to make it mutable. (ReadOnlyLocal)</value>
   </data>
   <data name="SMA0060_Description" xml:space="preserve">
     <value>Avoid assignments to locals unless the local is intentionally mutable.</value>
@@ -464,7 +464,7 @@
     <value>Avoid Reassigning Parameters</value>
   </data>
   <data name="SMA0061_MessageFormat" xml:space="preserve">
-    <value>Parameter '{0}' is assigned (ReadOnlyParameter)</value>
+    <value>Cannot modify immutable parameter '{0}'. Rename it to 'mut_{0}' to make it mutable. (ReadOnlyParameter)</value>
   </data>
   <data name="SMA0061_Description" xml:space="preserve">
     <value>Avoid assignments to parameters unless the parameter is intentionally mutable.</value>
@@ -473,7 +473,7 @@
     <value>Avoid Passing Writable Variables to Calls</value>
   </data>
   <data name="SMA0062_MessageFormat" xml:space="preserve">
-    <value>Variable '{0}' is passed to call in writable form (ReadOnlyArgument)</value>
+    <value>Cannot pass immutable variable '{0}' as a writable argument (ReadOnlyArgument)</value>
   </data>
   <data name="SMA0062_Description" xml:space="preserve">
     <value>Avoid passing local/parameter-rooted variables to method/indexer calls in writable forms unless explicitly mutable.</value>
