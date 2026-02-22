@@ -348,7 +348,7 @@ This analyzer helps keep local values and parameters immutable by flagging write
     - Allowed: `out var x` / `out T x` declaration at call site
     - Allowed: Root local/parameter name starts with `mut_`
     - Type checks (`string` is treated as readonly struct)
-        - Reference type argument is always reported
+        - Reference type argument (except string) is always reported
         - Struct argument:
             - Allowed: Callee parameter has `in` modifier
             - Allowed: Callee parameter has no modifier and struct is `readonly`
