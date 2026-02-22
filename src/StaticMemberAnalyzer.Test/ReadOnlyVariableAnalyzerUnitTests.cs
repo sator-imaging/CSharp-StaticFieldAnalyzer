@@ -1208,6 +1208,191 @@ namespace Test
         }
 
         [TestMethod]
+        public async Task PropertyAccessors_LocalAssignment_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        public int MyProp
+        {
+            get
+            {
+                int x = 0;
+                {|#0:x|} = 1;
+                return x;
+            }
+            set
+            {
+                int y = 0;
+                {|#1:y|} = value;
+            }
+        }
+    }
+}
+";
+
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("x");
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(1)
+                .WithArguments("y");
+
+            await VerifyWithRuleEnabledAsync(test, expected0, expected1);
+        }
+
+        [TestMethod]
+        public async Task IndexerAccessors_LocalAssignment_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        public int this[int index]
+        {
+            get
+            {
+                int x = 0;
+                {|#0:x|} = index;
+                return x;
+            }
+            set
+            {
+                int y = 0;
+                {|#1:y|} = value;
+            }
+        }
+    }
+}
+";
+
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("x");
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(1)
+                .WithArguments("y");
+
+            await VerifyWithRuleEnabledAsync(test, expected0, expected1);
+        }
+
+        [TestMethod]
+        public async Task Lambda_LocalAndParameterAssignment_ReportsDiagnostic()
+        {
+            var test = @"
+using System;
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            Action<int> a = (p) => {
+                int x = 0;
+                {|#0:x|} = p;
+                {|#1:p|} = 1;
+            };
+        }
+    }
+}
+";
+
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("x");
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter)
+                .WithLocation(1)
+                .WithArguments("p");
+
+            await VerifyWithRuleEnabledAsync(test, expected0, expected1);
+        }
+
+        [TestMethod]
+        public async Task Lambda_MutPrefix_IsAllowed()
+        {
+            var test = @"
+using System;
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            Action<int> a = (mut_p) => {
+                int mut_x = 0;
+                mut_x = mut_p;
+                mut_p = 1;
+            };
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task PropertyAccessors_MutPrefix_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        public int MyProp
+        {
+            get
+            {
+                int mut_x = 0;
+                mut_x = 1;
+                return mut_x;
+            }
+            set
+            {
+                int mut_y = 0;
+                mut_y = value;
+            }
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task IndexerAccessors_MutPrefix_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        public int this[int index]
+        {
+            get
+            {
+                int mut_x = 0;
+                mut_x = index;
+                return mut_x;
+            }
+            set
+            {
+                int mut_y = 0;
+                mut_y = value;
+            }
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
         public async Task RuleSuppressed_NoDiagnostic()
         {
             var test = @"
