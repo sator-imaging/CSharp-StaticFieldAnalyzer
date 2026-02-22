@@ -448,4 +448,25 @@
   <data name="SMA0042_Title" xml:space="preserve">
     <value>Not All Code Paths Return a Value</value>
   </data>
+  <data name="SMA0060__MD_TITLE__" xml:space="preserve">
+    <value>Read-Only Variable Analysis</value>
+  </data>
+  <data name="SMA0060_Title" xml:space="preserve">
+    <value>Avoid Reassigning Locals</value>
+  </data>
+  <data name="SMA0060_MessageFormat" xml:space="preserve">
+    <value>Local '{0}' is assigned (ReadOnlyLocal)</value>
+  </data>
+  <data name="SMA0060_Description" xml:space="preserve">
+    <value>Avoid assignments to locals unless the local is intentionally mutable.</value>
+  </data>
+  <data name="SMA0061_Title" xml:space="preserve">
+    <value>Avoid Reassigning Parameters</value>
+  </data>
+  <data name="SMA0061_MessageFormat" xml:space="preserve">
+    <value>Parameter '{0}' is assigned (ReadOnlyParameter)</value>
+  </data>
+  <data name="SMA0061_Description" xml:space="preserve">
+    <value>Avoid assignments to parameters unless the parameter is intentionally mutable.</value>
+  </data>
 </root>

@@ -1,11 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<!--added-->
-	<IsRoslynComponent>true</IsRoslynComponent>
-	<!--/added-->
+    <IsRoslynComponent>true</IsRoslynComponent>
 
-	<TargetFramework>netstandard2.0</TargetFramework>
+    <!-- Debug settings for Visual Studio -->
+    <VSSDKTargetPlatformRegRootSuffix>Roslyn</VSSDKTargetPlatformRegRootSuffix>
+    <StartAction>Program</StartAction>
+    <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
+    <StartArguments>/rootsuffix $(VSSDKTargetPlatformRegRootSuffix)</StartArguments>
+
+  	<TargetFramework>netstandard2.0</TargetFramework>
     <IsPackable>false</IsPackable>
 
     <!-- Avoid ID conflicts with the package project. -->

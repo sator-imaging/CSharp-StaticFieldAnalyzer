@@ -1,7 +1,0 @@
-{
-  "profiles": {
-    "IsRoslynComponent": {
-      "commandName": "DebugRoslynComponent"
-    }
-  }
-}
