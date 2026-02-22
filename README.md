@@ -4,15 +4,17 @@
 
 Roslyn-based analyzer to provide diagnostics of static fields and properties initialization and more.
 
-- Wrong order of static field and property declaration
-- Partial type member reference across files
-- [Cross-Referencing Problem](#cross-referencing-problem) of static field across type
-- [`Enum` type analysis](#enum-analyzer-and-code-fix-provider) to prevent user-level value conversion & [more](#kotlin-like-enum-pattern)
+- [Static Field Analysis](#static-field-analysis) detects flaky initialization
+    - Wrong order of static field and property declaration
+    - Partial type member reference across files
+    - [Cross-Referencing Problem](#cross-referencing-problem) of static field across type
+- [Immutable/Read-Only Variable Analysis](#read-only-variable-analysis) detects assignment to locals/parameters and writable call-site argument passing
+- [`Enum` Type Analysis](#enum-analyzer-and-code-fix-provider) to prevent user-level value conversion & [more](#kotlin-like-enum-pattern)
+- [`Disposable` Analysis](#disposable-analyzer) to detect missing using statement
 - `struct` parameter-less constructor misuse analysis
-- [`Disposable` analyzer](#disposable-analyzer) to detect missing using statement
 - `TSelf` generic type argument & type constraint analysis
-- Annotating and underlining field, property or etc with custom message
 - File header comment enforcement
+- ~~Annotating and underlining field, property or etc with custom message~~
 
 > [!TIP]
 > Find out all diagnostic rules: [**RULES.md**](RULES.md)
@@ -54,6 +56,8 @@ See [the following section](#annotating--underlining) for details.
 
 
 
+&nbsp;
+
 # Installation
 
 - NuGet
@@ -73,6 +77,8 @@ You could use this analyzer on older versions of Visual Studio. To do so, update
 
 
 
+&nbsp;
+
 # Unity Integration
 
 This analyzer can be used with Unity 2020.2 or above. See the following page for detail.
@@ -82,6 +88,8 @@ This analyzer can be used with Unity 2020.2 or above. See the following page for
 
 
 
+
+&nbsp;
 
 # Cross-Referencing Problem
 
@@ -142,6 +150,8 @@ When reading B value first, initialization order is changed and resulting value 
 
 
 
+
+&nbsp;
 
 # `Enum` Analyzer and Code Fix Provider
 
@@ -273,6 +283,8 @@ switch (val)
 
 
 
+&nbsp;
+
 # Disposable Analyzer
 
 ```cs
@@ -311,6 +323,113 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 
 
 
+
+&nbsp;
+
+# Read-Only Variable Analysis
+
+This analyzer helps keep local values and parameters immutable by flagging write operations.  
+
+- Assignment
+    - `=`
+    - `??=`
+    - `= ref`
+    - Deconstruction assignment: `(x, y) = ...` / `(x, var y) = ...`
+        - Deconstruction declaration assignment is allowed: `var (x, y) = ...`
+    - *Note*: Assignment to `out` method parameter is always allowed
+- Increment and decrement
+    - `++x`, `x++`, `--x`, `x--`
+- Compound assignment
+    - `+=`, `-=`, `*=`, `/=`, `%=`
+    - `&=`, `|=`, `^=`, `<<=`, `>>=`
+- Argument handling
+    - Allowed: Method invocation and object creation (e.g. `Use(Create())`, `Use(new C())`)
+    - Allowed: Anonymous object and array creation (e.g. `Use(new { X = 1 })`, `Use(new[] { 1, 2 })`)
+    - Allowed: `out var x` / `out T x` declaration at call site
+    - Allowed: Root local/parameter name starts with `mut_`
+    - Type checks (`string` is treated as readonly struct)
+        - Reference type argument (except string) is always reported
+        - Struct argument:
+            - Allowed: Callee parameter has `in` modifier
+            - Allowed: Callee parameter has no modifier and struct is `readonly`
+            - Otherwise reported
+
+
+```cs
+class Demo
+{
+    readonly struct ReadOnlyS { }
+    struct MutableS { }
+
+    static object Create() => new object();
+    static void UseRefType(object value) { }
+    static void UseIn(in MutableS value) { }
+    static void UseReadOnly(ReadOnlyS value) { }
+    public int this[string key] => 0;
+    public int this[object key] => 0;
+
+    void Test(
+        int param,
+        int mut_param,
+        MutableS s,
+        ReadOnlyS rs,
+        ref int refValue,
+        out int result
+    )
+    {
+        result = 0;  // Allowed: assignment to `out` parameter
+
+        param += 1;      // Reported: parameter assignment
+        mut_param += 1;  // Allowed: `mut_` prefix on parameter
+
+        int foo = 0;
+        foo = 1;     // Reported: local assignment
+        foo++;       // Reported: local increment
+
+        var (x, y) = (42, 310);  // Allowed: var (...) is allowed
+        (x, y) = (42, 310);      // Reported: deconstruction assignment
+        (x, var z) = (42, 310);  // Reported: mixed deconstruction causes error
+                                    //           For Unity compatibility, `var z` also get error
+
+        // Allowed: assignment in for-header
+        int i;
+        for (i = 0; i < 10; i++)
+        {
+            i += 0;  // Reported: not in for-header
+        }
+
+        int.TryParse("1", out var parsed);  // Allowed: out declaration at call site
+        int.TryParse("1", out parsed);      // Reported: out overwrites variable
+
+        int.TryParse("1", out var mut_parsed);
+        int.TryParse("1", out mut_parsed);  // Allowed: `mut_` prefix
+
+        int mut_counter = 0;
+        mut_counter = 1;  // Allowed: `mut_` prefix
+
+        string key = "A";
+        object keyObj = new object();
+        var indexer = new Demo();
+        _ = indexer[key];     // Allowed: string is treated readonly-struct
+        _ = indexer[keyObj];  // Reported: reference type indexer key
+        indexer = new();      // Reported: local assignment (reference type)
+
+        UseIn(s);                  // Allowed: callee parameter is `in`
+        UseReadOnly(rs);           // Allowed: readonly struct with no modifier
+        UseRefType(Create());      // Allowed: argument value is invocation
+        UseRefType(new object());  // Allowed: argument value is object creation
+    }
+}
+```
+
+> [!NOTE]
+> Member access assignments are reported when rooted at local/parameter (e.g. `foo.Bar.Value = 1` where `foo` is local/parameter), but not when rooted at field.
+
+
+
+
+
+&nbsp;
 
 # Annotating / Underlining
 
@@ -397,25 +516,15 @@ To remove unnecessary attribute from Unity build, add the following `link.xml` f
 
 
 
-&nbsp;  
-&nbsp;  
-
-# Devnote
-
-Steps to publish new version of nuget package
-- update nuget package version in `.props`
-- upload source code to github
-- run build action for test
-- merge pull request sent from build action
-- create github release
-- run nuget packaging action to push new version
 
 
-## TODO
+&nbsp;
 
-### Disposable Analyzer
+# TODO
 
-#### Known Misdetections
+## Disposable Analyzer
+
+### Known Misdetections
 
 - lambda return statement
     - `MethodArg(() => DisposableProperty);`
@@ -424,7 +533,7 @@ Steps to publish new version of nuget package
     - `DisposableProperty = condition ? null : disposableList[index];` 
 
 
-### Enum Analyzer Features
+## Enum Analyzer Features
 - implicit cast suppressor attribute
     - `[assembly: EnumAnalyzer(SuppressImplicitCast = true)]`
         - ***DO NOT*** suppress cast to `object` `Enum` `string` `int` or other blittable types
@@ -437,60 +546,3 @@ Steps to publish new version of nuget package
       internal static readonly MyEnumLike ForDebuggingPurpose = new();
   }
   ```
-
-
-### Underlining Analyzer
-
-- features not supported
-    - `ITypeParameterObjectCreationOperation`
-    - `IDefaultValueOperation`
-- unnecessary optimization...??
-    - `ts_singleLocation` --> `ImmutableArray.Create(loc)`
-    - https://github.com/dotnet/runtime/blob/main/src/libraries/System.Collections.Immutable/src/System/Collections/Immutable/ImmutableArray.cs#L37
-- entry method has many `if` statements. seems that ready to be separated
-    - underlining by `CategoryAttribute`
-    - lambda analysis
-    - ...and other if statements can be made more simple by separating analyzer action registration
-
-
-### Optimization
-
-- Implement `IViewTaggerProvider` for underlining analyzer.
-
-
-
-
-
-<!--
-
-&nbsp;  
-&nbsp;  
-
-
-# Off-topic: Why not `const`?
-
-## Effective C#
-
-In Effective C#, it describes that runtime constant `readonly static` is better than compile-time constant `const`.
-
-For example, when there are 2 libralies, MyLib.dll and External.dll
-- External.dll has public constant value `10.1f`
-- MyLib.dll read that value and compiled as managed assembly
-- Then, replacing External.dll which has updated constant value `20.2f`
-
-In this case, MyLib.dll will continue to use it's compile-time constant value `10.1f` read from old External.dll, until it is recompiled.
-
-> ie. constant values are "burned" into compiled assembly.
-
-
-So, using runtime constant is better than `const` in shared libraries.
-
-
-
-## `const string` can be easily listed up
-
-When you store your api end point (costs each access) or api key or something secret as `const string`, those are easily retrieved by `strings YourApp.exe` command, or by C# decompilers when compiled as managed code assembly.
-
-Of course using `readonly static string` won't solve the problem perfectly, but worth to consider use to obfuscate secrets keys/values.
-
--->
