@@ -79,7 +79,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 return;
             }
 
-            ReportIfDisallowedLocal(context, op.Target);
+            ReportIfDisallowedMutation(context, op, op.Target);
         }
 
         private static void AnalyzeCompoundAssignment(OperationAnalysisContext context)
@@ -89,7 +89,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 return;
             }
 
-            ReportIfDisallowedLocal(context, op.Target);
+            ReportIfDisallowedMutation(context, op, op.Target);
         }
 
         private static void AnalyzeCoalesceAssignment(OperationAnalysisContext context)
@@ -99,7 +99,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 return;
             }
 
-            ReportIfDisallowedLocal(context, op.Target);
+            ReportIfDisallowedMutation(context, op, op.Target);
         }
 
         private static void AnalyzeIncrementOrDecrement(OperationAnalysisContext context)
@@ -109,7 +109,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 return;
             }
 
-            ReportIfDisallowedLocal(context, op.Target);
+            ReportIfDisallowedMutation(context, op, op.Target);
         }
 
         private static void AnalyzeDeconstructionAssignment(OperationAnalysisContext context)
@@ -128,7 +128,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 return;
             }
 
-            ReportIfDisallowedLocal(context, target);
+            ReportIfDisallowedMutation(context, op, target);
         }
 
         private static void AnalyzeArgumentOperation(OperationAnalysisContext context)
@@ -141,7 +141,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             AnalyzeArgument(context, argument);
         }
 
-        private static void ReportIfDisallowedLocal(OperationAnalysisContext context, IOperation target)
+        private static void ReportIfDisallowedMutation(OperationAnalysisContext context, IOperation mutationOp, IOperation target)
         {
             var reported = new HashSet<string>();
             foreach (var (name, isParameter, isOutParameter, location, syntax) in EnumerateAssignedLocalsAndParameters(target))
@@ -156,7 +156,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     continue;
                 }
 
-                if (IsAllowedForStatementHeaderAssignment(syntax))
+                if (IsAllowedInStatementHeader(mutationOp, syntax))
                 {
                     continue;
                 }
@@ -286,35 +286,42 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 hasRoot ? rootName : argumentValue.Syntax.ToString()));
         }
 
-        private static bool IsAllowedForStatementHeaderAssignment(SyntaxNode syntax)
+        private static bool IsAllowedInStatementHeader(IOperation operation, SyntaxNode syntax)
         {
             var forSyntax = syntax.FirstAncestorOrSelf<ForStatementSyntax>();
-            if (forSyntax == null)
+            if (forSyntax != null)
             {
-                return false;
-            }
-
-            if (forSyntax.Declaration != null && forSyntax.Declaration.Span.Contains(syntax.Span))
-            {
-                return true;
-            }
-
-            if (forSyntax.Condition != null && forSyntax.Condition.Span.Contains(syntax.Span))
-            {
-                return true;
-            }
-
-            foreach (var initializer in forSyntax.Initializers)
-            {
-                if (initializer.Span.Contains(syntax.Span))
+                if (forSyntax.Declaration != null && forSyntax.Declaration.Span.Contains(syntax.Span))
                 {
                     return true;
                 }
+
+                if (forSyntax.Condition != null && forSyntax.Condition.Span.Contains(syntax.Span))
+                {
+                    return true;
+                }
+
+                foreach (var initializer in forSyntax.Initializers)
+                {
+                    if (initializer.Span.Contains(syntax.Span))
+                    {
+                        return true;
+                    }
+                }
+
+                foreach (var incrementor in forSyntax.Incrementors)
+                {
+                    if (incrementor.Span.Contains(syntax.Span))
+                    {
+                        return true;
+                    }
+                }
             }
 
-            foreach (var incrementor in forSyntax.Incrementors)
+            if (operation.Kind == OperationKind.SimpleAssignment)
             {
-                if (incrementor.Span.Contains(syntax.Span))
+                var whileSyntax = syntax.FirstAncestorOrSelf<WhileStatementSyntax>();
+                if (whileSyntax != null && whileSyntax.Condition.Span.Contains(syntax.Span))
                 {
                     return true;
                 }
