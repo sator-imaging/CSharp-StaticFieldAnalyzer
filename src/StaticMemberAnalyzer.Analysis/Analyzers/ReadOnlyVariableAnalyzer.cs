@@ -20,6 +20,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
     {
         public const string RuleId_ReadOnlyLocal = "SMA0060";
         public const string RuleId_ReadOnlyParameter = "SMA0061";
+        public const string RuleId_ReadOnlyArgument = "SMA0062";
 
         private static readonly DiagnosticDescriptor Rule_ReadOnlyLocal = new(
             RuleId_ReadOnlyLocal,
@@ -39,13 +40,23 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             isEnabledByDefault: true,
             description: new LocalizableResourceString("SMA0061_Description", Resources.ResourceManager, typeof(Resources)));
 
+        private static readonly DiagnosticDescriptor Rule_ReadOnlyArgument = new(
+            RuleId_ReadOnlyArgument,
+            new LocalizableResourceString("SMA0062_Title", Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString("SMA0062_MessageFormat", Resources.ResourceManager, typeof(Resources)),
+            Core.Category,
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: true,
+            description: new LocalizableResourceString("SMA0062_Description", Resources.ResourceManager, typeof(Resources)));
+
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
 #if STMG_DEBUG_MESSAGE
             Core.Rule_DebugError,
             Core.Rule_DebugWarn,
 #endif
             Rule_ReadOnlyLocal,
-            Rule_ReadOnlyParameter
+            Rule_ReadOnlyParameter,
+            Rule_ReadOnlyArgument
             );
 
         public override void Initialize(AnalysisContext context)
@@ -58,6 +69,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             context.RegisterOperationAction(AnalyzeCompoundAssignment, OperationKind.CompoundAssignment);
             context.RegisterOperationAction(AnalyzeIncrementOrDecrement, OperationKind.Increment, OperationKind.Decrement);
             context.RegisterOperationAction(AnalyzeDeconstructionAssignment, OperationKind.DeconstructionAssignment);
+            context.RegisterOperationAction(AnalyzeArgumentOperation, OperationKind.Argument);
         }
 
         private static void AnalyzeSimpleAssignment(OperationAnalysisContext context)
@@ -107,15 +119,39 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 return;
             }
 
+            var target = op.Target is IConversionOperation conversion
+                ? conversion.Operand
+                : op.Target;
+
+            if (target is IDeclarationExpressionOperation)
+            {
+                return;
+            }
+
             ReportIfDisallowedLocal(context, op.Target);
+        }
+
+        private static void AnalyzeArgumentOperation(OperationAnalysisContext context)
+        {
+            if (context.Operation is not IArgumentOperation argument)
+            {
+                return;
+            }
+
+            AnalyzeArgument(context, argument);
         }
 
         private static void ReportIfDisallowedLocal(OperationAnalysisContext context, IOperation target)
         {
             var reported = new HashSet<string>();
-            foreach (var (name, isParameter, location, syntax) in EnumerateAssignedLocalsAndParameters(target))
+            foreach (var (name, isParameter, isOutParameter, location, syntax) in EnumerateAssignedLocalsAndParameters(target))
             {
-                if (IsAllowed(name))
+                if (HasMutableNamePrefix(name))
+                {
+                    continue;
+                }
+
+                if (isOutParameter)
                 {
                     continue;
                 }
@@ -135,21 +171,26 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
         }
 
-        private static IEnumerable<(string name, bool isParameter, Location location, SyntaxNode syntax)> EnumerateAssignedLocalsAndParameters(IOperation op)
+        private static IEnumerable<(string name, bool isParameter, bool isOutParameter, Location location, SyntaxNode syntax)> EnumerateAssignedLocalsAndParameters(IOperation op)
         {
             if (op is ILocalReferenceOperation localReference)
             {
-                yield return (localReference.Local.Name, false, op.Syntax.GetLocation(), op.Syntax);
+                yield return (localReference.Local.Name, false, false, op.Syntax.GetLocation(), op.Syntax);
             }
             else if (op is IParameterReferenceOperation parameterReference)
             {
-                yield return (parameterReference.Parameter.Name, true, op.Syntax.GetLocation(), op.Syntax);
+                yield return (
+                    parameterReference.Parameter.Name,
+                    true,
+                    parameterReference.Parameter.RefKind == RefKind.Out,
+                    op.Syntax.GetLocation(),
+                    op.Syntax);
             }
             else if (op is IPropertyReferenceOperation or IFieldReferenceOperation)
             {
                 if (TryGetRootLocalOrParameter(op, out var name, out var isParameter))
                 {
-                    yield return (name, isParameter, op.Syntax.GetLocation(), op.Syntax);
+                    yield return (name, isParameter, false, op.Syntax.GetLocation(), op.Syntax);
                 }
             }
             else if (op is ITupleOperation tupleOperation)
@@ -164,7 +205,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
             else if (op is IVariableDeclaratorOperation variableDeclarator && variableDeclarator.Symbol is ILocalSymbol localSymbol)
             {
-                yield return (localSymbol.Name, false, op.Syntax.GetLocation(), op.Syntax);
+                yield return (localSymbol.Name, false, false, op.Syntax.GetLocation(), op.Syntax);
             }
             else if (op is IDeclarationExpressionOperation declarationExpression)
             {
@@ -175,7 +216,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
         }
 
-        private static bool IsAllowed(string name)
+        private static bool HasMutableNamePrefix(string name)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -183,6 +224,66 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
 
             return name.StartsWith("mut_");
+        }
+
+        private static void AnalyzeArgument(OperationAnalysisContext context, IArgumentOperation argument)
+        {
+            var argumentValue = argument.Value;
+            while (argumentValue is IConversionOperation conversion)
+            {
+                argumentValue = conversion.Operand;
+            }
+
+            if (IsAllowedArgumentValue(argumentValue))
+            {
+                return;
+            }
+
+            var parameter = argument.Parameter;
+            if (parameter == null)
+            {
+                return;
+            }
+
+            // `out var x` / `out T x` declaration in call site is allowed.
+            if (parameter.RefKind == RefKind.Out && argumentValue is IDeclarationExpressionOperation)
+            {
+                return;
+            }
+
+            var hasRoot = TryGetRootLocalOrParameter(argumentValue, out var rootName, out _);
+            if (hasRoot && HasMutableNamePrefix(rootName))
+            {
+                return;
+            }
+
+            var type = parameter.Type;
+            var isString = type.SpecialType == SpecialType.System_String;
+            var readOnlyStructLike = isString || (!type.IsReferenceType && type.IsReadOnly);
+
+            if (type.IsReferenceType && !isString)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    Rule_ReadOnlyArgument,
+                    argumentValue.Syntax.GetLocation(),
+                    hasRoot ? rootName : argumentValue.Syntax.ToString()));
+                return;
+            }
+
+            if (parameter.RefKind == RefKind.In)
+            {
+                return;
+            }
+
+            if (parameter.RefKind == RefKind.None && readOnlyStructLike)
+            {
+                return;
+            }
+
+            context.ReportDiagnostic(Diagnostic.Create(
+                Rule_ReadOnlyArgument,
+                argumentValue.Syntax.GetLocation(),
+                hasRoot ? rootName : argumentValue.Syntax.ToString()));
         }
 
         private static bool IsAllowedForStatementHeaderAssignment(SyntaxNode syntax)
@@ -276,6 +377,14 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         private static DiagnosticDescriptor GetDescriptor(bool isParameter)
         {
             return isParameter ? Rule_ReadOnlyParameter : Rule_ReadOnlyLocal;
+        }
+
+        private static bool IsAllowedArgumentValue(IOperation value)
+        {
+            return value is IInvocationOperation
+                or IObjectCreationOperation
+                or IAnonymousObjectCreationOperation
+                or IArrayCreationOperation;
         }
     }
 }

@@ -134,7 +134,7 @@ namespace Test
         }
 
         [TestMethod]
-        public async Task DeconstructionAssignment_ReportsDiagnostic()
+        public async Task DeconstructionAssignment_ExistingVariables_ReportsDiagnostic()
         {
             var test = @"
 namespace Test
@@ -143,10 +143,9 @@ namespace Test
     {
         void M()
         {
-            var tuple = (1, 2);
             int left = 0;
             int right = 0;
-            ({|#0:left|}, {|#1:right|}) = tuple;
+            ({|#0:left|}, {|#1:right|}) = (1, 2);
         }
     }
 }
@@ -163,7 +162,65 @@ namespace Test
         }
 
         [TestMethod]
-        public async Task DeconstructionDeclaration_ReportsDiagnostic()
+        public async Task DeconstructionAssignment_LeftExistingRightDeclared_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            int left = 0;
+            ({|#0:left|}, var {|#1:right|}) = (1, 2);
+        }
+    }
+}
+";
+
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("left");
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(1)
+                .WithArguments("right");
+            var expectedCompiler = Microsoft.CodeAnalysis.Testing.DiagnosticResult.CompilerError("CS8184")
+                .WithSpan(9, 13, 9, 30);
+
+            await VerifyWithRuleEnabledAsync(test, expectedCompiler, expected0, expected1);
+        }
+
+        [TestMethod]
+        public async Task DeconstructionAssignment_LeftDeclaredRightExisting_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            int right = 0;
+            (var {|#0:left|}, {|#1:right|}) = (1, 2);
+        }
+    }
+}
+";
+
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("left");
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(1)
+                .WithArguments("right");
+            var expectedCompiler = Microsoft.CodeAnalysis.Testing.DiagnosticResult.CompilerError("CS8184")
+                .WithSpan(9, 13, 9, 30);
+
+            await VerifyWithRuleEnabledAsync(test, expectedCompiler, expected0, expected1);
+        }
+
+        [TestMethod]
+        public async Task DeconstructionDeclaration_IsAllowed()
         {
             var test = @"
 namespace Test
@@ -173,20 +230,13 @@ namespace Test
         void M()
         {
             var tuple = (1, 2);
-            var ({|#0:leftValue|}, {|#1:rightValue|}) = tuple;
+            var (leftValue, rightValue) = tuple;
         }
     }
 }
 ";
 
-            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
-                .WithLocation(0)
-                .WithArguments("leftValue");
-            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
-                .WithLocation(1)
-                .WithArguments("rightValue");
-
-            await VerifyWithRuleEnabledAsync(test, expected0, expected1);
+            await VerifyWithRuleEnabledAsync(test);
         }
 
         [TestMethod]
@@ -463,6 +513,632 @@ namespace Test
         }
 
         [TestMethod]
+        public async Task MethodCall_ReferenceTypeArgument_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class C { }
+
+    class Program
+    {
+        static void Use(C value) { }
+
+        void M()
+        {
+            var foo = new C();
+            Use({|#0:foo|});
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument)
+                .WithLocation(0)
+                .WithArguments("foo");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task MethodCall_MutPrefixArgument_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class C { }
+
+    class Program
+    {
+        static void Use(C value) { }
+
+        void M()
+        {
+            var mut_foo = new C();
+            Use(mut_foo);
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task StructArgument_InParameter_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    struct S { public int X; }
+
+    class Program
+    {
+        static void Use(in S value) { }
+
+        void M()
+        {
+            var s = new S();
+            Use(s);
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task StructArgument_ReadOnlyByValue_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    readonly struct S { public int X { get; } }
+
+    class Program
+    {
+        static void Use(S value) { }
+
+        void M()
+        {
+            var s = new S();
+            Use(s);
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task StructArgument_MutableByValue_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    struct S { public int X; }
+
+    class Program
+    {
+        static void Use(S value) { }
+
+        void M()
+        {
+            var s = new S();
+            Use({|#0:s|});
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument)
+                .WithLocation(0)
+                .WithArguments("s");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task IndexerArgument_ReferenceType_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class MyIndexer
+    {
+        public int this[string key] => 0;
+    }
+
+    class Program
+    {
+        void M()
+        {
+            var idx = new MyIndexer();
+            var key = ""A"";
+            _ = idx[key];
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task MethodCallArgument_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class C { }
+
+    class Program
+    {
+        static void Use(C value) { }
+        static C Create() => new C();
+
+        void M()
+        {
+            Use(Create());
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task ObjectCreationArgument_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class C { }
+
+    class Program
+    {
+        static void Use(C value) { }
+
+        void M()
+        {
+            Use(new C());
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task FieldArgument_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class C { }
+
+    class Program
+    {
+        C _field = new C();
+        static void Use(C value) { }
+
+        void M()
+        {
+            Use({|#0:_field|});
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument)
+                .WithLocation(0)
+                .WithArguments("_field");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task PropertyArgument_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class C { }
+
+    class Program
+    {
+        C Prop => new C();
+        static void Use(C value) { }
+
+        void M()
+        {
+            Use({|#0:Prop|});
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument)
+                .WithLocation(0)
+                .WithArguments("Prop");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task RefAssignment_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            int foo = 0;
+            int bar = 1;
+            ref int r = ref foo;
+            {|#0:r|} = ref bar;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("r");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task DecrementAssignment_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            int foo = 0;
+            {|#0:foo|}--;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("foo");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task CompoundAssignment_Subtract_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            int foo = 0;
+            {|#0:foo|} -= 1;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("foo");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task CompoundAssignment_Multiply_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            int foo = 1;
+            {|#0:foo|} *= 2;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("foo");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task CompoundAssignment_Divide_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            int foo = 2;
+            {|#0:foo|} /= 2;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("foo");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task CompoundAssignment_Modulo_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            int foo = 2;
+            {|#0:foo|} %= 2;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("foo");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task CompoundAssignment_And_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            int foo = 1;
+            {|#0:foo|} &= 1;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("foo");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task CompoundAssignment_Or_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            int foo = 1;
+            {|#0:foo|} |= 1;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("foo");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task CompoundAssignment_Xor_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            int foo = 1;
+            {|#0:foo|} ^= 1;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("foo");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task CompoundAssignment_LeftShift_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            int foo = 1;
+            {|#0:foo|} <<= 1;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("foo");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task CompoundAssignment_RightShift_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void M()
+        {
+            int foo = 1;
+            {|#0:foo|} >>= 1;
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+                .WithLocation(0)
+                .WithArguments("foo");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task MethodCall_MutPrefixParameterArgument_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class C { }
+
+    class Program
+    {
+        static void Use(C value) { }
+
+        void M(C mut_value)
+        {
+            Use(mut_value);
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task AnonymousObjectArgument_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        static void Use(object value) { }
+
+        void M()
+        {
+            Use(new { X = 1 });
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task ArrayCreationArgument_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        static void Use(int[] value) { }
+
+        void M()
+        {
+            Use(new[] { 1, 2, 3 });
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task OutTypedDeclarationCall_NotReported()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void N()
+        {
+            int.TryParse(""1"", out int foo);
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
+        public async Task OutParameterAssignment_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        void M(out int result)
+        {
+            result = 0;
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
         public async Task RuleSuppressed_NoDiagnostic()
         {
             var test = @"
@@ -497,6 +1173,9 @@ namespace Test
                 specificOptions = specificOptions.SetItem(
                     ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter,
                     ReportDiagnostic.Suppress);
+                specificOptions = specificOptions.SetItem(
+                    ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument,
+                    ReportDiagnostic.Suppress);
 
                 compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(specificOptions);
                 return solution.WithProjectCompilationOptions(projectId, compilationOptions);
@@ -524,6 +1203,9 @@ namespace Test
                     ReportDiagnostic.Error);
                 specificOptions = specificOptions.SetItem(
                     ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter,
+                    ReportDiagnostic.Error);
+                specificOptions = specificOptions.SetItem(
+                    ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument,
                     ReportDiagnostic.Error);
 
                 compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(specificOptions);
