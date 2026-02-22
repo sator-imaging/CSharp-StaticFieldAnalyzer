@@ -7,12 +7,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers;
 using System.Threading.Tasks;
 using VerifyCS = StaticMemberAnalyzer.Test.CSharpAnalyzerVerifier<
-    SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers.ReadOnlyLocalsAnalyzer>;
+    SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers.ReadOnlyVariableAnalyzer>;
 
 namespace SatorImaging.StaticMemberAnalyzer.Test
 {
     [TestClass]
-    public class ReadOnlyLocalsAnalyzerUnitTests
+    public class ReadOnlyVariableAnalyzerUnitTests
     {
         [TestMethod]
         public async Task SimpleAssignment_ReportsDiagnostic()
@@ -31,7 +31,7 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyLocal)
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
                 .WithLocation(0)
                 .WithArguments("foo");
 
@@ -55,7 +55,7 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyLocal)
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
                 .WithLocation(0)
                 .WithArguments("foo");
 
@@ -79,7 +79,7 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyLocal)
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
                 .WithLocation(0)
                 .WithArguments("foo");
 
@@ -103,7 +103,7 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyLocal)
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzerer.RuleId_ReadOnlyLocal)
                 .WithLocation(0)
                 .WithArguments("foo");
 
@@ -126,7 +126,7 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyParameter)
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter)
                 .WithLocation(0)
                 .WithArguments("foo");
 
@@ -152,10 +152,10 @@ namespace Test
 }
 ";
 
-            var expected0 = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyLocal)
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
                 .WithLocation(0)
                 .WithArguments("left");
-            var expected1 = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyLocal)
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
                 .WithLocation(1)
                 .WithArguments("right");
 
@@ -179,10 +179,10 @@ namespace Test
 }
 ";
 
-            var expected0 = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyLocal)
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
                 .WithLocation(0)
                 .WithArguments("leftValue");
-            var expected1 = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyLocal)
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
                 .WithLocation(1)
                 .WithArguments("rightValue");
 
@@ -206,7 +206,7 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyLocal)
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
                 .WithLocation(0)
                 .WithArguments("i");
 
@@ -251,7 +251,7 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyParameter)
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter)
                 .WithLocation(0)
                 .WithArguments("valueParam");
 
@@ -291,13 +291,13 @@ namespace Test
 }
 ";
 
-            var expected0 = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyParameter)
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter)
                 .WithLocation(0)
                 .WithArguments("value");
-            var expected1 = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyParameter)
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter)
                 .WithLocation(2)
                 .WithArguments("value");
-            var expected2 = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyParameter)
+            var expected2 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter)
                 .WithLocation(1)
                 .WithArguments("index");
 
@@ -327,7 +327,7 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyLocal)
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
                 .WithLocation(0)
                 .WithArguments("foo");
 
@@ -356,7 +356,7 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyParameter)
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter)
                 .WithLocation(0)
                 .WithArguments("foo");
 
@@ -431,7 +431,7 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyLocal)
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
                 .WithLocation(0)
                 .WithArguments("i");
 
@@ -455,7 +455,7 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyLocal)
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
                 .WithLocation(0)
                 .WithArguments("foo");
 
@@ -492,10 +492,10 @@ namespace Test
                     return solution;
 
                 var specificOptions = compilationOptions.SpecificDiagnosticOptions.SetItem(
-                    ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyLocal,
+                    ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal,
                     ReportDiagnostic.Suppress);
                 specificOptions = specificOptions.SetItem(
-                    ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyParameter,
+                    ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter,
                     ReportDiagnostic.Suppress);
 
                 compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(specificOptions);
@@ -520,10 +520,10 @@ namespace Test
                     return solution;
 
                 var specificOptions = compilationOptions.SpecificDiagnosticOptions.SetItem(
-                    ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyLocal,
+                    ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal,
                     ReportDiagnostic.Error);
                 specificOptions = specificOptions.SetItem(
-                    ReadOnlyLocalsAnalyzer.RuleId_ReadOnlyParameter,
+                    ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter,
                     ReportDiagnostic.Error);
 
                 compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(specificOptions);
