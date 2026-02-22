@@ -237,7 +237,7 @@ public class EnumLike
 
 ### Benefits of Enum-like Types
 
-<p><details lang="en" --open><summary>利点</summary>
+<p><details --open><summary>利点</summary>
 
 Kotlin 風 enum (代数的データ型) は無効値の生成を防ぎやすくします。
 
@@ -283,7 +283,7 @@ switch (val)
 }
 ```
 
-<!------- End of Details EN Tag -------></details></p>
+<!------- End of Details Tag -------></details></p>
 
 
 

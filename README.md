@@ -237,7 +237,7 @@ public class EnumLike
 
 ### Benefits of Enum-like Types
 
-<p><details lang="en" --open><summary>Benefits</summary>
+<p><details --open><summary>Benefits</summary>
 
 Kotlin-like enum (algebraic data type) can prevent invalid value creation.
 
@@ -283,7 +283,7 @@ switch (val)
 }
 ```
 
-<!------- End of Details EN Tag -------></details></p>
+<!------- End of Details Tag -------></details></p>
 
 
 

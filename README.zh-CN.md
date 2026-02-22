@@ -237,7 +237,7 @@ public class EnumLike
 
 ### Benefits of Enum-like Types
 
-<p><details lang="en" --open><summary>优势</summary>
+<p><details --open><summary>优势</summary>
 
 Kotlin 风格 enum（代数数据类型）可以防止无效值被创建。
 
@@ -283,7 +283,7 @@ switch (val)
 }
 ```
 
-<!------- End of Details EN Tag -------></details></p>
+<!------- End of Details Tag -------></details></p>
 
 
 
