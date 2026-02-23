@@ -1,4 +1,4 @@
-name: resource update
+name: Resource Update
 
 on:
   #push:
