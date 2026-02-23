@@ -439,6 +439,16 @@ class Demo
 > Member access assignments are reported when rooted at local/parameter (e.g. `foo.Bar.Value = 1` where `foo` is local/parameter), but not when rooted at field.
 
 
+## Suppress Analysis by Category
+
+To suppress analysis for the entire category, add the following to your `.editorconfig` file.
+
+```
+[*.cs]
+dotnet_analyzer_diagnostic.category-ImmutableVariable.severity = silent
+```
+
+
 
 
 

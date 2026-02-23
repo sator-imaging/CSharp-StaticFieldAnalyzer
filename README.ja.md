@@ -439,6 +439,16 @@ class Demo
 > ローカル/引数をルートにしたメンバー代入 (例: `foo.Bar.Value = 1` の `foo`) は報告対象です。フィールドをルートにした場合は報告しません。
 
 
+## カテゴリによる解析の抑制
+
+カテゴリ全体で解析を抑制するには、`.editorconfig` ファイルに以下を追加します。
+
+```
+[*.cs]
+dotnet_analyzer_diagnostic.category-ImmutableVariable.severity = silent
+```
+
+
 
 
 

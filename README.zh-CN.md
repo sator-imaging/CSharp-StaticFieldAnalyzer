@@ -439,6 +439,16 @@ class Demo
 > 当赋值根节点是局部变量/参数时会被报告（例如 `foo.Bar.Value = 1` 中的 `foo`）。根节点是字段时不会报告。
 
 
+## 按类别抑制分析
+
+若要按类别抑制分析，请将以下内容添加到 `.editorconfig` 文件。
+
+```
+[*.cs]
+dotnet_analyzer_diagnostic.category-ImmutableVariable.severity = silent
+```
+
+
 
 
 
