@@ -404,6 +404,13 @@ class Demo
             i += 0;  // Reported: not in for-header
         }
 
+        // Allowed: assignment in while-header
+        int read;
+        while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            read = 0;  // Reported: not in while-header
+        }
+
         int.TryParse("1", out var parsed);  // Allowed: out declaration at call site
         int.TryParse("1", out parsed);      // Reported: out overwrites variable
 
