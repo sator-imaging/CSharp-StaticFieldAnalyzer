@@ -18,6 +18,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class ReadOnlyVariableAnalyzer : DiagnosticAnalyzer
     {
+        const string ImmutableCategory = "ImmutableVariable";
+
         public const string RuleId_ReadOnlyLocal = "SMA0060";
         public const string RuleId_ReadOnlyParameter = "SMA0061";
         public const string RuleId_ReadOnlyArgument = "SMA0062";
@@ -26,7 +28,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             RuleId_ReadOnlyLocal,
             new LocalizableResourceString("SMA0060_Title", Resources.ResourceManager, typeof(Resources)),
             new LocalizableResourceString("SMA0060_MessageFormat", Resources.ResourceManager, typeof(Resources)),
-            Core.Category,
+            ImmutableCategory,
             DiagnosticSeverity.Error,
             isEnabledByDefault: true,
             description: new LocalizableResourceString("SMA0060_Description", Resources.ResourceManager, typeof(Resources)));
@@ -35,7 +37,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             RuleId_ReadOnlyParameter,
             new LocalizableResourceString("SMA0061_Title", Resources.ResourceManager, typeof(Resources)),
             new LocalizableResourceString("SMA0061_MessageFormat", Resources.ResourceManager, typeof(Resources)),
-            Core.Category,
+            ImmutableCategory,
             DiagnosticSeverity.Error,
             isEnabledByDefault: true,
             description: new LocalizableResourceString("SMA0061_Description", Resources.ResourceManager, typeof(Resources)));
@@ -44,7 +46,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             RuleId_ReadOnlyArgument,
             new LocalizableResourceString("SMA0062_Title", Resources.ResourceManager, typeof(Resources)),
             new LocalizableResourceString("SMA0062_MessageFormat", Resources.ResourceManager, typeof(Resources)),
-            Core.Category,
+            ImmutableCategory,
             DiagnosticSeverity.Error,
             isEnabledByDefault: true,
             description: new LocalizableResourceString("SMA0062_Description", Resources.ResourceManager, typeof(Resources)));

@@ -8,6 +8,7 @@ obj
 !src
 !Unity
 
+!.editorconfig
 !.gitignore
 !*.props
 !*.slnx
