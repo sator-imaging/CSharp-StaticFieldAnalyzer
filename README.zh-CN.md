@@ -112,7 +112,7 @@ class A {
 
 class B {
     public static int Other = 620;
-    public static int Value = A.Other;  // will be '0' not '310'
+    public static int Value = A.Other;  // 结果将是 '0' 而不是 '310'
 }
 
 public static class Test
@@ -124,9 +124,9 @@ public static class Test
         System.Console.WriteLine(B.Value);  // 0   👈👈👈
         System.Console.WriteLine(B.Other);  // 620
 
-        // when changing class member access order, it works correctly 🤣
-        // see the following section for detailed explanation
-        //System.Console.WriteLine(B.Value);  // 310  👈 correct!!
+        // 当改变类成员访问顺序时，它可以正常工作 🤣
+        // 详见下一节的解释
+        //System.Console.WriteLine(B.Value);  // 310  👈 正确!!
         //System.Console.WriteLine(B.Other);  // 620
         //System.Console.WriteLine(A.Value);  // 620
         //System.Console.WriteLine(A.Other);  // 310
@@ -193,23 +193,23 @@ enum 的处理很容易变得混乱。通常应避免在业务代码中直接做
 
 ```cs
 public class EnumLike
-//           ~~~~~~~~ WARN: no `sealed` modifier on type and public constructor exists
-//                          * this warning appears only if type has member called 'Entries'
+//           ~~~~~~~~ 警告：类型缺少 sealed 修饰符且存在公开构造函数
+//                          * 此警告仅在类型包含名为 'Entries' 的成员时出现
 {
     public static readonly EnumLike A = new("A");
     public static readonly EnumLike B = new("B");
 
     public static ReadOnlySpan<EnumLike> Entries => EntriesAsMemory.Span;
 
-    // 'Entries' must have all of 'public static readonly' fields in declared order
+    // 'Entries' 必须按声明顺序包含所有 'public static readonly' 字段
     static readonly EnumLike[] _entries = new[] { B, A };
-    //                                    ~~~~~~~~~~~~~~ wrong order!!
+    //                                    ~~~~~~~~~~~~~~ 顺序错误!!
 
-    // 'ReadOnlyMemory<T>' can be used instead of array
+    // 可以使用 'ReadOnlyMemory<T>' 代替数组
     public static readonly ReadOnlyMemory<EnumLike> EntriesAsMemory = new(new[] { A, B });
 
 
-    /* ===  Kotlin style enum template  === */
+    /* ===  Kotlin 风格 enum 模板  === */
 
     static int AUTO_INCREMENT = 0;  // iota
 
@@ -246,8 +246,8 @@ var invalid = Activator.CreateInstance(typeof(EnumLike));
 
 if (EnumLike.A == invalid || EnumLike.B == invalid)
 {
-    // this code path won't be reached
-    // each enum like entry is a class instance and ReferenceEquals match required
+    // 永远不会执行到此代码路径
+    // 每个类 enum 条目都是一个类实例，需要 ReferenceEquals 匹配
 }
 ```
 
@@ -259,7 +259,7 @@ var val = EnumLike.A;
 
 switch (val)
 {
-    // pattern matching with case guard...!!
+    // 带有 case 守卫的模式匹配...!!
     case EnumLike when val == EnumLike.A:
         System.Console.WriteLine(val);
         break;
@@ -269,10 +269,10 @@ switch (val)
         break;
 }
 
-// this pattern generates same AOT compiled code
+// 此模式生成相同的 AOT 编译代码
 switch (val)
 {
-    // typeless case guard
+    // 无类型的 case 守卫
     case {} when val == EnumLike.A:
         System.Console.WriteLine(val);
         break;
@@ -295,10 +295,10 @@ switch (val)
 
 ```cs
 var d = new Disposable();
-//      ~~~~~~~~~~~~~~~~ no `using` statement found
+//      ~~~~~~~~~~~~~~~~ 未找到 using 语句
 
 d = (new object()) as IDisposable;
-//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ cast from/to disposable
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 在可释放类型之间转换
 ```
 
 
@@ -317,7 +317,7 @@ d = (new object()) as IDisposable;
 若需对指定类型抑制分析，声明名为 `DisposableAnalyzerSuppressor` 的特性并加到程序集上。
 
 ```cs
-[assembly: DisposableAnalyzerSuppressor(typeof(Task), typeof(Task<>))]  // Task and Task<T> are ignored by default
+[assembly: DisposableAnalyzerSuppressor(typeof(Task), typeof(Task<>))]  // 默认忽略 Task 和 Task<T>
 
 [Conditional("DEBUG"), AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
 sealed class DisposableAnalyzerSuppressor : Attribute
@@ -383,54 +383,54 @@ class Demo
         out int result
     )
     {
-        result = 0;  // Allowed: assignment to `out` parameter
+        result = 0;  // 允许：对 out 参数赋值
 
-        param += 1;      // Reported: parameter assignment
-        mut_param += 1;  // Allowed: `mut_` prefix on parameter
+        param += 1;      // 报告：对参数赋值
+        mut_param += 1;  // 允许：参数名以 mut_ 开头
 
         int foo = 0;
-        foo = 1;     // Reported: local assignment
-        foo++;       // Reported: local increment
+        foo = 1;     // 报告：对局部变量赋值
+        foo++;       // 报告：局部变量自增
 
-        var (x, y) = (42, 310);  // Allowed: var (...) is allowed
-        (x, y) = (42, 310);      // Reported: deconstruction assignment
-        (x, var z) = (42, 310);  // Reported: mixed deconstruction causes error
-                                    //           For Unity compatibility, `var z` also get error
+        var (x, y) = (42, 310);  // 允许：允许使用 var (...)
+        (x, y) = (42, 310);      // 报告：解构赋值
+        (x, var z) = (42, 310);  // 报告：混合解构会导致错误
+                                    //           为了 Unity 兼容性，var z 也会报错
 
-        // Allowed: assignment in for-header
+        // 允许：for 循环头中的赋值
         int i;
         for (i = 0; i < 10; i++)
         {
-            i += 0;  // Reported: not in for-header
+            i += 0;  // 报告：不在 for 循环头中
         }
 
-        // Allowed: assignment in while-header
+        // 允许：while 循环头中的赋值
         int read;
         while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
         {
-            read = 0;  // Reported: not in while-header
+            read = 0;  // 报告：不在 while 循环头中
         }
 
-        int.TryParse("1", out var parsed);  // Allowed: out declaration at call site
-        int.TryParse("1", out parsed);      // Reported: out overwrites variable
+        int.TryParse("1", out var parsed);  // 允许：在调用点进行 out 声明
+        int.TryParse("1", out parsed);      // 报告：out 覆盖了变量
 
         int.TryParse("1", out var mut_parsed);
-        int.TryParse("1", out mut_parsed);  // Allowed: `mut_` prefix
+        int.TryParse("1", out mut_parsed);  // 允许：mut_ 前缀
 
         int mut_counter = 0;
-        mut_counter = 1;  // Allowed: `mut_` prefix
+        mut_counter = 1;  // 允许：mut_ 前缀
 
         string key = "A";
         object keyObj = new object();
         var indexer = new Demo();
-        _ = indexer[key];     // Allowed: string is treated readonly-struct
-        _ = indexer[keyObj];  // Reported: reference type indexer key
-        indexer = new();      // Reported: local assignment (reference type)
+        _ = indexer[key];     // 允许：string 被视为只读结构体
+        _ = indexer[keyObj];  // 报告：引用类型索引器键
+        indexer = new();      // 报告：对局部变量赋值（引用类型）
 
-        UseIn(s);                  // Allowed: callee parameter is `in`
-        UseReadOnly(rs);           // Allowed: readonly struct with no modifier
-        UseRefType(Create());      // Allowed: argument value is invocation
-        UseRefType(new object());  // Allowed: argument value is object creation
+        UseIn(s);                  // 允许：被调用参数带 in 修饰符
+        UseReadOnly(rs);           // 允许：无修饰符的只读结构体
+        UseRefType(Create());      // 允许：参数值为方法调用
+        UseRefType(new object());  // 允许：参数值为对象创建
     }
 }
 ```
@@ -478,23 +478,23 @@ class Demo
 using System.ComponentModel;
 
 [DescriptionAttribute("Draw underline for IDE environment and show this message")]
-//          ^^^^^^^^^ `Attribute` suffix is required to draw underline
+//          ^^^^^^^^^ 需要 Attribute 后缀才能绘制下划线
 public class WithUnderline
 {
-    [DescriptionAttribute]  // parameter-less will draw underline with default message
+    [DescriptionAttribute]  // 无参形式将使用默认消息绘制下划线
     public static void Method() { }
 }
 
-// C# language spec allows to omit `Attribute` suffix but when omitted, underline won't be drawn
-// to avoid conflict with originally designed usage for VS form designer
+// C# 语言规范允许省略 Attribute 后缀，但省略后将不会绘制下划线
+// 为了避免与 VS 窗体设计器的原始设计用途冲突
 [Description("No Underline")]
 public class NoUnderline { }
 
-// underline won't be drawn when namespace is specified
+// 指定命名空间时不会绘制下划线
 [System.ComponentModel.DescriptionAttribute("...")]
 public static int Underline_Not_Drawn = 0;
 
-// this code will draw underline. 'Trivia' is allowed to being added in attribute syntax
+// 此代码将绘制下划线。允许在特性语法中添加 'Trivia'
 [ /**/  DescriptionAttribute   (   "Underline will be drawn" )   /* hello, world. */   ]
 public static int Underline_Drawn = 310;
 ```

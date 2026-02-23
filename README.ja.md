@@ -112,7 +112,7 @@ class A {
 
 class B {
     public static int Other = 620;
-    public static int Value = A.Other;  // will be '0' not '310'
+    public static int Value = A.Other;  // '310' ではなく '0' になる
 }
 
 public static class Test
@@ -124,9 +124,9 @@ public static class Test
         System.Console.WriteLine(B.Value);  // 0   👈👈👈
         System.Console.WriteLine(B.Other);  // 620
 
-        // when changing class member access order, it works correctly 🤣
-        // see the following section for detailed explanation
-        //System.Console.WriteLine(B.Value);  // 310  👈 correct!!
+        // メンバーのアクセス順を変えると正しく動作する 🤣
+        // 詳細は次項を参照
+        //System.Console.WriteLine(B.Value);  // 310  👈 正しい!!
         //System.Console.WriteLine(B.Other);  // 620
         //System.Console.WriteLine(A.Value);  // 620
         //System.Console.WriteLine(A.Other);  // 310
@@ -193,23 +193,23 @@ Enum ライク型の要件:
 
 ```cs
 public class EnumLike
-//           ~~~~~~~~ WARN: no `sealed` modifier on type and public constructor exists
-//                          * this warning appears only if type has member called 'Entries'
+//           ~~~~~~~~ 警告: sealed 修飾子がなく、公開コンストラクターが存在する
+//                          * この警告は 'Entries' メンバーを持つ場合にのみ表示される
 {
     public static readonly EnumLike A = new("A");
     public static readonly EnumLike B = new("B");
 
     public static ReadOnlySpan<EnumLike> Entries => EntriesAsMemory.Span;
 
-    // 'Entries' must have all of 'public static readonly' fields in declared order
+    // 'Entries' はすべての 'public static readonly' フィールドを宣言順に保持する必要がある
     static readonly EnumLike[] _entries = new[] { B, A };
-    //                                    ~~~~~~~~~~~~~~ wrong order!!
+    //                                    ~~~~~~~~~~~~~~ 順序が正しくない!!
 
-    // 'ReadOnlyMemory<T>' can be used instead of array
+    // 配列の代わりに 'ReadOnlyMemory<T>' も使用可能
     public static readonly ReadOnlyMemory<EnumLike> EntriesAsMemory = new(new[] { A, B });
 
 
-    /* ===  Kotlin style enum template  === */
+    /* ===  Kotlin 風 Enum テンプレート  === */
 
     static int AUTO_INCREMENT = 0;  // iota
 
@@ -246,8 +246,8 @@ var invalid = Activator.CreateInstance(typeof(EnumLike));
 
 if (EnumLike.A == invalid || EnumLike.B == invalid)
 {
-    // this code path won't be reached
-    // each enum like entry is a class instance and ReferenceEquals match required
+    // このコードパスには到達しない
+    // 各 Enum ライクエントリはクラスインスタンスであり、ReferenceEquals での一致が必要
 }
 ```
 
@@ -259,7 +259,7 @@ var val = EnumLike.A;
 
 switch (val)
 {
-    // pattern matching with case guard...!!
+    // ケースガード付きのパターンマッチング...!!
     case EnumLike when val == EnumLike.A:
         System.Console.WriteLine(val);
         break;
@@ -269,10 +269,10 @@ switch (val)
         break;
 }
 
-// this pattern generates same AOT compiled code
+// このパターンは同じ AOT コンパイル済みコードを生成する
 switch (val)
 {
-    // typeless case guard
+    // 型指定なしのケースガード
     case {} when val == EnumLike.A:
         System.Console.WriteLine(val);
         break;
@@ -295,10 +295,10 @@ switch (val)
 
 ```cs
 var d = new Disposable();
-//      ~~~~~~~~~~~~~~~~ no `using` statement found
+//      ~~~~~~~~~~~~~~~~ using 文が見つからない
 
 d = (new object()) as IDisposable;
-//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ cast from/to disposable
+//  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Disposable 型への/からのキャスト
 ```
 
 
@@ -317,7 +317,7 @@ d = (new object()) as IDisposable;
 特定型の解析を抑制するには、`DisposableAnalyzerSuppressor` という属性を定義し、アセンブリに付与します。
 
 ```cs
-[assembly: DisposableAnalyzerSuppressor(typeof(Task), typeof(Task<>))]  // Task and Task<T> are ignored by default
+[assembly: DisposableAnalyzerSuppressor(typeof(Task), typeof(Task<>))]  // Task と Task<T> はデフォルトで無視される
 
 [Conditional("DEBUG"), AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
 sealed class DisposableAnalyzerSuppressor : Attribute
@@ -383,54 +383,54 @@ class Demo
         out int result
     )
     {
-        result = 0;  // Allowed: assignment to `out` parameter
+        result = 0;  // 許可: out 引数への代入
 
-        param += 1;      // Reported: parameter assignment
-        mut_param += 1;  // Allowed: `mut_` prefix on parameter
+        param += 1;      // 報告: 引数への代入
+        mut_param += 1;  // 許可: 引数名が mut_ で始まっている
 
         int foo = 0;
-        foo = 1;     // Reported: local assignment
-        foo++;       // Reported: local increment
+        foo = 1;     // 報告: ローカル変数への代入
+        foo++;       // 報告: ローカル変数のインクリメント
 
-        var (x, y) = (42, 310);  // Allowed: var (...) is allowed
-        (x, y) = (42, 310);      // Reported: deconstruction assignment
-        (x, var z) = (42, 310);  // Reported: mixed deconstruction causes error
-                                    //           For Unity compatibility, `var z` also get error
+        var (x, y) = (42, 310);  // 許可: var (...) は許可される
+        (x, y) = (42, 310);      // 報告: 分解代入
+        (x, var z) = (42, 310);  // 報告: 混在した分解はエラーを引き起こす
+                                    //           Unity との互換性のため、var z もエラーになる
 
-        // Allowed: assignment in for-header
+        // 許可: for ヘッダー内での代入
         int i;
         for (i = 0; i < 10; i++)
         {
-            i += 0;  // Reported: not in for-header
+            i += 0;  // 報告: for ヘッダー外
         }
 
-        // Allowed: assignment in while-header
+        // 許可: while ヘッダー内での代入
         int read;
         while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
         {
-            read = 0;  // Reported: not in while-header
+            read = 0;  // 報告: while ヘッダー外
         }
 
-        int.TryParse("1", out var parsed);  // Allowed: out declaration at call site
-        int.TryParse("1", out parsed);      // Reported: out overwrites variable
+        int.TryParse("1", out var parsed);  // 許可: 呼び出し先での out 宣言
+        int.TryParse("1", out parsed);      // 報告: out が変数を上書きしている
 
         int.TryParse("1", out var mut_parsed);
-        int.TryParse("1", out mut_parsed);  // Allowed: `mut_` prefix
+        int.TryParse("1", out mut_parsed);  // 許可: mut_ プレフィックス
 
         int mut_counter = 0;
-        mut_counter = 1;  // Allowed: `mut_` prefix
+        mut_counter = 1;  // 許可: mut_ プレフィックス
 
         string key = "A";
         object keyObj = new object();
         var indexer = new Demo();
-        _ = indexer[key];     // Allowed: string is treated readonly-struct
-        _ = indexer[keyObj];  // Reported: reference type indexer key
-        indexer = new();      // Reported: local assignment (reference type)
+        _ = indexer[key];     // 許可: string は読み取り専用構造体として扱われる
+        _ = indexer[keyObj];  // 報告: 参照型のインデクサーキー
+        indexer = new();      // 報告: ローカル変数への代入（参照型）
 
-        UseIn(s);                  // Allowed: callee parameter is `in`
-        UseReadOnly(rs);           // Allowed: readonly struct with no modifier
-        UseRefType(Create());      // Allowed: argument value is invocation
-        UseRefType(new object());  // Allowed: argument value is object creation
+        UseIn(s);                  // 許可: 呼び出し先の引数が in 修飾子付き
+        UseReadOnly(rs);           // 許可: 修飾子なしの読み取り専用構造体
+        UseRefType(Create());      // 許可: 引数がメソッド呼び出し
+        UseRefType(new object());  // 許可: 引数がオブジェクト生成
     }
 }
 ```
@@ -478,23 +478,23 @@ Visual Studio の仕様上、`Info` 重要度の下線は先頭数文字にし�
 using System.ComponentModel;
 
 [DescriptionAttribute("Draw underline for IDE environment and show this message")]
-//          ^^^^^^^^^ `Attribute` suffix is required to draw underline
+//          ^^^^^^^^^ 下線を描画するには Attribute サフィックスが必要
 public class WithUnderline
 {
-    [DescriptionAttribute]  // parameter-less will draw underline with default message
+    [DescriptionAttribute]  // 引数なしはデフォルトメッセージで下線を描画する
     public static void Method() { }
 }
 
-// C# language spec allows to omit `Attribute` suffix but when omitted, underline won't be drawn
-// to avoid conflict with originally designed usage for VS form designer
+// C# 仕様では Attribute サフィックスを省略できるが、省略すると下線は描画されない
+// VS フォームデザイナー向けの元々の用途との競合を避けるため
 [Description("No Underline")]
 public class NoUnderline { }
 
-// underline won't be drawn when namespace is specified
+// 名前空間が指定されている場合、下線は描画されない
 [System.ComponentModel.DescriptionAttribute("...")]
 public static int Underline_Not_Drawn = 0;
 
-// this code will draw underline. 'Trivia' is allowed to being added in attribute syntax
+// このコードは下線を描画する。属性構文に 'Trivia' を含めることが可能
 [ /**/  DescriptionAttribute   (   "Underline will be drawn" )   /* hello, world. */   ]
 public static int Underline_Drawn = 310;
 ```
