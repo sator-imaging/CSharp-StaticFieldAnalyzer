@@ -345,6 +345,9 @@ This analyzer helps keep local values and parameters immutable by flagging write
     - *Note*: Assignment to `out` method parameter is always allowed
 - Increment and decrement
     - `++x`, `x++`, `--x`, `x--`
+- Special handling for loop headers
+    - Allowed: Assignment and increment/decrement in `for` loop header
+    - Allowed: Simple assignment in `while` loop condition
 - Compound assignment
     - `+=`, `-=`, `*=`, `/=`, `%=`
     - `&=`, `|=`, `^=`, `<<=`, `>>=`
