@@ -408,7 +408,7 @@ class Demo
         int read;
         while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
         {
-            // read = 0;  // Reported: not in while-header
+            read = 0;  // Reported: not in while-header
         }
 
         int.TryParse("1", out var parsed);  // Allowed: out declaration at call site
