@@ -24,6 +24,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         public const string RuleId_ReadOnlyLocal = "SMA0060";
         public const string RuleId_ReadOnlyParameter = "SMA0061";
         public const string RuleId_ReadOnlyArgument = "SMA0062";
+        public const string RuleId_ReadOnlyProperty = "SMA0063";
 
         private static readonly DiagnosticDescriptor Rule_ReadOnlyLocal = new(
             RuleId_ReadOnlyLocal,
@@ -52,6 +53,15 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             isEnabledByDefault: IsEnabledByDefault,
             description: new LocalizableResourceString("SMA0062_Description", Resources.ResourceManager, typeof(Resources)));
 
+        private static readonly DiagnosticDescriptor Rule_ReadOnlyProperty = new(
+            RuleId_ReadOnlyProperty,
+            new LocalizableResourceString("SMA0063_Title", Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString("SMA0063_MessageFormat", Resources.ResourceManager, typeof(Resources)),
+            ImmutableCategory,
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: IsEnabledByDefault,
+            description: new LocalizableResourceString("SMA0063_Description", Resources.ResourceManager, typeof(Resources)));
+
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
 #if STMG_DEBUG_MESSAGE
             Core.Rule_DebugError,
@@ -59,7 +69,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 #endif
             Rule_ReadOnlyLocal,
             Rule_ReadOnlyParameter,
-            Rule_ReadOnlyArgument
+            Rule_ReadOnlyArgument,
+            Rule_ReadOnlyProperty
             );
 
         public override void Initialize(AnalysisContext context)
@@ -242,6 +253,21 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 return;
             }
 
+            var hasRoot = TryGetRootLocalOrParameter(argumentValue, out var rootName, out _);
+            if (hasRoot && HasMutableNamePrefix(rootName))
+            {
+                return;
+            }
+
+            if (argumentValue is IPropertyReferenceOperation propertyReference && propertyReference.Property.IsReadOnly)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    Rule_ReadOnlyProperty,
+                    argumentValue.Syntax.GetLocation(),
+                    argumentValue.Syntax.ToString()));
+                return;
+            }
+
             var parameter = argument.Parameter;
             if (parameter == null)
             {
@@ -250,12 +276,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             // `out var x` / `out T x` declaration in call site is allowed.
             if (parameter.RefKind == RefKind.Out && argumentValue is IDeclarationExpressionOperation)
-            {
-                return;
-            }
-
-            var hasRoot = TryGetRootLocalOrParameter(argumentValue, out var rootName, out _);
-            if (hasRoot && HasMutableNamePrefix(rootName))
             {
                 return;
             }

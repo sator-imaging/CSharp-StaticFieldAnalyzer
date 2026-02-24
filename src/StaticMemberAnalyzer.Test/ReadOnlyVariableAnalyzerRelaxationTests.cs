@@ -171,6 +171,9 @@ namespace Test
                 specificOptions = specificOptions.SetItem(
                     ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument,
                     ReportDiagnostic.Error);
+                specificOptions = specificOptions.SetItem(
+                    ReadOnlyVariableAnalyzer.RuleId_ReadOnlyProperty,
+                    ReportDiagnostic.Error);
 
                 compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(specificOptions);
                 return solution.WithProjectCompilationOptions(projectId, compilationOptions);

@@ -765,7 +765,7 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument)
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyProperty)
                 .WithLocation(0)
                 .WithArguments("Prop");
 
@@ -1431,6 +1431,9 @@ namespace Test
                 specificOptions = specificOptions.SetItem(
                     ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument,
                     ReportDiagnostic.Suppress);
+                specificOptions = specificOptions.SetItem(
+                    ReadOnlyVariableAnalyzer.RuleId_ReadOnlyProperty,
+                    ReportDiagnostic.Suppress);
 
                 compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(specificOptions);
                 return solution.WithProjectCompilationOptions(projectId, compilationOptions);
@@ -1448,6 +1451,7 @@ namespace Test
                 ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal,
                 ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter,
                 ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument,
+                ReadOnlyVariableAnalyzer.RuleId_ReadOnlyProperty,
             };
 
             foreach (var id in ids)
@@ -1480,6 +1484,9 @@ namespace Test
                     ReportDiagnostic.Error);
                 specificOptions = specificOptions.SetItem(
                     ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument,
+                    ReportDiagnostic.Error);
+                specificOptions = specificOptions.SetItem(
+                    ReadOnlyVariableAnalyzer.RuleId_ReadOnlyProperty,
                     ReportDiagnostic.Error);
 
                 compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(specificOptions);
