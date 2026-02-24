@@ -45,6 +45,7 @@ Resource suffix: `_Title` `_Description` `__MD_TITLE__`
 | SMA0040 | Missing Using Statement                    | `using` statement should be used for instance that has public `Dispose` or `DisposeAsync` method.
 | SMA0041 | Null Assignment to Disposable              | Disposable object is assigned null without a preceding `.Dispose()` or `?.Dispose()` call.
 | SMA0042 | Not All Code Paths Return a Value          | A locally declared disposable object must be returned on all code paths.
+| SMA0043 | Undisposed Disposable Member               | Disposable fields and properties should be disposed of in the class's Dispose method.
 
 ## File Structure Analysis
 | ID      | Diagnostic                                 | Description
