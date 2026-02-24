@@ -19,7 +19,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
     public sealed class ReadOnlyVariableAnalyzer : DiagnosticAnalyzer
     {
         const string ImmutableCategory = "ImmutableVariable";
-        const bool IsEnableByDefault = false;
+        const bool IsEnabledByDefault = false;
 
         public const string RuleId_ReadOnlyLocal = "SMA0060";
         public const string RuleId_ReadOnlyParameter = "SMA0061";
