@@ -337,17 +337,12 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 このアナライザーは、書き込み操作を検出してローカル値/引数の不変性維持を支援します。
 
 > [!IMPORTANT]
-> この解析はデフォルトで無効になっています。有効にする方法は次項を参照してください。
-
-
-## カテゴリによる解析の有効化
-
-カテゴリ全体で解析を有効にするには、`.editorconfig` ファイルに以下を追加します。
-
-```
-[*.cs]
-dotnet_analyzer_diagnostic.category-ImmutableVariable.severity = warning
-```
+> この解析はデフォルトで無効になっています。有効にするには、`.editorconfig` ファイルに以下を追加します。
+>
+> ```
+> [*.cs]
+> dotnet_analyzer_diagnostic.category-ImmutableVariable.severity = warning
+> ```
 
 
 - 代入

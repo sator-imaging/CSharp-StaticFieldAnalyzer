@@ -337,17 +337,12 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 This analyzer helps keep local values and parameters immutable by flagging write operations.  
 
 > [!IMPORTANT]
-> This analysis is disabled by default. To enable it, see the following section.
-
-
-## Enable Analysis by Category
-
-To enable analysis for the entire category, add the following to your `.editorconfig` file.
-
-```
-[*.cs]
-dotnet_analyzer_diagnostic.category-ImmutableVariable.severity = warning
-```
+> This analysis is disabled by default. To enable it, add the following to your `.editorconfig` file.
+>
+> ```
+> [*.cs]
+> dotnet_analyzer_diagnostic.category-ImmutableVariable.severity = warning
+> ```
 
 
 - Assignment
