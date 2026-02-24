@@ -363,7 +363,7 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 - 参数处理
     - 允许: 方法调用和对象创建（如 `Use(Create())`, `Use(new C())`）
     - 允许: 匿名对象和数组创建（如 `Use(new { X = 1 })`, `Use(new[] { 1, 2 })`）
-    - 允许: Lambda 和匿名方法声明（如 `Use(x => x)`, `Use(delegate { })`）
+    - 允许: Lambda 和匿名方法声明（如 `Use(x => x)`, `Use(delegate { })`）。请注意，函数体内部的修改操作仍会被分析和报告。
     - 允许: 调用点 `out var x` / `out T x` 声明
     - 允许: 根局部变量/参数名以 `mut_` 开头
     - 类型检查（`string` 按只读 struct 处理）

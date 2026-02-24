@@ -363,7 +363,7 @@ This analyzer helps keep local values and parameters immutable by flagging write
 - Argument handling
     - Allowed: Method invocation and object creation (e.g. `Use(Create())`, `Use(new C())`)
     - Allowed: Anonymous object and array creation (e.g. `Use(new { X = 1 })`, `Use(new[] { 1, 2 })`)
-    - Allowed: Lambda and anonymous method declarations (e.g. `Use(x => x)`, `Use(delegate { })`)
+    - Allowed: Lambda and anonymous method declarations (e.g. `Use(x => x)`, `Use(delegate { })`). Note that mutations within the function body are still analyzed and reported.
     - Allowed: `out var x` / `out T x` declaration at call site
     - Allowed: Root local/parameter name starts with `mut_`
     - Type checks (`string` is treated as readonly struct)

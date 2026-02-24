@@ -363,7 +363,7 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 - 引数処理
     - 許可: メソッド呼び出し/オブジェクト生成 (例: `Use(Create())`, `Use(new C())`)
     - 許可: 匿名オブジェクト/配列生成 (例: `Use(new { X = 1 })`, `Use(new[] { 1, 2 })`)
-    - 許可: ラムダ式/匿名メソッド宣言 (例: `Use(x => x)`, `Use(delegate { })`)
+    - 許可: ラムダ式/匿名メソッド宣言 (例: `Use(x => x)`, `Use(delegate { })`)。ただし、関数内の書き込み操作は引き続き解析・報告されます。
     - 許可: 呼び出し側 `out var x` / `out T x` 宣言
     - 許可: ルートローカル/引数名が `mut_` で始まる
     - 型チェック (`string` は読み取り専用 struct 相当として扱う)
