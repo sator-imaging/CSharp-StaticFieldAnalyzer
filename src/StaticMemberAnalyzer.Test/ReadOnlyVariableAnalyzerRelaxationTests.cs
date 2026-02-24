@@ -20,6 +20,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Test
             var test = @"
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 namespace Test
 {
     class Program
@@ -35,6 +36,10 @@ namespace Test
             UseGeneric(eg);
             Use(eParam);
             UseGeneric(egParam);
+
+            // LINQ methods
+            eg.Any();
+            egParam.Any();
         }
     }
 }
