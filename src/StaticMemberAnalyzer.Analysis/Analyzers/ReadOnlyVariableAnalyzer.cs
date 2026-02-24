@@ -249,7 +249,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 argumentValue = conversion.Operand;
             }
 
-            if (argumentValue is IFieldReferenceOperation { Field: { IsReadOnly: true } })
+            if (argumentValue is IFieldReferenceOperation { Field: { IsReadOnly: true } or { IsConst: true } })
             {
                 return;
             }

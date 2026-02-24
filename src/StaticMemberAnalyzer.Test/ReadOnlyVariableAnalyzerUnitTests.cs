@@ -243,6 +243,28 @@ namespace Test
         }
 
         [TestMethod]
+        public async Task ConstFieldArgument_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class Program
+    {
+        const int MyConst = 10;
+        static void Use(int value) { }
+
+        void M()
+        {
+            Use(MyConst);
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
         public async Task ReadOnlyStructGetterOnlyPropertyArgument_IsAllowed()
         {
             var test = @"
