@@ -19,6 +19,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
     public sealed class ReadOnlyVariableAnalyzer : DiagnosticAnalyzer
     {
         const string ImmutableCategory = "ImmutableVariable";
+        const bool IsEnabledByDefault = false;
 
         public const string RuleId_ReadOnlyLocal = "SMA0060";
         public const string RuleId_ReadOnlyParameter = "SMA0061";
@@ -30,7 +31,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             new LocalizableResourceString("SMA0060_MessageFormat", Resources.ResourceManager, typeof(Resources)),
             ImmutableCategory,
             DiagnosticSeverity.Error,
-            isEnabledByDefault: true,
+            isEnabledByDefault: IsEnabledByDefault,
             description: new LocalizableResourceString("SMA0060_Description", Resources.ResourceManager, typeof(Resources)));
 
         private static readonly DiagnosticDescriptor Rule_ReadOnlyParameter = new(
@@ -39,7 +40,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             new LocalizableResourceString("SMA0061_MessageFormat", Resources.ResourceManager, typeof(Resources)),
             ImmutableCategory,
             DiagnosticSeverity.Error,
-            isEnabledByDefault: true,
+            isEnabledByDefault: IsEnabledByDefault,
             description: new LocalizableResourceString("SMA0061_Description", Resources.ResourceManager, typeof(Resources)));
 
         private static readonly DiagnosticDescriptor Rule_ReadOnlyArgument = new(
@@ -48,7 +49,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             new LocalizableResourceString("SMA0062_MessageFormat", Resources.ResourceManager, typeof(Resources)),
             ImmutableCategory,
             DiagnosticSeverity.Error,
-            isEnabledByDefault: true,
+            isEnabledByDefault: IsEnabledByDefault,
             description: new LocalizableResourceString("SMA0062_Description", Resources.ResourceManager, typeof(Resources)));
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
