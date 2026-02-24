@@ -249,25 +249,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 argumentValue = conversion.Operand;
             }
 
-            if (argumentValue is IFieldReferenceOperation { Field: { IsReadOnly: true } or { IsConst: true } })
-            {
-                return;
-            }
-
-            if (argumentValue is IPropertyReferenceOperation { Property: { IsReadOnly: true } } propRef)
-            {
-                if (propRef.Property.GetMethod?.IsReadOnly == true)
-                {
-                    return;
-                }
-
-                context.ReportDiagnostic(Diagnostic.Create(
-                    Rule_PropertyAccessCanChangeState,
-                    argumentValue.Syntax.GetLocation(),
-                    argumentValue.Syntax.ToString()));
-                return;
-            }
-
             if (IsAllowedArgumentValue(argumentValue))
             {
                 return;
@@ -286,9 +267,31 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
 
             var hasRoot = TryGetRootLocalOrParameter(argumentValue, out var rootName, out _);
-            if (hasRoot && HasMutableNamePrefix(rootName))
+            if (hasRoot)
             {
-                return;
+                if (HasMutableNamePrefix(rootName))
+                {
+                    return;
+                }
+
+                if (argumentValue is IFieldReferenceOperation { Field: { IsReadOnly: true } or { IsConst: true } })
+                {
+                    return;
+                }
+
+                if (argumentValue is IPropertyReferenceOperation { Property: { IsReadOnly: true } } propRef)
+                {
+                    if (propRef.Property.GetMethod?.IsReadOnly == true)
+                    {
+                        return;
+                    }
+
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        Rule_PropertyAccessCanChangeState,
+                        argumentValue.Syntax.GetLocation(),
+                        argumentValue.Syntax.ToString()));
+                    return;
+                }
             }
 
             var type = parameter.Type;

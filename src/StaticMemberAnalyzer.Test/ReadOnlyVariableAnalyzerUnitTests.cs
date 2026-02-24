@@ -781,7 +781,8 @@ namespace Test
 
         void M()
         {
-            Use({|#0:_field|});
+            var self = this;
+            Use({|#0:self._field|});
         }
     }
 }
@@ -789,7 +790,7 @@ namespace Test
 
             var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument)
                 .WithLocation(0)
-                .WithArguments("_field");
+                .WithArguments("self");
 
             await VerifyWithRuleEnabledAsync(test, expected);
         }
@@ -809,7 +810,8 @@ namespace Test
 
         void M()
         {
-            Use(_field);
+            var self = this;
+            Use(self._field);
         }
     }
 }
@@ -833,7 +835,8 @@ namespace Test
 
         void M()
         {
-            Use({|#0:Prop|});
+            var self = this;
+            Use({|#0:self.Prop|});
         }
     }
 }
@@ -841,7 +844,7 @@ namespace Test
 
             var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument)
                 .WithLocation(0)
-                .WithArguments("Prop");
+                .WithArguments("self.Prop");
 
             await VerifyWithRuleEnabledAsync(test, expected);
         }
