@@ -478,4 +478,22 @@
   <data name="SMA0062_Description" xml:space="preserve">
     <value>Avoid passing local/parameter-rooted variables to method/indexer calls in writable forms unless explicitly mutable.</value>
   </data>
+  <data name="SMA0043_Title" xml:space="preserve">
+    <value>Undisposed Disposable Member</value>
+  </data>
+  <data name="SMA0043_Description" xml:space="preserve">
+    <value>Disposable fields and properties should be disposed of in the class's Dispose method.</value>
+  </data>
+  <data name="SMA0043_MessageFormat" xml:space="preserve">
+    <value>'{0}' is not disposed (UndisposedMember)</value>
+  </data>
+  <data name="SMA0044_Title" xml:space="preserve">
+    <value>Type Should Implement IDisposable</value>
+  </data>
+  <data name="SMA0044_Description" xml:space="preserve">
+    <value>Types with disposable fields or properties should implement IDisposable.</value>
+  </data>
+  <data name="SMA0044_MessageFormat" xml:space="preserve">
+    <value>Type '{0}' has disposable members but does not implement IDisposable (MissingDisposeImplementation)</value>
+  </data>
 </root>
