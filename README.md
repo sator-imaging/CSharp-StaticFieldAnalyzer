@@ -336,6 +336,20 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 
 This analyzer helps keep local values and parameters immutable by flagging write operations.  
 
+> [!IMPORTANT]
+> This analysis is disabled by default. To enable it, see the following section.
+
+
+## Enable Analysis by Category
+
+To enable analysis for the entire category, add the following to your `.editorconfig` file.
+
+```
+[*.cs]
+dotnet_analyzer_diagnostic.category-ImmutableVariable.severity = warning
+```
+
+
 - Assignment
     - `=`
     - `??=`
@@ -442,14 +456,6 @@ class Demo
 > Member access assignments are reported when rooted at local/parameter (e.g. `foo.Bar.Value = 1` where `foo` is local/parameter), but not when rooted at field.
 
 
-## Suppress Analysis by Category
-
-To suppress analysis for the entire category, add the following to your `.editorconfig` file.
-
-```
-[*.cs]
-dotnet_analyzer_diagnostic.category-ImmutableVariable.severity = silent
-```
 
 
 

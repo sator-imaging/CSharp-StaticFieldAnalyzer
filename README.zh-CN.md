@@ -336,6 +336,20 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 
 该分析器通过标记写操作，帮助保持局部变量和参数的不可变性。
 
+> [!IMPORTANT]
+> 该分析默认情况下处于禁用状态。要启用它，请参阅下一节。
+
+
+## 按类别启用分析
+
+若要按类别启用分析，请将以下内容添加到 `.editorconfig` 文件。
+
+```
+[*.cs]
+dotnet_analyzer_diagnostic.category-ImmutableVariable.severity = warning
+```
+
+
 - 赋值
     - `=`
     - `??=`
@@ -442,14 +456,6 @@ class Demo
 > 当赋值根节点是局部变量/参数时会被报告（例如 `foo.Bar.Value = 1` 中的 `foo`）。根节点是字段时不会报告。
 
 
-## 按类别抑制分析
-
-若要按类别抑制分析，请将以下内容添加到 `.editorconfig` 文件。
-
-```
-[*.cs]
-dotnet_analyzer_diagnostic.category-ImmutableVariable.severity = silent
-```
 
 
 
