@@ -261,6 +261,17 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             var type = parameter.Type;
             var isString = type.SpecialType == SpecialType.System_String;
+
+            // Relax for IEnumerable and Enum
+            var isIEnumerable = type.SpecialType == SpecialType.System_Collections_IEnumerable
+                || type.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T;
+            var isEnum = type.TypeKind == TypeKind.Enum;
+
+            if (isIEnumerable || isEnum)
+            {
+                return;
+            }
+
             var readOnlyStructLike = isString || (!type.IsReferenceType && type.IsReadOnly);
 
             if (type.IsReferenceType && !isString)
@@ -395,7 +406,9 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 or IAnonymousObjectCreationOperation
                 or IArrayCreationOperation
                 or ILiteralOperation
-                or IDefaultValueOperation;
+                or IDefaultValueOperation
+                or IAnonymousFunctionOperation
+                or IDelegateCreationOperation;
         }
     }
 }
