@@ -279,7 +279,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     return;
                 }
 
-                if (argumentValue is IPropertyReferenceOperation { Property: { IsReadOnly: true } } propRef)
+                if (argumentValue is IPropertyReferenceOperation propRef)
                 {
                     if (propRef.Property.GetMethod?.IsReadOnly == true)
                     {

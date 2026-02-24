@@ -40,6 +40,36 @@ namespace Test
         }
 
         [TestMethod]
+        public async Task ReadWritePropertyArgument_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class C { }
+
+    class Program
+    {
+        C _field;
+        public C Prop { get => _field; set => _field = value; }
+        static void Use(C value) { }
+
+        void M()
+        {
+            var self = this;
+            Use({|#0:self.Prop|});
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument)
+                .WithLocation(0)
+                .WithArguments("self.Prop");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
         public async Task CompoundAssignment_ReportsDiagnostic()
         {
             var test = @"
