@@ -15,10 +15,11 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class DisposableMethodImplAnalyzer : DiagnosticAnalyzer
     {
-        public const string RuleId = "SMA0043";
+        public const string RuleId_UndisposedMember = "SMA0043";
+        public const string RuleId_MissingDisposeImpl = "SMA0044";
 
-        private static readonly DiagnosticDescriptor Rule = new(
-            RuleId,
+        private static readonly DiagnosticDescriptor Rule_UndisposedMember = new(
+            RuleId_UndisposedMember,
             new LocalizableResourceString(nameof(Resources.SMA0043_Title), Resources.ResourceManager, typeof(Resources)),
             new LocalizableResourceString(nameof(Resources.SMA0043_MessageFormat), Resources.ResourceManager, typeof(Resources)),
             Core.Category,
@@ -26,7 +27,19 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             isEnabledByDefault: true,
             description: new LocalizableResourceString(nameof(Resources.SMA0043_Description), Resources.ResourceManager, typeof(Resources)));
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+        private static readonly DiagnosticDescriptor Rule_MissingDisposeImpl = new(
+            RuleId_MissingDisposeImpl,
+            new LocalizableResourceString(nameof(Resources.SMA0044_Title), Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString(nameof(Resources.SMA0044_MessageFormat), Resources.ResourceManager, typeof(Resources)),
+            Core.Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: new LocalizableResourceString(nameof(Resources.SMA0044_Description), Resources.ResourceManager, typeof(Resources)));
+
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
+            Rule_UndisposedMember,
+            Rule_MissingDisposeImpl
+        );
 
         public override void Initialize(AnalysisContext context)
         {
@@ -111,15 +124,18 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (undisposedMembers.Count == 0)
                 return;
 
-            var reportLocations = disposeMethods.Count > 0
-                ? disposeMethods.Select(m => m.Locations[0])
-                : namedType.Locations.Take(1);
-
-            foreach (var location in reportLocations)
+            if (disposeMethods.Count == 0)
             {
-                foreach (var member in undisposedMembers)
+                context.ReportDiagnostic(Diagnostic.Create(Rule_MissingDisposeImpl, namedType.Locations[0], namedType.Name));
+            }
+            else
+            {
+                foreach (var method in disposeMethods)
                 {
-                    context.ReportDiagnostic(Diagnostic.Create(Rule, location, member.Name));
+                    foreach (var member in undisposedMembers)
+                    {
+                        context.ReportDiagnostic(Diagnostic.Create(Rule_UndisposedMember, method.Locations[0], member.Name));
+                    }
                 }
             }
         }

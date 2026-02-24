@@ -46,6 +46,7 @@ Resource suffix: `_Title` `_Description` `__MD_TITLE__`
 | SMA0041 | Null Assignment to Disposable              | Disposable object is assigned null without a preceding `.Dispose()` or `?.Dispose()` call.
 | SMA0042 | Not All Code Paths Return a Value          | A locally declared disposable object must be returned on all code paths.
 | SMA0043 | Undisposed Disposable Member               | Disposable fields and properties should be disposed of in the class's Dispose method.
+| SMA0044 | Type Should Implement IDisposable          | Types with disposable fields or properties should implement IDisposable.
 
 ## File Structure Analysis
 | ID      | Diagnostic                                 | Description

@@ -36,14 +36,14 @@ namespace Test
     }
 }
 ";
-            var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId)
+            var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId_UndisposedMember)
                 .WithLocation(0)
                 .WithArguments("_disposable");
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
         }
 
         [TestMethod]
-        public async Task UndisposedField_NoDisposeMethod_ReportsDiagnosticOnClass()
+        public async Task UndisposedField_NoDisposeMethod_ReportsSMA0044OnClass()
         {
             var test = @"
 using System;
@@ -61,9 +61,9 @@ namespace Test
     }
 }
 ";
-            var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId)
+            var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId_MissingDisposeImpl)
                 .WithLocation(0)
-                .WithArguments("_disposable");
+                .WithArguments("Program");
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
         }
 
@@ -93,10 +93,10 @@ namespace Test
 ";
             var expected = new[]
             {
-                VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId)
+                VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId_UndisposedMember)
                     .WithLocation(0)
                     .WithArguments("_d1"),
-                VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId)
+                VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId_UndisposedMember)
                     .WithLocation(0)
                     .WithArguments("_d2"),
             };
@@ -207,7 +207,7 @@ namespace Test
     }
 }
 ";
-            var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId)
+            var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId_UndisposedMember)
                 .WithLocation(0)
                 .WithArguments("_disposable");
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
@@ -263,7 +263,7 @@ namespace Test
     }
 }
 ";
-            var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId)
+            var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId_UndisposedMember)
                 .WithLocation(0)
                 .WithArguments("DisposableProperty");
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
@@ -308,7 +308,7 @@ namespace Test
     }
 }
 ";
-            var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId)
+            var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId_UndisposedMember)
                 .WithLocation(0)
                 .WithArguments("_disposable");
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
