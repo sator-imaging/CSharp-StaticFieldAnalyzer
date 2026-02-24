@@ -243,6 +243,34 @@ namespace Test
         }
 
         [TestMethod]
+        public async Task ReadOnlyStructGetterOnlyPropertyArgument_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    struct MutableStruct { public int X; }
+    readonly struct S
+    {
+        public MutableStruct Prop => new MutableStruct();
+    }
+
+    class Program
+    {
+        static void Use(MutableStruct s) { }
+
+        void M()
+        {
+            var s = new S();
+            Use(s.Prop);
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
         public async Task SingleLetterLocal_ReportsDiagnostic()
         {
             var test = @"
@@ -745,6 +773,30 @@ namespace Test
         }
 
         [TestMethod]
+        public async Task ReadOnlyFieldArgument_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    class C { }
+
+    class Program
+    {
+        readonly C _field = new C();
+        static void Use(C value) { }
+
+        void M()
+        {
+            Use(_field);
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
         public async Task PropertyArgument_ReportsDiagnostic()
         {
             var test = @"
@@ -765,11 +817,71 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument)
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument)
                 .WithLocation(0)
                 .WithArguments("Prop");
 
             await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task StructGetterOnlyPropertyArgument_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    struct MutableStruct { public int X; }
+    struct S
+    {
+        public MutableStruct Prop => new MutableStruct();
+    }
+
+    class Program
+    {
+        static void Use(MutableStruct s) { }
+
+        void M()
+        {
+            var s = new S();
+            Use({|#0:s.Prop|});
+        }
+    }
+}
+";
+
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument)
+                .WithLocation(0)
+                .WithArguments("s");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task StructReadOnlyGetterOnlyPropertyArgument_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    struct MutableStruct { public int X; }
+    struct S
+    {
+        public readonly MutableStruct Prop => new MutableStruct();
+    }
+
+    class Program
+    {
+        static void Use(MutableStruct s) { }
+
+        void M()
+        {
+            var s = new S();
+            Use(s.Prop);
+        }
+    }
+}
+";
+
+            await VerifyWithRuleEnabledAsync(test);
         }
 
         [TestMethod]
@@ -1448,6 +1560,7 @@ namespace Test
                 ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal,
                 ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter,
                 ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument,
+                ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument,
             };
 
             foreach (var id in ids)
@@ -1480,6 +1593,9 @@ namespace Test
                     ReportDiagnostic.Error);
                 specificOptions = specificOptions.SetItem(
                     ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument,
+                    ReportDiagnostic.Error);
+                specificOptions = specificOptions.SetItem(
+                    ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument,
                     ReportDiagnostic.Error);
 
                 compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(specificOptions);
