@@ -249,6 +249,11 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 argumentValue = conversion.Operand;
             }
 
+            if (argumentValue is IFieldReferenceOperation { Field: { IsReadOnly: true } })
+            {
+                return;
+            }
+
             if (IsAllowedArgumentValue(argumentValue))
             {
                 return;
@@ -286,11 +291,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
 
             var readOnlyStructLike = isString || (!type.IsReferenceType && type.IsReadOnly);
-
-            if (argumentValue is IFieldReferenceOperation { Field: { IsReadOnly: true } })
-            {
-                return;
-            }
 
             if (type.IsReferenceType && !isString)
             {
