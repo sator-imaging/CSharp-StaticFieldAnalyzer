@@ -122,6 +122,32 @@ namespace Test
             await VerifyWithRuleEnabledAsync(test, expected0);
         }
 
+        [TestMethod]
+        public async Task ActionVariable_ReportsDiagnostic()
+        {
+            var test = @"
+using System;
+namespace Test
+{
+    class Program
+    {
+        static void Use(Action action) { }
+
+        void M(Action aParam)
+        {
+            Action a = () => { };
+            Use({|#0:a|});
+            Use({|#1:aParam|});
+        }
+    }
+}
+";
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument).WithLocation(0).WithArguments("a");
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument).WithLocation(1).WithArguments("aParam");
+
+            await VerifyWithRuleEnabledAsync(test, expected0, expected1);
+        }
+
         private static async Task VerifyWithRuleEnabledAsync(string source, params Microsoft.CodeAnalysis.Testing.DiagnosticResult[] expected)
         {
             var test = new VerifyCS.Test
