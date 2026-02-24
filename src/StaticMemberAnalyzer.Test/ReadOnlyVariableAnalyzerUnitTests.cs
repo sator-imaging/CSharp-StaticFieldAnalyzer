@@ -871,9 +871,9 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument)
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument)
                 .WithLocation(0)
-                .WithArguments("s");
+                .WithArguments("s.Prop");
 
             await VerifyWithRuleEnabledAsync(test, expected);
         }

@@ -254,6 +254,20 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 return;
             }
 
+            if (argumentValue is IPropertyReferenceOperation { Property: { IsReadOnly: true } } propRef)
+            {
+                if (propRef.Property.GetMethod?.IsReadOnly == true)
+                {
+                    return;
+                }
+
+                context.ReportDiagnostic(Diagnostic.Create(
+                    Rule_PropertyAccessCanChangeState,
+                    argumentValue.Syntax.GetLocation(),
+                    argumentValue.Syntax.ToString()));
+                return;
+            }
+
             if (IsAllowedArgumentValue(argumentValue))
             {
                 return;
@@ -294,15 +308,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
             if (type.IsReferenceType && !isString)
             {
-                if (argumentValue is IPropertyReferenceOperation { Property: { IsReadOnly: true } })
-                {
-                    context.ReportDiagnostic(Diagnostic.Create(
-                        Rule_PropertyAccessCanChangeState,
-                        argumentValue.Syntax.GetLocation(),
-                        argumentValue.Syntax.ToString()));
-                    return;
-                }
-
                 context.ReportDiagnostic(Diagnostic.Create(
                     Rule_ReadOnlyArgument,
                     argumentValue.Syntax.GetLocation(),
@@ -318,14 +323,6 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (parameter.RefKind == RefKind.None && readOnlyStructLike)
             {
                 return;
-            }
-
-            if (argumentValue is IPropertyReferenceOperation { Property: { IsReadOnly: true } } propRef)
-            {
-                if (propRef.Property.GetMethod?.IsReadOnly == true)
-                {
-                    return;
-                }
             }
 
             context.ReportDiagnostic(Diagnostic.Create(
