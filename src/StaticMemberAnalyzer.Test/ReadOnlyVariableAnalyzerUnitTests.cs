@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers;
+using System.Linq;
 using System.Threading.Tasks;
 using VerifyCS = StaticMemberAnalyzer.Test.CSharpAnalyzerVerifier<
     SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers.ReadOnlyVariableAnalyzer>;
@@ -1437,6 +1438,25 @@ namespace Test
 
             await verifier.RunAsync();
         }
+
+        [TestMethod]
+        public void RulesAreDisabledByDefault()
+        {
+            var analyzer = new ReadOnlyVariableAnalyzer();
+            var ids = new[]
+            {
+                ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal,
+                ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter,
+                ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument,
+            };
+
+            foreach (var id in ids)
+            {
+                var descriptor = analyzer.SupportedDiagnostics.First(d => d.Id == id);
+                Assert.IsFalse(descriptor.IsEnabledByDefault, $"{id} should be disabled by default");
+            }
+        }
+
 
         private static async Task VerifyWithRuleEnabledAsync(string source, params Microsoft.CodeAnalysis.Testing.DiagnosticResult[] expected)
         {
