@@ -336,6 +336,15 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 
 This analyzer helps keep local values and parameters immutable by flagging write operations.  
 
+> [!IMPORTANT]
+> This analysis is disabled by default. To enable it, add the following to your `.editorconfig` file.
+>
+> ```
+> [*.cs]
+> dotnet_analyzer_diagnostic.category-ImmutableVariable.severity = warning
+> ```
+
+
 - Assignment
     - `=`
     - `??=`
@@ -345,6 +354,9 @@ This analyzer helps keep local values and parameters immutable by flagging write
     - *Note*: Assignment to `out` method parameter is always allowed
 - Increment and decrement
     - `++x`, `x++`, `--x`, `x--`
+- Special handling for loop headers
+    - Allowed: Assignment and increment/decrement in `for` loop header
+    - Allowed: Simple assignment in `while` loop condition
 - Compound assignment
     - `+=`, `-=`, `*=`, `/=`, `%=`
     - `&=`, `|=`, `^=`, `<<=`, `>>=`
@@ -437,6 +449,8 @@ class Demo
 
 > [!NOTE]
 > Member access assignments are reported when rooted at local/parameter (e.g. `foo.Bar.Value = 1` where `foo` is local/parameter), but not when rooted at field.
+
+
 
 
 

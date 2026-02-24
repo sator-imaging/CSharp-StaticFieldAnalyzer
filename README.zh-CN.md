@@ -336,6 +336,15 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 
 该分析器通过标记写操作，帮助保持局部变量和参数的不可变性。
 
+> [!IMPORTANT]
+> 该分析默认情况下处于禁用状态。若要启用它，请将以下内容添加到 `.editorconfig` 文件。
+>
+> ```
+> [*.cs]
+> dotnet_analyzer_diagnostic.category-ImmutableVariable.severity = warning
+> ```
+
+
 - 赋值
     - `=`
     - `??=`
@@ -345,6 +354,9 @@ sealed class DisposableAnalyzerSuppressor : Attribute
     - *注*: 对 `out` 参数赋值始终允许
 - 自增/自减
     - `++x`, `x++`, `--x`, `x--`
+- 循环头中的特殊处理
+    - 允许: `for` 循环头中的赋值和自增/自减
+    - 允许: `while` 循环条件中的简单赋值
 - 复合赋值
     - `+=`, `-=`, `*=`, `/=`, `%=`
     - `&=`, `|=`, `^=`, `<<=`, `>>=`
@@ -437,6 +449,8 @@ class Demo
 
 > [!NOTE]
 > 当赋值根节点是局部变量/参数时会被报告（例如 `foo.Bar.Value = 1` 中的 `foo`）。根节点是字段时不会报告。
+
+
 
 
 

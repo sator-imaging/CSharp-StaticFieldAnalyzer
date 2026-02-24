@@ -336,6 +336,15 @@ sealed class DisposableAnalyzerSuppressor : Attribute
 
 このアナライザーは、書き込み操作を検出してローカル値/引数の不変性維持を支援します。
 
+> [!IMPORTANT]
+> この解析はデフォルトで無効になっています。有効にするには、`.editorconfig` ファイルに以下を追加します。
+>
+> ```
+> [*.cs]
+> dotnet_analyzer_diagnostic.category-ImmutableVariable.severity = warning
+> ```
+
+
 - 代入
     - `=`
     - `??=`
@@ -345,6 +354,9 @@ sealed class DisposableAnalyzerSuppressor : Attribute
     - *注*: メソッド `out` 引数への代入は常に許可
 - インクリメント/デクリメント
     - `++x`, `x++`, `--x`, `x--`
+- ループヘッダーの特殊な扱い
+    - 許可: `for` ループのヘッダー内での代入とインクリメント/デクリメント
+    - 許可: `while` ループの条件式内での単純代入
 - 複合代入
     - `+=`, `-=`, `*=`, `/=`, `%=`
     - `&=`, `|=`, `^=`, `<<=`, `>>=`
@@ -437,6 +449,8 @@ class Demo
 
 > [!NOTE]
 > ローカル/引数をルートにしたメンバー代入 (例: `foo.Bar.Value = 1` の `foo`) は報告対象です。フィールドをルートにした場合は報告しません。
+
+
 
 
 
