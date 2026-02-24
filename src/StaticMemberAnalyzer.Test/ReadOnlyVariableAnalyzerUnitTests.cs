@@ -281,11 +281,15 @@ namespace Test
     class Program
     {
         const int MyConst = 10;
+        readonly int OtherConst = 20;
         static void Use(int value) { }
 
         void M()
         {
             Use(MyConst);
+
+            Program foo = this;
+            Use(foo.OtherConst);
         }
     }
 }
