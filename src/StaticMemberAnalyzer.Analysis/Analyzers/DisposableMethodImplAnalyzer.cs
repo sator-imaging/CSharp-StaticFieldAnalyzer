@@ -61,10 +61,16 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 return;
 
             var disposedMembers = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
+            var disposeMethods = new List<IMethodSymbol>();
 
             foreach (var member in namedType.GetMembers().OfType<IMethodSymbol>())
             {
                 if (member.IsStatic) continue;
+
+                if (member.Name == "Dispose")
+                {
+                    disposeMethods.Add(member);
+                }
 
                 foreach (var syntaxRef in member.DeclaringSyntaxReferences)
                 {
@@ -101,11 +107,19 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 }
             }
 
-            foreach (var member in disposableMembers)
+            var undisposedMembers = disposableMembers.Where(m => !disposedMembers.Contains(m)).ToList();
+            if (undisposedMembers.Count == 0)
+                return;
+
+            var reportLocations = disposeMethods.Count > 0
+                ? disposeMethods.Select(m => m.Locations[0])
+                : namedType.Locations.Take(1);
+
+            foreach (var location in reportLocations)
             {
-                if (!disposedMembers.Contains(member))
+                foreach (var member in undisposedMembers)
                 {
-                    context.ReportDiagnostic(Diagnostic.Create(Rule, member.Locations[0], member.Name));
+                    context.ReportDiagnostic(Diagnostic.Create(Rule, location, member.Name));
                 }
             }
         }

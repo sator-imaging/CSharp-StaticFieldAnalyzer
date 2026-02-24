@@ -14,7 +14,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Test
     public class DisposableMethodImplAnalyzerUnitTests
     {
         [TestMethod]
-        public async Task UndisposedField_ReportsDiagnostic()
+        public async Task UndisposedField_ReportsDiagnosticOnDisposeMethod()
         {
             var test = @"
 using System;
@@ -28,9 +28,9 @@ namespace Test
 
     class Program
     {
-        private MyDisposable {|#0:_disposable|};
+        private MyDisposable _disposable;
 
-        public void Dispose()
+        public void {|#0:Dispose|}()
         {
         }
     }
@@ -39,6 +39,67 @@ namespace Test
             var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId)
                 .WithLocation(0)
                 .WithArguments("_disposable");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task UndisposedField_NoDisposeMethod_ReportsDiagnosticOnClass()
+        {
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class {|#0:Program|}
+    {
+        private MyDisposable _disposable;
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId)
+                .WithLocation(0)
+                .WithArguments("_disposable");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task MultipleUndisposedFields_ReportsDiagnosticsOnSameDisposeMethod()
+        {
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program
+    {
+        private MyDisposable _d1;
+        private MyDisposable _d2;
+
+        public void {|#0:Dispose|}()
+        {
+        }
+    }
+}
+";
+            var expected = new[]
+            {
+                VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId)
+                    .WithLocation(0)
+                    .WithArguments("_d1"),
+                VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId)
+                    .WithLocation(0)
+                    .WithArguments("_d2"),
+            };
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
         }
 
@@ -124,7 +185,7 @@ namespace Test
         }
 
         [TestMethod]
-        public async Task DuckTypedDisposable_Undisposed_ReportsDiagnostic()
+        public async Task DuckTypedDisposable_Undisposed_ReportsDiagnosticOnDisposeMethod()
         {
             var test = @"
 using System;
@@ -138,9 +199,9 @@ namespace Test
 
     class Program
     {
-        private DuckDisposable {|#0:_disposable|};
+        private DuckDisposable _disposable;
 
-        public void Dispose()
+        public void {|#0:Dispose|}()
         {
         }
     }
@@ -180,7 +241,7 @@ namespace Test
         }
 
         [TestMethod]
-        public async Task UndisposedProperty_ReportsDiagnostic()
+        public async Task UndisposedProperty_ReportsDiagnosticOnDisposeMethod()
         {
             var test = @"
 using System;
@@ -194,9 +255,9 @@ namespace Test
 
     class Program
     {
-        private MyDisposable {|#0:DisposableProperty|} { get; set; }
+        private MyDisposable DisposableProperty { get; set; }
 
-        public void Dispose()
+        public void {|#0:Dispose|}()
         {
         }
     }
@@ -230,7 +291,7 @@ namespace Test
         }
 
         [TestMethod]
-        public async Task IDisposableTypedField_Undisposed_ReportsDiagnostic()
+        public async Task IDisposableTypedField_Undisposed_ReportsDiagnosticOnDisposeMethod()
         {
             var test = @"
 using System;
@@ -239,9 +300,9 @@ namespace Test
 {
     class Program
     {
-        private IDisposable {|#0:_disposable|};
+        private IDisposable _disposable;
 
-        public void Dispose()
+        public void {|#0:Dispose|}()
         {
         }
     }
