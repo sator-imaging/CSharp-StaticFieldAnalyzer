@@ -341,5 +341,169 @@ namespace Test
 ";
             await VerifyCS.VerifyAnalyzerAsync(test);
         }
+
+        [TestMethod]
+        public async Task FullDisposePattern_CorrectlyDisposedInDisposeBool_ReportsNoDiagnostic()
+        {
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program : IDisposable
+    {
+        private MyDisposable _disposable;
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _disposable.Dispose();
+            }
+        }
+    }
+}
+";
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
+
+        [TestMethod]
+        public async Task FullDisposePattern_MissingDisposalInDisposeBool_ReportsDiagnosticOnDisposeBool()
+        {
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program : IDisposable
+    {
+        private MyDisposable _disposable;
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void {|#0:Dispose|}(bool disposing)
+        {
+        }
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId_UndisposedMember)
+                .WithLocation(0)
+                .WithArguments("_disposable");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task FullDisposePattern_DisposedInDispose0ButPatternMatched_ReportsDiagnosticOnDisposeBool()
+        {
+            // In the full dispose pattern, it should be in Dispose(bool), not Dispose()
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program : IDisposable
+    {
+        private MyDisposable _disposable;
+
+        public void Dispose()
+        {
+            _disposable.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void {|#0:Dispose|}(bool disposing)
+        {
+        }
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId_UndisposedMember)
+                .WithLocation(0)
+                .WithArguments("_disposable");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task ExplicitInterfaceImplementation_CorrectlyDisposed_ReportsNoDiagnostic()
+        {
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program : IDisposable
+    {
+        private MyDisposable _disposable;
+
+        void IDisposable.Dispose()
+        {
+            _disposable.Dispose();
+        }
+    }
+}
+";
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
+
+        [TestMethod]
+        public async Task ExplicitInterfaceImplementation_Undisposed_ReportsDiagnosticOnExplicitMethod()
+        {
+            var test = @"
+using System;
+
+namespace Test
+{
+    class MyDisposable : IDisposable
+    {
+        public void Dispose() { }
+    }
+
+    class Program : IDisposable
+    {
+        private MyDisposable _disposable;
+
+        void IDisposable.{|#0:Dispose|}()
+        {
+        }
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(DisposableMethodImplAnalyzer.RuleId_UndisposedMember)
+                .WithLocation(0)
+                .WithArguments("_disposable");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
     }
 }

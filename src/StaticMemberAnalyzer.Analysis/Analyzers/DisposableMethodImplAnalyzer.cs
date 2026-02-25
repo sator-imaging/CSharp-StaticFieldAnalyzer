@@ -17,6 +17,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
     {
         public const string RuleId_UndisposedMember = "SMA0043";
         public const string RuleId_MissingDisposeImpl = "SMA0044";
+        private const string DisposeMethodName = "Dispose";
 
         private static readonly DiagnosticDescriptor Rule_UndisposedMember = new(
             RuleId_UndisposedMember,
@@ -73,19 +74,82 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (disposableMembers.Count == 0)
                 return;
 
-            var disposedMembers = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
-            var disposeMethods = new List<IMethodSymbol>();
+            var dispose0Methods = new List<IMethodSymbol>();
+            var dispose1BoolMethods = new List<IMethodSymbol>();
+            var allDisposeMethods = new List<IMethodSymbol>();
+
+            var iDisposable = context.Compilation.GetSpecialType(SpecialType.System_IDisposable);
+            var iDisposableDispose = iDisposable?.GetMembers(DisposeMethodName).OfType<IMethodSymbol>().FirstOrDefault(m => m.Parameters.Length == 0);
 
             foreach (var member in namedType.GetMembers().OfType<IMethodSymbol>())
             {
                 if (member.IsStatic) continue;
 
-                if (member.Name == "Dispose")
+                bool isDispose = member.Name == DisposeMethodName;
+                if (!isDispose && iDisposableDispose != null)
                 {
-                    disposeMethods.Add(member);
+                    // Check explicit implementation
+                    if (member.ExplicitInterfaceImplementations.Any(e => SymbolEqualityComparer.Default.Equals(e, iDisposableDispose)))
+                    {
+                        isDispose = true;
+                    }
                 }
 
-                foreach (var syntaxRef in member.DeclaringSyntaxReferences)
+                if (isDispose)
+                {
+                    allDisposeMethods.Add(member);
+                    if (member.Parameters.Length == 0 && (member.DeclaredAccessibility == Accessibility.Public || member.ExplicitInterfaceImplementations.Any()))
+                    {
+                        dispose0Methods.Add(member);
+                    }
+                    else if (member.Parameters.Length == 1 && member.Parameters[0].Type.SpecialType == SpecialType.System_Boolean && member.DeclaredAccessibility == Accessibility.Protected)
+                    {
+                        dispose1BoolMethods.Add(member);
+                    }
+                }
+            }
+
+            var gcType = context.Compilation.GetTypeByMetadataName("System.GC");
+            bool callsSuppressFinalize = false;
+            foreach (var dispose0 in dispose0Methods)
+            {
+                foreach (var syntaxRef in dispose0.DeclaringSyntaxReferences)
+                {
+                    var syntax = syntaxRef.GetSyntax();
+                    var model = context.Compilation.GetSemanticModel(syntax.SyntaxTree);
+                    var operation = model.GetOperation(syntax, context.CancellationToken);
+                    if (operation != null)
+                    {
+                        foreach (var op in operation.DescendantsAndSelf())
+                        {
+                            if (op is IInvocationOperation invocation &&
+                                invocation.TargetMethod.Name == "SuppressFinalize" &&
+                                SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ContainingType, gcType))
+                            {
+                                callsSuppressFinalize = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (callsSuppressFinalize) break;
+                }
+                if (callsSuppressFinalize) break;
+            }
+
+            bool isFullDisposePattern = dispose0Methods.Count > 0 && dispose1BoolMethods.Count > 0 && callsSuppressFinalize;
+
+            var targetMethods = isFullDisposePattern ? dispose1BoolMethods : allDisposeMethods;
+
+            if (targetMethods.Count == 0)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(Rule_MissingDisposeImpl, namedType.Locations[0], namedType.Name));
+                return;
+            }
+
+            var disposedMembers = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
+            foreach (var method in targetMethods)
+            {
+                foreach (var syntaxRef in method.DeclaringSyntaxReferences)
                 {
                     var syntax = syntaxRef.GetSyntax();
                     var model = context.Compilation.GetSemanticModel(syntax.SyntaxTree);
@@ -94,7 +158,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
                     foreach (var op in operation.DescendantsAndSelf())
                     {
-                        if (op is IInvocationOperation invocation && invocation.TargetMethod.Name == "Dispose" && invocation.TargetMethod.Parameters.Length == 0)
+                        if (op is IInvocationOperation invocation && invocation.TargetMethod.Name == DisposeMethodName && invocation.TargetMethod.Parameters.Length == 0)
                         {
                             var receiver = invocation.Instance;
                             if (receiver is IConditionalAccessInstanceOperation)
@@ -124,18 +188,11 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (undisposedMembers.Count == 0)
                 return;
 
-            if (disposeMethods.Count == 0)
+            foreach (var method in targetMethods)
             {
-                context.ReportDiagnostic(Diagnostic.Create(Rule_MissingDisposeImpl, namedType.Locations[0], namedType.Name));
-            }
-            else
-            {
-                foreach (var method in disposeMethods)
+                foreach (var member in undisposedMembers)
                 {
-                    foreach (var member in undisposedMembers)
-                    {
-                        context.ReportDiagnostic(Diagnostic.Create(Rule_UndisposedMember, method.Locations[0], member.Name));
-                    }
+                    context.ReportDiagnostic(Diagnostic.Create(Rule_UndisposedMember, method.Locations[0], member.Name));
                 }
             }
         }
@@ -201,7 +258,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 return false;
 
             // Check public void Dispose()
-            return namedType.GetMembers("Dispose").OfType<IMethodSymbol>().Any(m =>
+            return namedType.GetMembers(DisposeMethodName).OfType<IMethodSymbol>().Any(m =>
                 m.Parameters.Length == 0 &&
                 m.ReturnType.SpecialType == SpecialType.System_Void &&
                 m.DeclaredAccessibility == Accessibility.Public);
