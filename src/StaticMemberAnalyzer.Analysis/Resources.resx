@@ -482,9 +482,18 @@
     <value>Property Access Can Change State</value>
   </data>
   <data name="SMA0063_Description" xml:space="preserve">
-    <value>Avoid passing properties to method/indexer calls as writable arguments because their accessors can have side effects.</value>
+    <value>Accessing properties of immutable variables can change internal state because their accessors can have side effects.</value>
   </data>
   <data name="SMA0063_MessageFormat" xml:space="preserve">
-    <value>Passing property '{0}' as a writable argument can change internal state on access (ReadOnlyPropertyArgument)</value>
+    <value>Accessing property '{0}' of an immutable variable can change internal state (PropertyAccess)</value>
+  </data>
+  <data name="SMA0064_Title" xml:space="preserve">
+    <value>Method Call Can Change State</value>
+  </data>
+  <data name="SMA0064_Description" xml:space="preserve">
+    <value>Calling methods of immutable variables can change internal state unless the method is marked as 'readonly'.</value>
+  </data>
+  <data name="SMA0064_MessageFormat" xml:space="preserve">
+    <value>Calling method '{0}' of an immutable variable can change internal state (MethodCall)</value>
   </data>
 </root>

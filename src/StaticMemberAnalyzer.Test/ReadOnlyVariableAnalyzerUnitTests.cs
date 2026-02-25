@@ -64,7 +64,7 @@ namespace Test
 
             var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument)
                 .WithLocation(0)
-                .WithArguments("self.Prop");
+                .WithArguments("Prop");
 
             await VerifyWithRuleEnabledAsync(test, expected);
         }
@@ -464,11 +464,17 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyLocal)
                 .WithLocation(0)
                 .WithArguments("foo");
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument)
+                .WithSpan(15, 13, 15, 21) // foo.Next
+                .WithArguments("Next");
+            var expected2 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument)
+                .WithSpan(15, 13, 15, 27) // foo.Next.Value
+                .WithArguments("Value");
 
-            await VerifyWithRuleEnabledAsync(test, expected);
+            await VerifyWithRuleEnabledAsync(test, expected0, expected1, expected2);
         }
 
         [TestMethod]
@@ -493,11 +499,17 @@ namespace Test
 }
 ";
 
-            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter)
+            var expected0 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter)
                 .WithLocation(0)
                 .WithArguments("foo");
+            var expected1 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument)
+                .WithSpan(14, 13, 14, 21) // foo.Next
+                .WithArguments("Next");
+            var expected2 = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument)
+                .WithSpan(14, 13, 14, 27) // foo.Next.Value
+                .WithArguments("Value");
 
-            await VerifyWithRuleEnabledAsync(test, expected);
+            await VerifyWithRuleEnabledAsync(test, expected0, expected1, expected2);
         }
 
         [TestMethod]
@@ -742,9 +754,9 @@ namespace Test
     {
         void M()
         {
-            var idx = new MyIndexer();
+            var mut_idx = new MyIndexer();
             var key = ""A"";
-            _ = idx[key];
+            _ = mut_idx[key];
         }
     }
 }
@@ -878,7 +890,7 @@ namespace Test
 
             var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument)
                 .WithLocation(0)
-                .WithArguments("self.Prop");
+                .WithArguments("Prop");
 
             await VerifyWithRuleEnabledAsync(test, expected);
         }
@@ -910,7 +922,7 @@ namespace Test
 
             var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument)
                 .WithLocation(0)
-                .WithArguments("s.Prop");
+                .WithArguments("Prop");
 
             await VerifyWithRuleEnabledAsync(test, expected);
         }
@@ -1611,6 +1623,74 @@ namespace Test
         }
 
         [TestMethod]
+        public async Task PropertyAccess_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Box { public int Prop { get; set; } }
+    class Program
+    {
+        void M()
+        {
+            var foo = new Box();
+            _ = {|#0:foo.Prop|};
+        }
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument)
+                .WithLocation(0)
+                .WithArguments("Prop");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task MethodCall_ReportsDiagnostic()
+        {
+            var test = @"
+namespace Test
+{
+    class Box { public void Method() { } }
+    class Program
+    {
+        void M()
+        {
+            var foo = new Box();
+            {|#0:foo.Method()|};
+        }
+    }
+}
+";
+            var expected = VerifyCS.Diagnostic(ReadOnlyVariableAnalyzer.RuleId_ReadOnlyMethodCall)
+                .WithLocation(0)
+                .WithArguments("Method");
+
+            await VerifyWithRuleEnabledAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task ReadOnlyMethodCall_IsAllowed()
+        {
+            var test = @"
+namespace Test
+{
+    struct S { public readonly void Method() { } }
+    class Program
+    {
+        void M()
+        {
+            var foo = new S();
+            foo.Method();
+        }
+    }
+}
+";
+            await VerifyWithRuleEnabledAsync(test);
+        }
+
+        [TestMethod]
         public void RulesAreDisabledByDefault()
         {
             var analyzer = new ReadOnlyVariableAnalyzer();
@@ -1620,6 +1700,7 @@ namespace Test
                 ReadOnlyVariableAnalyzer.RuleId_ReadOnlyParameter,
                 ReadOnlyVariableAnalyzer.RuleId_ReadOnlyArgument,
                 ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument,
+                ReadOnlyVariableAnalyzer.RuleId_ReadOnlyMethodCall,
             };
 
             foreach (var id in ids)
@@ -1655,6 +1736,9 @@ namespace Test
                     ReportDiagnostic.Error);
                 specificOptions = specificOptions.SetItem(
                     ReadOnlyVariableAnalyzer.RuleId_ReadOnlyPropertyArgument,
+                    ReportDiagnostic.Error);
+                specificOptions = specificOptions.SetItem(
+                    ReadOnlyVariableAnalyzer.RuleId_ReadOnlyMethodCall,
                     ReportDiagnostic.Error);
 
                 compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(specificOptions);

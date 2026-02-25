@@ -25,6 +25,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         public const string RuleId_ReadOnlyParameter = "SMA0061";
         public const string RuleId_ReadOnlyArgument = "SMA0062";
         public const string RuleId_ReadOnlyPropertyArgument = "SMA0063";
+        public const string RuleId_ReadOnlyMethodCall = "SMA0064";
 
         private static readonly DiagnosticDescriptor Rule_ReadOnlyLocal = new(
             RuleId_ReadOnlyLocal,
@@ -62,6 +63,15 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             isEnabledByDefault: IsEnabledByDefault,
             description: new LocalizableResourceString("SMA0063_Description", Resources.ResourceManager, typeof(Resources)));
 
+        private static readonly DiagnosticDescriptor Rule_MethodCallCanChangeState = new(
+            RuleId_ReadOnlyMethodCall,
+            new LocalizableResourceString("SMA0064_Title", Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString("SMA0064_MessageFormat", Resources.ResourceManager, typeof(Resources)),
+            ImmutableCategory,
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: IsEnabledByDefault,
+            description: new LocalizableResourceString("SMA0064_Description", Resources.ResourceManager, typeof(Resources)));
+
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
 #if STMG_DEBUG_MESSAGE
             Core.Rule_DebugError,
@@ -70,7 +80,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             Rule_ReadOnlyLocal,
             Rule_ReadOnlyParameter,
             Rule_ReadOnlyArgument,
-            Rule_PropertyAccessCanChangeState
+            Rule_PropertyAccessCanChangeState,
+            Rule_MethodCallCanChangeState
             );
 
         public override void Initialize(AnalysisContext context)
@@ -84,6 +95,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             context.RegisterOperationAction(AnalyzeIncrementOrDecrement, OperationKind.Increment, OperationKind.Decrement);
             context.RegisterOperationAction(AnalyzeDeconstructionAssignment, OperationKind.DeconstructionAssignment);
             context.RegisterOperationAction(AnalyzeArgumentOperation, OperationKind.Argument);
+            context.RegisterOperationAction(AnalyzePropertyReference, OperationKind.PropertyReference);
+            context.RegisterOperationAction(AnalyzeInvocation, OperationKind.Invocation);
         }
 
         private static void AnalyzeSimpleAssignment(OperationAnalysisContext context)
@@ -153,6 +166,58 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
 
             AnalyzeArgument(context, argument);
+        }
+
+        private static void AnalyzePropertyReference(OperationAnalysisContext context)
+        {
+            if (context.Operation is not IPropertyReferenceOperation propRef)
+            {
+                return;
+            }
+
+            if (propRef.Property.GetMethod?.IsReadOnly == true)
+            {
+                return;
+            }
+
+            if (TryGetRootLocalOrParameter(propRef, out var rootName, out _))
+            {
+                if (HasMutableNamePrefix(rootName))
+                {
+                    return;
+                }
+
+                context.ReportDiagnostic(Diagnostic.Create(
+                    Rule_PropertyAccessCanChangeState,
+                    propRef.Syntax.GetLocation(),
+                    propRef.Property.Name));
+            }
+        }
+
+        private static void AnalyzeInvocation(OperationAnalysisContext context)
+        {
+            if (context.Operation is not IInvocationOperation invocation)
+            {
+                return;
+            }
+
+            if (invocation.TargetMethod.IsReadOnly)
+            {
+                return;
+            }
+
+            if (TryGetRootLocalOrParameter(invocation, out var rootName, out _))
+            {
+                if (HasMutableNamePrefix(rootName))
+                {
+                    return;
+                }
+
+                context.ReportDiagnostic(Diagnostic.Create(
+                    Rule_MethodCallCanChangeState,
+                    invocation.Syntax.GetLocation(),
+                    invocation.TargetMethod.Name));
+            }
         }
 
         private static void ReportIfDisallowedMutation(OperationAnalysisContext context, IOperation mutationOp, IOperation target)
@@ -279,17 +344,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     return;
                 }
 
-                if (argumentValue is IPropertyReferenceOperation propRef)
+                if (argumentValue is IPropertyReferenceOperation)
                 {
-                    if (propRef.Property.GetMethod?.IsReadOnly == true)
-                    {
-                        return;
-                    }
-
-                    context.ReportDiagnostic(Diagnostic.Create(
-                        Rule_PropertyAccessCanChangeState,
-                        argumentValue.Syntax.GetLocation(),
-                        argumentValue.Syntax.ToString()));
                     return;
                 }
             }
@@ -418,6 +474,18 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 if (current is IArrayElementReferenceOperation arrayElementReference)
                 {
                     current = arrayElementReference.ArrayReference;
+                    continue;
+                }
+
+                if (current is IInvocationOperation invocation)
+                {
+                    current = invocation.Instance;
+                    continue;
+                }
+
+                if (current is IConditionalAccessOperation conditionalAccess)
+                {
+                    current = conditionalAccess.Operation;
                     continue;
                 }
 
