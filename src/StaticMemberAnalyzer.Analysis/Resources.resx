@@ -478,4 +478,13 @@
   <data name="SMA0062_Description" xml:space="preserve">
     <value>Avoid passing local/parameter-rooted variables to method/indexer calls in writable forms unless explicitly mutable.</value>
   </data>
+  <data name="SMA0063_Title" xml:space="preserve">
+    <value>Property Access Can Change State</value>
+  </data>
+  <data name="SMA0063_Description" xml:space="preserve">
+    <value>Avoid passing properties to method/indexer calls as writable arguments because their accessors can have side effects.</value>
+  </data>
+  <data name="SMA0063_MessageFormat" xml:space="preserve">
+    <value>Passing property '{0}' as a writable argument can change internal state on access (ReadOnlyPropertyArgument)</value>
+  </data>
 </root>

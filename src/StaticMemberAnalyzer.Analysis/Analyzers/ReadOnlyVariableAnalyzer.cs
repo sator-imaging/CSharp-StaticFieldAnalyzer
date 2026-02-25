@@ -24,6 +24,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
         public const string RuleId_ReadOnlyLocal = "SMA0060";
         public const string RuleId_ReadOnlyParameter = "SMA0061";
         public const string RuleId_ReadOnlyArgument = "SMA0062";
+        public const string RuleId_ReadOnlyPropertyArgument = "SMA0063";
 
         private static readonly DiagnosticDescriptor Rule_ReadOnlyLocal = new(
             RuleId_ReadOnlyLocal,
@@ -52,6 +53,15 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             isEnabledByDefault: IsEnabledByDefault,
             description: new LocalizableResourceString("SMA0062_Description", Resources.ResourceManager, typeof(Resources)));
 
+        private static readonly DiagnosticDescriptor Rule_PropertyAccessCanChangeState = new(
+            RuleId_ReadOnlyPropertyArgument,
+            new LocalizableResourceString("SMA0063_Title", Resources.ResourceManager, typeof(Resources)),
+            new LocalizableResourceString("SMA0063_MessageFormat", Resources.ResourceManager, typeof(Resources)),
+            ImmutableCategory,
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: IsEnabledByDefault,
+            description: new LocalizableResourceString("SMA0063_Description", Resources.ResourceManager, typeof(Resources)));
+
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
 #if STMG_DEBUG_MESSAGE
             Core.Rule_DebugError,
@@ -59,7 +69,8 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 #endif
             Rule_ReadOnlyLocal,
             Rule_ReadOnlyParameter,
-            Rule_ReadOnlyArgument
+            Rule_ReadOnlyArgument,
+            Rule_PropertyAccessCanChangeState
             );
 
         public override void Initialize(AnalysisContext context)
@@ -231,6 +242,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 
         private static void AnalyzeArgument(OperationAnalysisContext context, IArgumentOperation argument)
         {
+            // The analysis precedence in this method is intentionally designed and must not be changed.
             var argumentValue = argument.Value;
             while (argumentValue is IConversionOperation conversion)
             {
@@ -255,9 +267,31 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
 
             var hasRoot = TryGetRootLocalOrParameter(argumentValue, out var rootName, out _);
-            if (hasRoot && HasMutableNamePrefix(rootName))
+            if (hasRoot)
             {
-                return;
+                if (HasMutableNamePrefix(rootName))
+                {
+                    return;
+                }
+
+                if (argumentValue is IFieldReferenceOperation { Field: { IsReadOnly: true } or { IsConst: true } })
+                {
+                    return;
+                }
+
+                if (argumentValue is IPropertyReferenceOperation propRef)
+                {
+                    if (propRef.Property.GetMethod?.IsReadOnly == true)
+                    {
+                        return;
+                    }
+
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        Rule_PropertyAccessCanChangeState,
+                        argumentValue.Syntax.GetLocation(),
+                        argumentValue.Syntax.ToString()));
+                    return;
+                }
             }
 
             var type = parameter.Type;
