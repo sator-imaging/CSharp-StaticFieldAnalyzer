@@ -807,10 +807,10 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                 }
 
                 var allReturnStatements = controlFlow.ReturnStatements;
-                var returnStatements = allReturnStatements.OfType<ReturnStatementSyntax>().ToList();
+                var returnStatements = allReturnStatements.OfType<ReturnStatementSyntax>().ToArray();
 
-                if (returnStatements.Count == 0 ||
-                    allReturnStatements.Length != returnStatements.Count)
+                if (returnStatements.Length == 0 ||
+                    returnStatements.Length != allReturnStatements.Length)
                 {
                     // If not all return statements can be cast to ReturnStatementSyntax,
                     // we can't be sure about the variable's lifecycle.
@@ -857,7 +857,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                     */
                 }
 
-                inAllCodePaths = (handledPaths == returnStatements.Count);
+                inAllCodePaths = (handledPaths == returnStatements.Length);
                 return isVariableEverReturned;
             }
 
