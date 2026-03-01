@@ -575,7 +575,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             else
             {
                 var initRefSyntaxes = initExprStx.DescendantNodes().OfType<IdentifierNameSyntax>()
-                    .ToImmutableArray();
+                    .ToArray();
 
                 if (initRefSyntaxes.Length != enumFieldList.Count)
                 {
@@ -595,7 +595,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
                             return null;
                         })
                         .Where(static x => x != null)
-                        .ToImmutableArray();
+                        .ToArray();
 
                     for (int i = 0; i < enumFieldList.Count; i++)
                     {

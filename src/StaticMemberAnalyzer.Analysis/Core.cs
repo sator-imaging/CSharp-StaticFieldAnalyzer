@@ -83,7 +83,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
                 reportMethod.Invoke(Diagnostic.Create(
                     Rule_DebugWarn,
                     location,
-                    $"\n{memberName} (#{lineNumber})\n{string.Format(descriptor.MessageFormat.ToString(), messageFormatArgs.ToArray())}"
+                    $"\n{memberName} (#{lineNumber})\n{string.Format(descriptor.MessageFormat.ToString(), messageFormatArgs ?? Array.Empty<object>())}"
                     ));
 #endif
             }
@@ -92,7 +92,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis
                 reportMethod.Invoke(Diagnostic.Create(
                     descriptor,
                     location,
-                    messageFormatArgs.ToArray()
+                    messageFormatArgs ?? Array.Empty<object>()
                     ));
             }
 #pragma warning restore
