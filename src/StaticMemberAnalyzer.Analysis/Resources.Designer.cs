@@ -1023,5 +1023,41 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
                 return ResourceManager.GetString("SMA9100_Title", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Parameter Analysis に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0070__MD_TITLE__ {
+            get {
+                return ResourceManager.GetString("SMA0070__MD_TITLE__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Literal arguments should be named to express their meaning. に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0070_Description {
+            get {
+                return ResourceManager.GetString("SMA0070_Description", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Argument for parameter &apos;{0}&apos; should be named to express its meaning (NamedParameter) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0070_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0070_MessageFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Literal argument should be named に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0070_Title {
+            get {
+                return ResourceManager.GetString("SMA0070_Title", resourceCulture);
+            }
+        }
     }
 }
