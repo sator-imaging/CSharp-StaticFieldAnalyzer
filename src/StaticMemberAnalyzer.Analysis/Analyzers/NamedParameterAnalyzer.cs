@@ -87,6 +87,10 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (op.IsImplicit)
                 return;
 
+            // Skip if it's an indexer argument.
+            if (op.Parent is IPropertyReferenceOperation propRef && propRef.Arguments.Contains(op))
+                return;
+
             // Skip if it's part of an attribute, we handle that via SyntaxNodeAction because IArgumentOperation might not be reported for attributes in this Roslyn version.
             if (op.Syntax is AttributeArgumentSyntax)
                 return;

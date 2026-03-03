@@ -161,5 +161,25 @@ namespace Test
 ";
             await VerifyCS.VerifyAnalyzerAsync(test);
         }
+
+        [TestMethod]
+        public async Task TestIndexerArguments()
+        {
+            var test = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public class CTest
+    {
+        public void Test(int[] array, Dictionary<string, int> dict)
+        {
+            var x = array[0];
+            var y = dict[""key""];
+        }
+    }
+}
+";
+            await VerifyCS.VerifyAnalyzerAsync(test);
+        }
     }
 }
