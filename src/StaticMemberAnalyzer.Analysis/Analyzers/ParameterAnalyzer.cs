@@ -12,7 +12,7 @@ using System.Linq;
 namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class LiteralParameterAnalyzer : DiagnosticAnalyzer
+    public sealed class ParameterAnalyzer : DiagnosticAnalyzer
     {
         public const string RuleId_LiteralParameter = "SMA0070";
 
