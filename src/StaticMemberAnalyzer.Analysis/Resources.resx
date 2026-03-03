@@ -497,6 +497,6 @@
     <value>Literal arguments should be passed as named arguments to express their meaning.</value>
   </data>
   <data name="SMA0070_MessageFormat" xml:space="preserve">
-    <value>Literal argument for parameter '{0}' should be passed as named argument (NamedParameter)</value>
+    <value>Literal argument for parameter '{0}' should be passed as named argument (LiteralParameter)</value>
   </data>
 </root>

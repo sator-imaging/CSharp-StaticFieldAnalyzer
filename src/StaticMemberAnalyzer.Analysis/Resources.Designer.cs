@@ -1043,7 +1043,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
 
         /// <summary>
-        ///   Literal argument for parameter &apos;{0}&apos; should be passed as named argument (NamedParameter) に類似しているローカライズされた文字列を検索します。
+        ///   Literal argument for parameter &apos;{0}&apos; should be passed as named argument (LiteralParameter) に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0070_MessageFormat {
             get {
