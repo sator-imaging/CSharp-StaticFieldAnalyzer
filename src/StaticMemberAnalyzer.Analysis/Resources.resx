@@ -491,12 +491,12 @@
     <value>Parameter Analysis</value>
   </data>
   <data name="SMA0070_Title" xml:space="preserve">
-    <value>Literal argument should be named</value>
+    <value>Literal should be passed as named argument</value>
   </data>
   <data name="SMA0070_Description" xml:space="preserve">
-    <value>Literal arguments should be named to express their meaning.</value>
+    <value>Literal arguments should be passed as named arguments to express their meaning.</value>
   </data>
   <data name="SMA0070_MessageFormat" xml:space="preserve">
-    <value>Argument for parameter '{0}' should be named to express its meaning (NamedParameter)</value>
+    <value>Literal argument for parameter '{0}' should be passed as named argument (NamedParameter)</value>
   </data>
 </root>

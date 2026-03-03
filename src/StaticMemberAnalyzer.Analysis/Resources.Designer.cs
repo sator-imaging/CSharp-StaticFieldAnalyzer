@@ -1034,7 +1034,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
 
         /// <summary>
-        ///   Literal arguments should be named to express their meaning. に類似しているローカライズされた文字列を検索します。
+        ///   Literal arguments should be passed as named arguments to express their meaning. に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0070_Description {
             get {
@@ -1043,7 +1043,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
 
         /// <summary>
-        ///   Argument for parameter &apos;{0}&apos; should be named to express its meaning (NamedParameter) に類似しているローカライズされた文字列を検索します。
+        ///   Literal argument for parameter &apos;{0}&apos; should be passed as named argument (NamedParameter) に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0070_MessageFormat {
             get {
@@ -1052,7 +1052,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
 
         /// <summary>
-        ///   Literal argument should be named に類似しているローカライズされた文字列を検索します。
+        ///   Literal should be passed as named argument に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0070_Title {
             get {
