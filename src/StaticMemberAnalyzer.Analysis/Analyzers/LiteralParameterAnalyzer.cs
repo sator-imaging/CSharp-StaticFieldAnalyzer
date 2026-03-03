@@ -12,12 +12,12 @@ using System.Linq;
 namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public sealed class NamedParameterAnalyzer : DiagnosticAnalyzer
+    public sealed class LiteralParameterAnalyzer : DiagnosticAnalyzer
     {
-        public const string RuleId_NamedParameter = "SMA0070";
+        public const string RuleId_LiteralParameter = "SMA0070";
 
-        private static readonly DiagnosticDescriptor Rule_NamedParameter = new(
-            RuleId_NamedParameter,
+        private static readonly DiagnosticDescriptor Rule_LiteralParameter = new(
+            RuleId_LiteralParameter,
             new LocalizableResourceString(nameof(Resources.SMA0070_Title), Resources.ResourceManager, typeof(Resources)),
             new LocalizableResourceString(nameof(Resources.SMA0070_MessageFormat), Resources.ResourceManager, typeof(Resources)),
             Core.Category,
@@ -25,7 +25,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             isEnabledByDefault: true,
             description: new LocalizableResourceString(nameof(Resources.SMA0070_Description), Resources.ResourceManager, typeof(Resources)));
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule_NamedParameter);
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule_LiteralParameter);
 
         public override void Initialize(AnalysisContext context)
         {
@@ -74,7 +74,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             }
 
             context.ReportDiagnostic(Diagnostic.Create(
-                Rule_NamedParameter,
+                Rule_LiteralParameter,
                 argStx.GetLocation(),
                 parameterName));
         }
@@ -113,7 +113,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers
             if (!isNamed)
             {
                 context.ReportDiagnostic(Diagnostic.Create(
-                    Rule_NamedParameter,
+                    Rule_LiteralParameter,
                     op.Syntax.GetLocation(),
                     op.Parameter?.Name ?? "unknown"));
             }
