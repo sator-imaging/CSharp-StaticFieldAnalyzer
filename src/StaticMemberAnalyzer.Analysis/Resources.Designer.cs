@@ -1025,7 +1025,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
 
         /// <summary>
-        ///   Parameter Analysis に類似しているローカライズされた文字列を検索します。
+        ///   Argument Analysis に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0070__MD_TITLE__ {
             get {
@@ -1043,7 +1043,7 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
         }
 
         /// <summary>
-        ///   Literal argument for parameter &apos;{0}&apos; should be passed as named argument (LiteralParameter) に類似しているローカライズされた文字列を検索します。
+        ///   Literal argument for parameter &apos;{0}&apos; should be passed as named argument (LiteralArgument) に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string SMA0070_MessageFormat {
             get {

@@ -2,12 +2,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers;
 using System.Threading.Tasks;
 using VerifyCS = StaticMemberAnalyzer.Test.CSharpAnalyzerVerifier<
-    SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers.ParameterAnalyzer>;
+    SatorImaging.StaticMemberAnalyzer.Analysis.Analyzers.ArgumentAnalyzer>;
 
 namespace SatorImaging.StaticMemberAnalyzer.Test
 {
     [TestClass]
-    public class ParameterAnalyzerUnitTests
+    public class ArgumentAnalyzerUnitTests
     {
         [TestMethod]
         public async Task TestMethodLiteralArguments()
@@ -26,9 +26,9 @@ namespace Test
     }
 }
 ";
-            var expected0 = VerifyCS.Diagnostic(ParameterAnalyzer.RuleId_LiteralParameter).WithLocation(0).WithArguments("index");
-            var expected1 = VerifyCS.Diagnostic(ParameterAnalyzer.RuleId_LiteralParameter).WithLocation(1).WithArguments("strict");
-            var expected2 = VerifyCS.Diagnostic(ParameterAnalyzer.RuleId_LiteralParameter).WithLocation(2).WithArguments("message");
+            var expected0 = VerifyCS.Diagnostic(ArgumentAnalyzer.RuleId_LiteralArgument).WithLocation(0).WithArguments("index");
+            var expected1 = VerifyCS.Diagnostic(ArgumentAnalyzer.RuleId_LiteralArgument).WithLocation(1).WithArguments("strict");
+            var expected2 = VerifyCS.Diagnostic(ArgumentAnalyzer.RuleId_LiteralArgument).WithLocation(2).WithArguments("message");
             await VerifyCS.VerifyAnalyzerAsync(test, expected0, expected1, expected2);
         }
 
@@ -49,9 +49,9 @@ namespace Test
     }
 }
 ";
-            var expected0 = VerifyCS.Diagnostic(ParameterAnalyzer.RuleId_LiteralParameter).WithLocation(0).WithArguments("index");
-            var expected1 = VerifyCS.Diagnostic(ParameterAnalyzer.RuleId_LiteralParameter).WithLocation(1).WithArguments("strict");
-            var expected2 = VerifyCS.Diagnostic(ParameterAnalyzer.RuleId_LiteralParameter).WithLocation(2).WithArguments("message");
+            var expected0 = VerifyCS.Diagnostic(ArgumentAnalyzer.RuleId_LiteralArgument).WithLocation(0).WithArguments("index");
+            var expected1 = VerifyCS.Diagnostic(ArgumentAnalyzer.RuleId_LiteralArgument).WithLocation(1).WithArguments("strict");
+            var expected2 = VerifyCS.Diagnostic(ArgumentAnalyzer.RuleId_LiteralArgument).WithLocation(2).WithArguments("message");
             await VerifyCS.VerifyAnalyzerAsync(test, expected0, expected1, expected2);
         }
 
@@ -116,7 +116,7 @@ namespace Test
     }
 }
 ";
-            var expected = VerifyCS.Diagnostic(ParameterAnalyzer.RuleId_LiteralParameter).WithLocation(0).WithArguments("index");
+            var expected = VerifyCS.Diagnostic(ArgumentAnalyzer.RuleId_LiteralArgument).WithLocation(0).WithArguments("index");
             await VerifyCS.VerifyAnalyzerAsync(test, expected);
         }
 
