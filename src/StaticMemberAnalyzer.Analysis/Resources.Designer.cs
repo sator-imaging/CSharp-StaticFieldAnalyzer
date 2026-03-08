@@ -1023,5 +1023,134 @@ namespace SatorImaging.StaticMemberAnalyzer.Analysis {
                 return ResourceManager.GetString("SMA9100_Title", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Read-Only Variable Analysis に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0060__MD_TITLE__ {
+            get {
+                return ResourceManager.GetString("SMA0060__MD_TITLE__", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0060_Description に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0060_Description {
+            get {
+                return ResourceManager.GetString("SMA0060_Description", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0060_MessageFormat に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0060_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0060_MessageFormat", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0060_Title に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0060_Title {
+            get {
+                return ResourceManager.GetString("SMA0060_Title", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0061_Description に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0061_Description {
+            get {
+                return ResourceManager.GetString("SMA0061_Description", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0061_MessageFormat に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0061_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0061_MessageFormat", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0061_Title に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0061_Title {
+            get {
+                return ResourceManager.GetString("SMA0061_Title", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0062_Description に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0062_Description {
+            get {
+                return ResourceManager.GetString("SMA0062_Description", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0062_MessageFormat に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0062_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0062_MessageFormat", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0062_Title に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0062_Title {
+            get {
+                return ResourceManager.GetString("SMA0062_Title", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0063_Description に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0063_Description {
+            get {
+                return ResourceManager.GetString("SMA0063_Description", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0063_MessageFormat に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0063_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0063_MessageFormat", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0063_Title に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0063_Title {
+            get {
+                return ResourceManager.GetString("SMA0063_Title", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0064_Description に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0064_Description {
+            get {
+                return ResourceManager.GetString("SMA0064_Description", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0064_MessageFormat に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0064_MessageFormat {
+            get {
+                return ResourceManager.GetString("SMA0064_MessageFormat", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   SMA0064_Title に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string SMA0064_Title {
+            get {
+                return ResourceManager.GetString("SMA0064_Title", resourceCulture);
+            }
+        }
     }
 }
